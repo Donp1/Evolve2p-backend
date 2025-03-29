@@ -4,7 +4,8 @@ dotenv.config();
 const express = require("express");
 const nodemailer = require("nodemailer");
 const { generateOTP } = require("../utils");
-const { createOTPUser } = require("../utils/users");
+const { createOTPUser, findOtpByEmail } = require("../utils/users");
+const { db } = require("../db");
 
 const router = express.Router();
 
@@ -21,12 +22,12 @@ const transporter = nodemailer.createTransport({
 
 router.post("/", async (req, res) => {
   const { email } = req.body;
-  console.log(req.body);
   if (!email) {
     return res
       .status(401)
       .json({ error: true, message: "Provide an Email Address" });
   }
+
   const otp = generateOTP();
   try {
     const info = await transporter.sendMail({
@@ -57,12 +58,28 @@ router.post("/", async (req, res) => {
       `, // html body
     });
 
-    const otpUser = await createOTPUser({ email, otp: parseInt(otp) });
-
-    if (otpUser) {
-      return res
-        .status(200)
-        .json({ success: true, message: "Email sent successfully" });
+    const userExit = await findOtpByEmail(email);
+    if (userExit) {
+      const updateUser = await db.oTP.update({
+        data: {
+          otp,
+        },
+        where: {
+          email,
+        },
+      });
+      if (updateUser) {
+        return res
+          .status(200)
+          .json({ success: true, message: "Email sent successfully" });
+      }
+    } else {
+      const otpUser = await createOTPUser({ email, otp: parseInt(otp) });
+      if (otpUser) {
+        return res
+          .status(200)
+          .json({ success: true, message: "Email sent successfully" });
+      }
     }
   } catch (error) {
     return res
