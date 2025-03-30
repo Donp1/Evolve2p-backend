@@ -28,6 +28,14 @@ function findUserById(id) {
   });
 }
 
+function findUserByUsername(username) {
+  return db.user.findFirst({
+    where: {
+      username,
+    },
+  });
+}
+
 function findOtpByEmail(email) {
   return db.oTP.findUnique({
     where: {
@@ -42,4 +50,5 @@ module.exports = {
   createUser,
   findOtpByEmail,
   createOTPUser,
+  findUserByUsername,
 };

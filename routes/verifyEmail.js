@@ -22,7 +22,7 @@ router.post("/", async (req, res) => {
         .json({ error: true, message: "Invalid Email address" });
     }
 
-    if (String(userExit.otp) !== String(otp)) {
+    if (String(userExit.otp) != String(otp)) {
       return res.status(400).json({ error: true, message: "Invalid OTP Sent" });
     }
 
