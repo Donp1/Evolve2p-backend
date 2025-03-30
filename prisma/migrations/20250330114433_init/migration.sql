@@ -8,6 +8,7 @@ CREATE TABLE "User" (
     "username" TEXT NOT NULL,
     "country" TEXT NOT NULL,
     "isVerified" BOOLEAN DEFAULT false,
+    "pin" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -17,7 +18,7 @@ CREATE TABLE "OTP" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "otp" INTEGER,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "OTP_pkey" PRIMARY KEY ("id")
 );
