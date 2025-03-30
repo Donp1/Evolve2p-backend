@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
     if (userExit) {
       const updateUser = await db.oTP.update({
         data: {
-          otp,
+          otp: parseInt(otp),
         },
         where: {
           email,
