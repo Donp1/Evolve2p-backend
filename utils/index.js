@@ -4,9 +4,13 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
 function generateAccessToken(user) {
-  return jwt.sign({ userId: user.id }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: "5m",
-  });
+  return jwt.sign(
+    { userId: user.id, email: user.email },
+    process.env.JWT_ACCESS_SECRET,
+    {
+      expiresIn: "1d",
+    }
+  );
 }
 
 const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
