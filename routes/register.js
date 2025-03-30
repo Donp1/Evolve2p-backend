@@ -1,10 +1,8 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
 
-const { PrismaClient } = require("@prisma/client");
 const { findUserByEmail, createUser } = require("../utils/users");
 const { generateAccessToken } = require("../utils");
-
-const prisma = new PrismaClient();
 
 const route = express.Router();
 
@@ -23,8 +21,15 @@ route.post("/", async (req, res) => {
         .status(400)
         .json({ error: true, message: "Email already in use." });
     }
+    const securePassword = await bcrypt.hash(password, 10);
 
-    const newUser = await createUser(req.body);
+    const newUser = await createUser({
+      email,
+      country,
+      phone,
+      password: securePassword,
+      username,
+    });
 
     const accessToken = generateAccessToken(newUser);
 
