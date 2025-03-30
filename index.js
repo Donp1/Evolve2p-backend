@@ -22,7 +22,7 @@ app.use("/api/auth/register", register);
 app.use("/api/auth/login", login);
 app.use("/api/send-otp", sendOTP);
 app.use("/api/verify-email", verifyEmail);
-app.use("/api/check-email-exist", verifyEmail);
+app.use("/api/check-email-exist", checkEmailExist);
 app.use("/api/check-username-exist", checkUsernameExist);
 app.use("/api/update-user", updateUser);
 
