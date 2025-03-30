@@ -3,11 +3,12 @@ const bcrypt = require("bcryptjs");
 
 const { findUserByEmail, createUser } = require("../utils/users");
 const { generateAccessToken } = require("../utils");
+const { db } = require("../db");
 
 const route = express.Router();
 
 route.post("/", async (req, res) => {
-  const { email, country, phone, password, username } = req.body;
+  const { email, country, phone, password, username, verified } = req.body;
   if (!email || !country || !phone || !password || !username) {
     return res
       .status(400)
@@ -31,12 +32,24 @@ route.post("/", async (req, res) => {
       username,
     });
 
-    const accessToken = generateAccessToken(newUser);
+    if (newUser) {
+      if (verified) {
+        await db.user.update({
+          where: {
+            email: newUser.email,
+          },
+          data: {
+            isVerified: true,
+          },
+        });
+      }
+      const accessToken = generateAccessToken(newUser);
 
-    return res.status(201).json({
-      accessToken,
-      success: true,
-    });
+      return res.status(201).json({
+        accessToken,
+        success: true,
+      });
+    }
   } catch (error) {
     return res.status(500).json({ message: error, error: true });
   }
