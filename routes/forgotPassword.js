@@ -4,6 +4,10 @@ dotenv.config();
 const express = require("express");
 const bcrypt = require("bcryptjs");
 
+const { findUserByEmail } = require("../utils/users");
+
+const { db } = require("../db");
+
 const router = express.Router();
 
 router.put("/", async (req, res) => {
