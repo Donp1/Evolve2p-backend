@@ -34,7 +34,6 @@ route.post("/", async (req, res) => {
     }
 
     const accessToken = generateAccessToken(existingUser);
-    console.log(accessToken);
 
     return res.status(200).json({
       accessToken,

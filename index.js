@@ -10,6 +10,7 @@ const checkEmailExist = require("./routes/checkEmailExist.js");
 const checkUsernameExist = require("./routes/checkUsernameExist.js");
 const updateUser = require("./routes/updateUser.js");
 const forgotPassword = require("./routes/forgotPassword");
+const checkToken = require("./routes/checkToken.js");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +28,7 @@ app.use("/api/check-email-exist", checkEmailExist);
 app.use("/api/check-username-exist", checkUsernameExist);
 app.use("/api/update-user", updateUser);
 app.use("/api/forgot-password", forgotPassword);
+app.use("/api/check-token", checkToken);
 
 app.listen(PORT, (error) => {
   if (error) {
