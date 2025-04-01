@@ -13,26 +13,30 @@ router.put("/", async (req, res) => {
     return res.status(400).json({ message: "Provisw email and password" });
   }
 
-  const userExits = await findUserByEmail(email);
-  if (!userExits)
-    return res
-      .status(400)
-      .json({ error: true, message: "Invalid email address provided" });
+  try {
+    const userExits = await findUserByEmail(email);
+    if (!userExits)
+      return res
+        .status(400)
+        .json({ error: true, message: "Invalid email address provided" });
 
-  const hashPassword = await bcrypt.hash(password, 10);
+    const hashPassword = await bcrypt.hash(password, 10);
 
-  const updateUser = await db.user.update({
-    where: {
-      email,
-    },
-    data: {
-      password: hashPassword,
-    },
-  });
-  if (updateUser) {
-    return res
-      .status(200)
-      .json({ success: true, message: "Password updated successfully" });
+    const updateUser = await db.user.update({
+      where: {
+        email,
+      },
+      data: {
+        password: hashPassword,
+      },
+    });
+    if (updateUser) {
+      return res
+        .status(200)
+        .json({ success: true, message: "Password updated successfully" });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: true, message: error });
   }
 });
 
