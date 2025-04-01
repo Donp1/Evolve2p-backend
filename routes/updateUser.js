@@ -2,6 +2,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const express = require("express");
+const bcrypt = require("bcryptjs");
+
 const { isAuthenticated } = require("../middlewares");
 const { findUserByEmail } = require("../utils/users");
 const { db } = require("../db");
