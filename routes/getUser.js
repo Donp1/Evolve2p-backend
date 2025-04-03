@@ -17,7 +17,6 @@ router.post("/", isAuthenticated, async (req, res) => {
     const userExist = await findUserByEmail(email);
     if (userExist) {
       userExist.password = undefined;
-      userExist.pin = undefined;
       return res
         .status(200)
         .json({ success: true, message: "Valid user", user: userExist });
