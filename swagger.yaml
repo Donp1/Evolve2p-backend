@@ -1,0 +1,274 @@
+openapi: 3.0.0
+info:
+  title: Evolve2p API
+  description: Evolve2p API with Swagger documentation
+  version: 1.0.0
+servers:
+  - url: https://evolve2p-backend.onrender.com
+    description: Production server
+  - url: http://localhost:5000
+    description: Development server
+paths:
+  /api/auth/register:
+    post:
+      summary: Registers a new user.
+      description: This endpoint allows you to register a new user by providing a username, password, country, verified, phone, pin and email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                country:
+                  type: string
+                verified:
+                  type: boolean
+                phone:
+                  type: string
+                email:
+                  type: string
+              required:
+                - username
+                - password
+                - country
+                - verified
+                - phone
+                - email
+      responses:
+        "201":
+          description: User registered successfully.
+        "400":
+          description: Invalid input data.
+        "500":
+          description: Internal server error.
+  /api/auth/login:
+    post:
+      summary: Logs in a user.
+      description: This endpoint allows you to log in a user by providing a email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: User logged in successfully.
+        "400":
+          description: Invalid email or password.
+        "500":
+          description: Internal server error.
+  /api/send-otp:
+    post:
+      summary: Sends an OTP to the user's email.
+      description: This endpoint allows you to send an OTP to the user's email for verification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
+      responses:
+        "200":
+          description: OTP sent successfully.
+        "400":
+          description: Invalid email.
+        "500":
+          description: Internal server error.
+  /api/verify-email:
+    post:
+      summary: Verifies the OTP sent to the user's email.
+      description: This endpoint allows you to verify the OTP sent to the user's email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                otp:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: OTP verified successfully.
+        "400":
+          description: Invalid OTP or email.
+        "500":
+          description: Internal server error.
+  /api/forgot-password:
+    put:
+      summary: Change the user's password.
+      description: This endpoint allows you to change the user's password by providing the email and the new password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: Password updated successfully.
+        "400":
+          description: Invalid email or password.
+        "500":
+          description: Internal server error.
+  /api/check-email-exists:
+    post:
+      summary: Checks if the email exists in the database.
+      description: This endpoint allows you to check if the email exists in the database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
+      responses:
+        "200":
+          description: Email exists.
+        "404":
+          description: Email does not exist.
+        "500":
+          description: Internal server error.
+  /api/check-username-exists:
+    post:
+      summary: Checks if the username exists in the database.
+      description: This endpoint allows you to check if the username exists in the database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+              required:
+                - username
+      responses:
+        "200":
+          description: Username exists.
+        "404":
+          description: Username does not exist.
+        "500":
+          description: Internal server error.
+  /api/get-user:
+    post:
+      summary: Gets the user data.
+      description: This endpoint allows you to get the user data by providing the user Email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User data retrieved successfully.
+        "404":
+          description: User not found.
+        "500":
+          description: Internal server error.
+  /api/update-user:
+    put:
+      summary: Updates the user data.
+      description: This endpoint allows you to update the user data by providing the user Email and the new data.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
+                country:
+                  type: string
+                verified:
+                  type: boolean
+                phone:
+                  type: string
+              required:
+                - email
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User data updated successfully.
+        "400":
+          description: Invalid input data.
+        "404":
+          description: User not found.
+        "500":
+          description: Internal server error.
+  /api/check-token:
+    post:
+      summary: Checks if the token is valid.
+      description: This endpoint allows you to check if the token is valid.
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token is valid.
+        "401":
+          description: Token is invalid.
+        "500":
+          description: Internal server error.

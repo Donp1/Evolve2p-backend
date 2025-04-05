@@ -1,6 +1,11 @@
 const dotenv = require("dotenv");
 dotenv.config();
 const express = require("express");
+var cors = require("cors");
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
+const path = require("path");
 
 const register = require("./routes/register.js");
 const login = require("./routes/login.js");
@@ -17,9 +22,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 //middlewares
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+const swaggerDocument = YAML.load(path.join(__dirname, "swagger.yaml"));
+
+// swagger middleware
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 //Routes
 app.use("/api/auth/register", register);
 app.use("/api/auth/login", login);
