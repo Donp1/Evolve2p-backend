@@ -15,6 +15,14 @@ tags:
     description: User related endpoints
   - name: OTP
     description: OTP related endpoints
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # Optionally specify that it's a JWT token
+security:
+  - BearerAuth: [] # Apply this security globally to all paths
 paths:
   /api/auth/register:
     post:
@@ -212,6 +220,8 @@ paths:
     post:
       tags:
         - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
       summary: Gets the user data.
       description: This endpoint allows you to get the user data by providing the user Email.
       requestBody:
@@ -242,6 +252,8 @@ paths:
     put:
       tags:
         - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
       summary: Updates the user data.
       description: This endpoint allows you to update the user data by providing the user Email and the new data.
       requestBody:
