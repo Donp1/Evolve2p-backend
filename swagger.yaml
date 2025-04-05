@@ -160,7 +160,7 @@ paths:
           description: Invalid email or password.
         "500":
           description: Internal server error.
-  /api/check-email-exists:
+  /api/check-email-exist:
     post:
       tags:
         - User
@@ -184,7 +184,7 @@ paths:
           description: Email does not exist.
         "500":
           description: Internal server error.
-  /api/check-username-exists:
+  /api/check-username-exist:
     post:
       tags:
         - User
