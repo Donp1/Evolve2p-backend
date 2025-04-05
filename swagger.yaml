@@ -8,9 +8,18 @@ servers:
     description: Production server
   - url: http://localhost:5000
     description: Development server
+tags:
+  - name: Auth
+    description: Authentication related endpoints
+  - name: User
+    description: User related endpoints
+  - name: OTP
+    description: OTP related endpoints
 paths:
   /api/auth/register:
     post:
+      tags:
+        - Auth
       summary: Registers a new user.
       description: This endpoint allows you to register a new user by providing a username, password, country, verified, phone, pin and email.
       requestBody:
@@ -48,6 +57,8 @@ paths:
           description: Internal server error.
   /api/auth/login:
     post:
+      tags:
+        - Auth
       summary: Logs in a user.
       description: This endpoint allows you to log in a user by providing a email and password.
       requestBody:
@@ -73,6 +84,8 @@ paths:
           description: Internal server error.
   /api/send-otp:
     post:
+      tags:
+        - OTP
       summary: Sends an OTP to the user's email.
       description: This endpoint allows you to send an OTP to the user's email for verification.
       requestBody:
@@ -95,6 +108,8 @@ paths:
           description: Internal server error.
   /api/verify-email:
     post:
+      tags:
+        - OTP
       summary: Verifies the OTP sent to the user's email.
       description: This endpoint allows you to verify the OTP sent to the user's email.
       requestBody:
@@ -120,6 +135,8 @@ paths:
           description: Internal server error.
   /api/forgot-password:
     put:
+      tags:
+        - User
       summary: Change the user's password.
       description: This endpoint allows you to change the user's password by providing the email and the new password.
       requestBody:
@@ -145,6 +162,8 @@ paths:
           description: Internal server error.
   /api/check-email-exists:
     post:
+      tags:
+        - User
       summary: Checks if the email exists in the database.
       description: This endpoint allows you to check if the email exists in the database.
       requestBody:
@@ -167,6 +186,8 @@ paths:
           description: Internal server error.
   /api/check-username-exists:
     post:
+      tags:
+        - User
       summary: Checks if the username exists in the database.
       description: This endpoint allows you to check if the username exists in the database.
       requestBody:
@@ -189,6 +210,8 @@ paths:
           description: Internal server error.
   /api/get-user:
     post:
+      tags:
+        - User
       summary: Gets the user data.
       description: This endpoint allows you to get the user data by providing the user Email.
       requestBody:
@@ -217,6 +240,8 @@ paths:
           description: Internal server error.
   /api/update-user:
     put:
+      tags:
+        - User
       summary: Updates the user data.
       description: This endpoint allows you to update the user data by providing the user Email and the new data.
       requestBody:
