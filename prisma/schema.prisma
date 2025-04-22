@@ -15,8 +15,11 @@ model User {
   password   String
   username   String
   country    String
-  isVerified Boolean? @default(false)
+  kycVerified Boolean? @default(false)
+  emailVerified Boolean? @default(false)
   pin        String?
+  preferedCurrency String? @default("USD")
+  DOB String?
 }
 
 model OTP {

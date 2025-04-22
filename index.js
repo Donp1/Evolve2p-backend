@@ -17,6 +17,7 @@ const updateUser = require("./routes/updateUser.js");
 const forgotPassword = require("./routes/forgotPassword");
 const checkToken = require("./routes/checkToken.js");
 const getUser = require("./routes/getUser.js");
+const kycVerification = require("./routes/kycVerification.js");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -41,6 +42,7 @@ app.use("/api/update-user", updateUser);
 app.use("/api/forgot-password", forgotPassword);
 app.use("/api/check-token", checkToken);
 app.use("/api/get-user", getUser);
+app.use("/api/kyc-verification", kycVerification);
 
 app.listen(PORT, (error) => {
   if (error) {
