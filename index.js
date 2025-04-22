@@ -6,6 +6,8 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const path = require("path");
+const http = require("http");
+const socketIo = require("socket.io");
 
 const register = require("./routes/register.js");
 const login = require("./routes/login.js");
@@ -18,8 +20,12 @@ const forgotPassword = require("./routes/forgotPassword");
 const checkToken = require("./routes/checkToken.js");
 const getUser = require("./routes/getUser.js");
 const kycVerification = require("./routes/kycVerification.js");
+const webHookVerify = require("./routes/webHookVerify.js");
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
 const PORT = process.env.PORT || 5000;
 
 //middlewares
@@ -43,8 +49,9 @@ app.use("/api/forgot-password", forgotPassword);
 app.use("/api/check-token", checkToken);
 app.use("/api/get-user", getUser);
 app.use("/api/kyc-verification", kycVerification);
+app.use("/api/web-hook-verification", webHookVerify(io));
 
-app.listen(PORT, (error) => {
+server.listen(PORT, (error) => {
   if (error) {
     console.log(error.message);
   } else {
