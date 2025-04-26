@@ -8,6 +8,7 @@ const router = express.Router();
 module.exports = (io) => {
   router.post("/", (req, res) => {
     const webHookData = req.body;
+    console.log(webHookData);
 
     io.emit("kyc-completed", {
       data: webHookData,
