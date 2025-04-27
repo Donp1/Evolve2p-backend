@@ -23,8 +23,6 @@ const kycVerification = require("./routes/kycVerification.js");
 const webHookVerify = require("./routes/webHookVerify.js");
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
 
 const PORT = process.env.PORT || 5000;
 
@@ -49,9 +47,8 @@ app.use("/api/forgot-password", forgotPassword);
 app.use("/api/check-token", checkToken);
 app.use("/api/get-user", getUser);
 app.use("/api/kyc-verification", kycVerification);
-app.use("/api/web-hook-verification", webHookVerify(io));
 
-server.listen(PORT, (error) => {
+app.listen(PORT, (error) => {
   if (error) {
     console.log(error.message);
   } else {

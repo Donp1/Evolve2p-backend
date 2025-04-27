@@ -55,7 +55,6 @@ router.post("/", isAuthenticated, async (req, res) => {
       );
 
       const verifyLinkJson = await createVerifyLink.json();
-      console.log(verifyLinkJson);
       return res.json({
         success: true,
         url: verifyLinkJson?.meta["one-time-link"],
