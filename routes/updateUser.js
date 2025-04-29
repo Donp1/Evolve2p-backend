@@ -15,7 +15,15 @@ router.put("/", isAuthenticated, async (req, res) => {
   const email = req?.payload?.email;
 
   if (!email) {
-    return res.status(400).json({ message: "Email is required" });
+    return res
+      .status(400)
+      .json({ error: true, message: "Email is required", email });
+  }
+
+  if (Object.keys(data).length === 0) {
+    return res
+      .status(400)
+      .json({ error: true, message: "Update data is required" });
   }
 
   try {
