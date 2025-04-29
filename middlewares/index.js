@@ -18,6 +18,7 @@ function isAuthenticated(req, res, next) {
       process.env.JWT_ACCESS_SECRET,
       (err, payload) => {
         if (err) return console.log(err);
+
         req.payload = payload;
       }
     );

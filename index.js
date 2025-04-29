@@ -12,15 +12,15 @@ const socketIo = require("socket.io");
 const register = require("./routes/register.js");
 const login = require("./routes/login.js");
 const sendOTP = require("./routes/sendOTP.js");
-const verifyEmail = require("./routes/verifyEmail");
+const verifyEmail = require("./routes/verifyEmail.js");
 const checkEmailExist = require("./routes/checkEmailExist.js");
 const checkUsernameExist = require("./routes/checkUsernameExist.js");
 const updateUser = require("./routes/updateUser.js");
-const forgotPassword = require("./routes/forgotPassword");
+const forgotPassword = require("./routes/forgotPassword.js");
 const checkToken = require("./routes/checkToken.js");
 const getUser = require("./routes/getUser.js");
-const kycVerification = require("./routes/kycVerification.js");
-const webHookVerify = require("./routes/webHookVerify.js");
+const kycGetLink = require("./routes/kycGetLink.js");
+const kycVerification = require("./routes/kycVerify.js");
 
 const app = express();
 
@@ -46,6 +46,7 @@ app.use("/api/update-user", updateUser);
 app.use("/api/forgot-password", forgotPassword);
 app.use("/api/check-token", checkToken);
 app.use("/api/get-user", getUser);
+app.use("/api/kyc-get-link", kycGetLink);
 app.use("/api/kyc-verification", kycVerification);
 
 app.listen(PORT, (error) => {
