@@ -20,12 +20,13 @@ route.post("/", async (req, res) => {
   try {
     const existingUser = await findUserByEmail(email);
 
+    console.log(existingUser);
+
     if (!existingUser) {
       return res
         .status(403)
         .json({ error: true, message: "Invalid login credentials." });
     }
-
     const validPassword = await bcrypt.compare(password, existingUser.password);
     if (!validPassword) {
       return res

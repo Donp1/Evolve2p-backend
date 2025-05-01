@@ -10,7 +10,6 @@ function findUserByEmail(email) {
 }
 
 function createUser(user) {
-  user.password = bcrypt.hashSync(user.password, 12);
   return db.user.create({
     data: user,
   });

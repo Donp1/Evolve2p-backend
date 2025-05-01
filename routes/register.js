@@ -8,7 +8,7 @@ const { db } = require("../db");
 const route = express.Router();
 
 route.post("/", async (req, res) => {
-  const { email, country, phone, password, username, verified } = req.body;
+  const { email, country, phone, password, username } = req.body;
   if (!email || !country || !phone || !password || !username) {
     return res
       .status(400)
@@ -33,16 +33,6 @@ route.post("/", async (req, res) => {
     });
 
     if (newUser) {
-      if (verified) {
-        await db.user.update({
-          where: {
-            email: newUser.email,
-          },
-          data: {
-            isVerified: true,
-          },
-        });
-      }
       const accessToken = generateAccessToken(newUser);
 
       return res.status(201).json({
