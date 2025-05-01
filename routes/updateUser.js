@@ -14,17 +14,19 @@ router.put("/", isAuthenticated, async (req, res) => {
   const data = req.body;
   const email = req?.payload?.email;
 
+  console.log(email);
+
   if (!email) {
     return res
       .status(400)
       .json({ error: true, message: "Email is required", email });
   }
 
-  if (Object.keys(data).length === 0) {
-    return res
-      .status(400)
-      .json({ error: true, message: "Update data is required" });
-  }
+  // if (Object.keys(data).length === 0) {
+  //   return res
+  //     .status(400)
+  //     .json({ error: true, message: "Update data is required" });
+  // }
 
   try {
     const userExits = await findUserByEmail(email);

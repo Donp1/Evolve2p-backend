@@ -44,6 +44,14 @@ function findOtpByEmail(email) {
   });
 }
 
+function deleteAccount(email) {
+  return db.user.delete({
+    where: {
+      email,
+    },
+  });
+}
+
 module.exports = {
   findUserByEmail,
   findUserById,
@@ -51,4 +59,5 @@ module.exports = {
   findOtpByEmail,
   createOTPUser,
   findUserByUsername,
+  deleteAccount,
 };
