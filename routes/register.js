@@ -8,11 +8,18 @@ const { db } = require("../db");
 const route = express.Router();
 
 route.post("/", async (req, res) => {
-  const { email, country, phone, password, username } = req.body;
+  const { email, country, phone, password, username, emailVerified } = req.body;
   if (!email || !country || !phone || !password || !username) {
     return res
       .status(400)
       .json({ error: true, message: "You must provide all information" });
+  }
+
+  let isEmailVerified;
+  if (emailVerified) {
+    isEmailVerified = emailVerified;
+  } else {
+    isEmailVerified = false;
   }
 
   try {
@@ -30,6 +37,7 @@ route.post("/", async (req, res) => {
       phone,
       password: securePassword,
       username,
+      emailVerified: isEmailVerified,
     });
 
     if (newUser) {
