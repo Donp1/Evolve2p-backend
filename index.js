@@ -22,6 +22,7 @@ const getUser = require("./routes/getUser.js");
 const kycGetLink = require("./routes/kycGetLink.js");
 const kycVerification = require("./routes/kycVerify.js");
 const deleteAccount = require("./routes/deleteAccount.js");
+const changePassword = require("./routes/changePassword.js");
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use("/api/get-user", getUser);
 app.use("/api/kyc-get-link", kycGetLink);
 app.use("/api/kyc-verification", kycVerification);
 app.use("/api/delete-account", deleteAccount);
+app.use("/api/change-password", changePassword);
 
 app.listen(PORT, (error) => {
   if (error) {

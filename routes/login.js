@@ -20,8 +20,6 @@ route.post("/", async (req, res) => {
   try {
     const existingUser = await findUserByEmail(email);
 
-    console.log(existingUser);
-
     if (!existingUser) {
       return res
         .status(403)
