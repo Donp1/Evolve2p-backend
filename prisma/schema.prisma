@@ -20,6 +20,7 @@ model User {
   pin        String?
   preferedCurrency String? @default("USD")
   DOB String?
+  secret String?
 }
 
 model OTP {

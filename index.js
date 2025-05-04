@@ -23,6 +23,8 @@ const kycGetLink = require("./routes/kycGetLink.js");
 const kycVerification = require("./routes/kycVerify.js");
 const deleteAccount = require("./routes/deleteAccount.js");
 const changePassword = require("./routes/changePassword.js");
+const generateSecret = require("./routes/generateSecrete.js");
+const verifySecrete = require("./routes/verifySecrete.js");
 
 const app = express();
 
@@ -52,6 +54,8 @@ app.use("/api/kyc-get-link", kycGetLink);
 app.use("/api/kyc-verification", kycVerification);
 app.use("/api/delete-account", deleteAccount);
 app.use("/api/change-password", changePassword);
+app.use("/api/generate-secrete", generateSecret);
+app.use("/api/verify-secrete", verifySecrete);
 
 app.listen(PORT, (error) => {
   if (error) {
