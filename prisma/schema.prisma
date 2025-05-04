@@ -21,6 +21,8 @@ model User {
   preferedCurrency String? @default("USD")
   DOB String?
   secret String?
+  is2faEnabled Boolean? @default(false)
+  authType String? 
 }
 
 model OTP {
