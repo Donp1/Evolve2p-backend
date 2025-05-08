@@ -25,6 +25,7 @@ const deleteAccount = require("./routes/deleteAccount.js");
 const changePassword = require("./routes/changePassword.js");
 const generateSecret = require("./routes/generateSecrete.js");
 const verifySecrete = require("./routes/verifySecrete.js");
+const checkPin = require("./routes/checkPin.js");
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use("/api/check-username-exist", checkUsernameExist);
 app.use("/api/update-user", updateUser);
 app.use("/api/forgot-password", forgotPassword);
 app.use("/api/check-token", checkToken);
+app.use("/api/check-pin", checkPin);
 app.use("/api/get-user", getUser);
 app.use("/api/kyc-get-link", kycGetLink);
 app.use("/api/kyc-verification", kycVerification);

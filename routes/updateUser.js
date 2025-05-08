@@ -35,6 +35,12 @@ router.put("/", isAuthenticated, async (req, res) => {
         .status(400)
         .json({ error: true, message: "Invalid email address provided" });
 
+    if (data.pin) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPin = await bcrypt.hash(data.pin, salt);
+      data.pin = hashedPin;
+    }
+
     const updateUser = await db.user.update({
       where: {
         email,

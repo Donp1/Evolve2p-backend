@@ -14,13 +14,13 @@ const router = express.Router();
 
 router.post("/", isAuthenticated, async (req, res) => {
   const { email } = req.payload;
-  const user = await findUserByEmail(email);
-
-  if (!user) {
-    return res.status(404).json({ error: true, message: "User not found" });
-  }
-
   try {
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+      return res.status(404).json({ error: true, message: "User not found" });
+    }
+
     const secret = speakeasy.generateSecret({
       length: 20,
       name: "Evolve2p: " + email,
