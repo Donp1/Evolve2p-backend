@@ -9,7 +9,7 @@ const { findUserByEmail } = require("../utils/users");
 const router = express.Router();
 
 router.post("/", isAuthenticated, async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.payload;
   if (!email) {
     return res.status(400).json({ error: true, message: "Provide an email" });
   }
@@ -18,6 +18,7 @@ router.post("/", isAuthenticated, async (req, res) => {
     if (userExist) {
       userExist.password = undefined;
       userExist.secret = undefined;
+      userExist.pin = undefined;
       return res
         .status(200)
         .json({ success: true, message: "Valid user", user: userExist });
