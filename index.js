@@ -2,12 +2,9 @@ const dotenv = require("dotenv");
 dotenv.config();
 const express = require("express");
 var cors = require("cors");
-const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const path = require("path");
-const http = require("http");
-const socketIo = require("socket.io");
 
 const register = require("./routes/register.js");
 const login = require("./routes/login.js");
@@ -26,6 +23,7 @@ const changePassword = require("./routes/changePassword.js");
 const generateSecret = require("./routes/generateSecrete.js");
 const verifySecrete = require("./routes/verifySecrete.js");
 const checkPin = require("./routes/checkPin.js");
+const sendSmsOtp = require("./routes/sendSmsOtp.js");
 
 const app = express();
 
@@ -41,23 +39,24 @@ const swaggerDocument = YAML.load(path.join(__dirname, "swagger.yaml"));
 // swagger middleware
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 //Routes
-app.use("/api/auth/register", register);
-app.use("/api/auth/login", login);
-app.use("/api/send-otp", sendOTP);
-app.use("/api/verify-email", verifyEmail);
-app.use("/api/check-email-exist", checkEmailExist);
-app.use("/api/check-username-exist", checkUsernameExist);
-app.use("/api/update-user", updateUser);
-app.use("/api/forgot-password", forgotPassword);
-app.use("/api/check-token", checkToken);
-app.use("/api/check-pin", checkPin);
-app.use("/api/get-user", getUser);
-app.use("/api/kyc-get-link", kycGetLink);
-app.use("/api/kyc-verification", kycVerification);
-app.use("/api/delete-account", deleteAccount);
-app.use("/api/change-password", changePassword);
-app.use("/api/generate-secrete", generateSecret);
-app.use("/api/verify-secrete", verifySecrete);
+app.use("/api/auth/register", register); // done
+app.use("/api/auth/login", login); // done
+app.use("/api/send-otp", sendOTP); // done
+app.use("/api/verify-email", verifyEmail); // done
+app.use("/api/check-email-exist", checkEmailExist); // done
+app.use("/api/check-username-exist", checkUsernameExist); // done
+app.use("/api/update-user", updateUser); // done
+app.use("/api/forgot-password", forgotPassword); // done
+app.use("/api/check-token", checkToken); //done
+app.use("/api/check-pin", checkPin); // done
+app.use("/api/get-user", getUser); // done
+app.use("/api/kyc-get-link", kycGetLink); // done
+app.use("/api/kyc-verification", kycVerification); // done
+app.use("/api/delete-account", deleteAccount); // done
+app.use("/api/change-password", changePassword); // done
+app.use("/api/generate-secrete", generateSecret); // done
+app.use("/api/verify-secrete", verifySecrete); // done
+app.use("/api/send-sms-otp", sendSmsOtp);
 
 app.listen(PORT, (error) => {
   if (error) {

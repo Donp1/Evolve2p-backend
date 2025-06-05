@@ -76,7 +76,7 @@ paths:
             schema:
               type: object
               properties:
-                username:
+                email:
                   type: string
                 password:
                   type: string
@@ -307,5 +307,217 @@ paths:
           description: Token is valid.
         "401":
           description: Token is invalid.
+        "500":
+          description: Internal server error.
+  /api/check-pin:
+    post:
+      tags:
+        - User
+      summary: Checks if the pin is valid.
+      description: This endpoint allows you to check if the pin is valid.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pin:
+                  type: string
+                email:
+                  type: string
+              required:
+                - pin
+                - email
+      responses:
+        "200":
+          description: Pin is valid.
+        "401":
+          description: Pin is invalid.
+        "500":
+          description: Internal server error.
+  /api/delete-account:
+    delete:
+      tags:
+        - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
+      summary: Deletes the user account.
+      description: This endpoint allows you to delete the user account by providing the user Email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Account deleted successfully.
+        "404":
+          description: Provide an Email address.
+        "400":
+          description: Email provided do not exist.
+        "500":
+          description: Internal server error.
+  /api/change-password:
+    put:
+      tags:
+        - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
+      summary: Changes the user's password.
+      description: This endpoint allows you to change the user's password by providing the user Email and the new password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+              required:
+                - current_password
+                - new_password
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Password updated successfully.
+        "400":
+          description: User not found.
+        "404":
+          description: Provide current and new password.
+        "500":
+          description: Internal server error.
+  /api/kyc-get-link:
+    post:
+      tags:
+        - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
+      summary: Gets the KYC link for the user.
+      description: This endpoint allows you to get the KYC link for the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: KYC link retrieved successfully.
+        "404":
+          description: User not found.
+        "500":
+          description: Internal server error.
+  /api/kyc-verification:
+    post:
+      tags:
+        - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
+      summary: Verifies the KYC for the user.
+      description: This endpoint allows you to verify the KYC for the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inquiry_id:
+                  type: object
+              required:
+                - inquiry_id
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: KYC verified successfully.
+        "404":
+          description: User not found.
+        "500":
+          description: Internal server error.
+  /api/generate-secrete:
+    post:
+      tags:
+        - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
+      summary: Generates a secret key for the user.
+      description: This endpoint allows you to generate a secret key for the user for 2fa authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Secret key generated successfully.
+        "404":
+          description: User not found.
+        "500":
+          description: Internal server error.
+  /api/verify-secrete:
+    post:
+      tags:
+        - User
+      security:
+        - BearerAuth: [] # This security is applied to this specific endpoint
+      summary: Verifies the secret key for the user.
+      description: This endpoint allows you to verify the secret key for the user for 2fa authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required:
+                - token
+      headers:
+        Authorization:
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token verified successfully.
+        "404":
+          description: User not found.
         "500":
           description: Internal server error.
