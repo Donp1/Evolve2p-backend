@@ -17,9 +17,11 @@ function isAuthenticated(req, res, next) {
       token,
       process.env.JWT_ACCESS_SECRET,
       (err, payload) => {
-        if (err) return console.log(err);
+        if (err)
+          return res.status(401).json({ error: true, message: err.message });
 
         req.payload = payload;
+        return next();
       }
     );
   } catch (err) {
@@ -31,8 +33,6 @@ function isAuthenticated(req, res, next) {
     // console.log(err);
     return res.status(401).json({ error: true, message: "Un-Authorized " });
   }
-
-  return next();
 }
 
 module.exports = {
