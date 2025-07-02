@@ -8,21 +8,23 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  name       String?
-  phone      String
-  password   String
-  username   String
-  country    String
-  kycVerified Boolean? @default(false)
-  emailVerified Boolean? @default(false)
-  pin        String?
-  preferedCurrency String? @default("USD")
-  DOB String?
-  secret String?
-  is2faEnabled Boolean? @default(false)
-  authType String? 
+  id               String        @id @default(uuid())
+  email            String        @unique
+  name             String?
+  phone            String
+  password         String
+  username         String
+  country          String
+  kycVerified      Boolean?      @default(false)
+  emailVerified    Boolean?      @default(false)
+  pin              String?
+  preferedCurrency String?       @default("USD")
+  DOB              String?
+  secret           String?
+  is2faEnabled     Boolean?      @default(false)
+  authType         String?
+  wallets          Wallet[]
+  transactions     Transaction[]
 }
 
 model OTP {
@@ -30,4 +32,53 @@ model OTP {
   email     String   @unique
   otp       Int?
   expiresAt DateTime @default(now())
+}
+
+// cypto models
+model Wallet {
+  id           String        @id @default(uuid())
+  userId       String
+  currency     String
+  address      String
+  addressIndex Int // used with XPUB derivation
+  balance      Decimal       @default(0)
+  createdAt    DateTime      @default(now())
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id        String            @id @default(uuid())
+  userId    String
+  walletId  String
+  type      TransactionType
+  amount    Decimal
+  toAddress String
+  txHash    String?           @unique
+  status    TransactionStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  user      User              @relation(fields: [userId], references: [id])
+  wallet    Wallet            @relation(fields: [walletId], references: [id])
+}
+
+// enums
+enum OfferType {
+  BUY
+  SELL
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  ESCROW_IN
+  ESCROW_OUT
+  TRADE_PAYMENT
+  TRADE_RELEASE
+  TRADE_REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }

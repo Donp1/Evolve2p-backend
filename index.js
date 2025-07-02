@@ -24,6 +24,8 @@ const generateSecret = require("./routes/generateSecrete.js");
 const verifySecrete = require("./routes/verifySecrete.js");
 const checkPin = require("./routes/checkPin.js");
 const sendSmsOtp = require("./routes/sendSmsOtp.js");
+const send = require("./routes/send.js");
+const deposit = require("./routes/deposit.js");
 
 const app = express();
 
@@ -57,6 +59,8 @@ app.use("/api/change-password", changePassword); // done
 app.use("/api/generate-secrete", generateSecret); // done
 app.use("/api/verify-secrete", verifySecrete); // done
 app.use("/api/send-sms-otp", sendSmsOtp);
+app.use("/api/send", send);
+app.use("/api/deposit", deposit);
 
 app.listen(PORT, (error) => {
   if (error) {
