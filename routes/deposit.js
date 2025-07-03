@@ -39,6 +39,15 @@ router.post("/", async (req, res) => {
     //     to: body.to || body.address,
     //     timestamp: body.timestamp || new Date().toISOString(),
 
+    await db.wallet.update({
+      where: { id: wallet.id },
+      data: {
+        balance: {
+          increment: body.amount || body.value,
+        },
+      },
+    });
+
     await db.transaction.create({
       data: {
         amount: body.amount || body.value,
