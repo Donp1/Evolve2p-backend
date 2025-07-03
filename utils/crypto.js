@@ -273,7 +273,7 @@ async function pollTRC20Deposits(assetType = "USDT") {
       const wallet = walletMap.get(toAddress);
       if (!wallet) continue;
 
-      const existing = await db.transaction.findUnique({
+      const existing = await db.transaction.findFirst({
         where: { txHash: txId },
       });
       if (existing) continue;
