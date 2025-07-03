@@ -101,46 +101,6 @@ async function sendETH(fromPrivateKey, toAddress, amount) {
   console.log(data);
   return data;
 }
-
-async function sendTRC20(fromPrivateKey, toAddress, amount, contractAddress) {
-  try {
-    const tronWeb = new TronWeb({
-      fullHost: "https://api.shasta.trongrid.io",
-      privateKey: fromPrivateKey,
-    });
-
-    const contract = await tronWeb.contract().at(contractAddress);
-    const decimals = await contract.decimals().call();
-    // 1_000_000
-    const tx = await contract.methods
-      .transfer(toAddress, BigInt(amount) * 10n ** BigInt(decimals))
-      .send();
-    console.log("✅ TX ID:", tx);
-    return { txId: tx };
-  } catch (error) {
-    console.log(error);
-  }
-
-  // const res = await fetch("https://api.tatum.io/v3/tron/transaction/trc20", {
-  //   method: "POST",
-  //   headers: {
-  //     "x-api-key": process.env.TATUM_API_KEY,
-  //     "Content-Type": "application/json",
-  //   },
-  //   body: JSON.stringify({
-  //     to: toAddress,
-  //     contractAddress, // USDT on Tron
-  //     chain: "TRON",
-  //     amount, // sending 5 USDT
-  //     fromPrivateKey,
-  //     digits: 6, // USDT has 6 decimals
-  //   }),
-  // });
-
-  // const data = await res.json();
-  // console.log(data);
-  // return data;
-}
 // assetType: 'BTC' | 'ETH'
 async function subscribeToAddressWebhook(userAddress, assetType) {
   const TATUM_API_URL = "https://api.tatum.io/v3/subscription";
@@ -343,11 +303,14 @@ async function pollTRC20Deposits(userAddress, assetType = "USDT") {
 
       // Send webhook
       try {
-        const webhookRes = await fetch("http://localhost:5000/api/deposit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const webhookRes = await fetch(
+          "https://evolve2p-backend.onrender.com/api/deposit",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
 
         if (webhookRes.ok) {
           console.log("✅ Webhook sent");
@@ -383,7 +346,6 @@ module.exports = {
   generateIndexFromUserId,
   sendBTC,
   sendETH,
-  sendTRC20,
   ERC20_CONTRACTS,
   subscribeToAddressWebhook,
   sendSweepTransaction,
