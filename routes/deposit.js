@@ -11,6 +11,7 @@ router.post("/", async (req, res) => {
     const txId = isTatum ? body.txId : body.id;
 
     console.log("Data: ", body);
+    console.log("txId: ", txId);
 
     const existing = await db.transaction.findFirst({
       where: { txHash: txId },
