@@ -7,14 +7,11 @@ router.post("/", async (req, res) => {
   const body = req.body;
 
   try {
-    const isTatum = body.chain && body.txId && body.to;
-    const txId = isTatum ? body.txId : body.id;
-
     console.log("Data: ", body);
-    console.log("txId: ", txId);
+    console.log("txId: ", body.txId);
 
     const existing = await db.transaction.findFirst({
-      where: { txHash: txId },
+      where: { txHash: body.txId },
     });
     if (existing) return res.status(200).json({ message: "Already processed" });
 
@@ -62,7 +59,7 @@ router.post("/", async (req, res) => {
         toAddress: body.to || body.address,
         type: "DEPOSIT",
         status: "COMPLETED",
-        txHash: txId,
+        txHash: body.txId,
         userId: wallet.userId,
         walletId: wallet.id,
       },
