@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
     const isTatum = body.chain && body.txId && body.to;
     const txId = isTatum ? body.txId : body.id;
 
-    console.log(body);
+    console.log("Data: ", body);
 
     const existing = await db.transaction.findFirst({
       where: { txHash: txId },
