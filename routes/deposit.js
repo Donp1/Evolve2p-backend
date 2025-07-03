@@ -10,15 +10,22 @@ router.post("/", async (req, res) => {
     const isTatum = body.chain && body.txId && body.to;
     const txId = isTatum ? body.txId : body.id;
 
+    console.log(body);
+
     const existing = await db.transaction.findFirst({
       where: { txHash: txId },
     });
     if (existing) return res.status(200).json({ message: "Already processed" });
 
     const wallet = await db.wallet.findFirst({
-      where: { address: body.to || body.address },
+      where: {
+        address: body.to || body.address,
+        currency: body.asset || "USDT",
+      },
       include: { user: true },
     });
+
+    console.log(wallet.currency);
 
     if (!wallet) {
       console.error(

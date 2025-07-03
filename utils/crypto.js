@@ -123,7 +123,7 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
     type: subscriptionType,
     attr: {
       ...attr,
-      url: `https://evolve2p-backend.onrender.com/${assetType.toLowerCase()}`,
+      url: `https://evolve2p-backend.onrender.com/api/deposit`, // Your webhook URL
     },
   };
 
@@ -245,11 +245,14 @@ const getUserPrivateKey = async (asset, index) => {
 const DECIMALS = 18n; // For USDT
 const POLL_INTERVAL_MS = 8000;
 
-async function pollTRC20Deposits(userAddress, assetType = "USDT") {
-  // In-memory cache of seen transaction IDs
-  // let seenTxs = new Set();
+async function pollTRC20Deposits(assetType = "USDT") {
+  const walletMap = new Map();
+  const wallets = await db.wallet.findMany();
+  wallets.forEach((wallet) => {
+    walletMap.set(wallet.address, wallet);
+  });
+
   const CONTRACT_ADDRESS = ERC20_CONTRACTS[assetType.toUpperCase()];
-  const USER_ADDRESS = userAddress;
 
   if (!CONTRACT_ADDRESS)
     throw new Error(`Unsupported TRC20 asset: ${assetType}`);
@@ -267,7 +270,8 @@ async function pollTRC20Deposits(userAddress, assetType = "USDT") {
 
       const toAddress = TronWeb.address.fromHex(to);
 
-      if (toAddress !== USER_ADDRESS) continue;
+      const wallet = walletMap.get(toAddress);
+      if (!wallet) continue;
 
       const existing = await db.transaction.findUnique({
         where: { txHash: txId },
@@ -287,7 +291,7 @@ async function pollTRC20Deposits(userAddress, assetType = "USDT") {
         id: txId,
         address: toAddress,
         type: "incoming",
-        asset: assetType,
+        asset: assetType.toUpperCase(),
         network: "TRON",
         amount: amount.toFixed(6),
         txId,
@@ -300,17 +304,14 @@ async function pollTRC20Deposits(userAddress, assetType = "USDT") {
       };
 
       console.log("📥 New deposit detected:", payload);
-
+      // https://evolve2p-backend.onrender.com/api/deposit
       // Send webhook
       try {
-        const webhookRes = await fetch(
-          "https://evolve2p-backend.onrender.com/api/deposit",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }
-        );
+        const webhookRes = await fetch("http://localhost:5000/api/deposit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
         if (webhookRes.ok) {
           console.log("✅ Webhook sent");
@@ -326,19 +327,11 @@ async function pollTRC20Deposits(userAddress, assetType = "USDT") {
   }
 }
 
-startPolling();
+// startPolling();
 
-function startPolling(
-  userAddress = "TWw6kcdyozyMAPMHRa8xhHnB8QCFnEbS9k",
-  assetType = "USDT"
-) {
-  console.log(
-    `📡 Starting TRC20 monitoring for ${assetType} address: ${userAddress}`
-  );
-  setInterval(
-    () => pollTRC20Deposits(userAddress, assetType),
-    POLL_INTERVAL_MS
-  );
+function startPolling(assetType = "USDC") {
+  console.log(`📡 Starting TRC20 monitoring for ${assetType}`);
+  setInterval(() => pollTRC20Deposits(assetType), POLL_INTERVAL_MS);
 }
 
 module.exports = {
@@ -348,6 +341,7 @@ module.exports = {
   sendETH,
   ERC20_CONTRACTS,
   subscribeToAddressWebhook,
+  startPolling,
   sendSweepTransaction,
   getUserPrivateKey,
 };

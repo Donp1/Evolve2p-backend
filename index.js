@@ -6,6 +6,8 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const path = require("path");
 
+const { startPolling, ERC20_CONTRACTS } = require("./utils/crypto.js");
+
 const register = require("./routes/register.js");
 const login = require("./routes/login.js");
 const sendOTP = require("./routes/sendOTP.js");
@@ -69,3 +71,5 @@ app.listen(PORT, (error) => {
     console.log(`Server running on PORT ${PORT}`);
   }
 });
+
+Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));

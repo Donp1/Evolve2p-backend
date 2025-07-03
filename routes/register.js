@@ -4,7 +4,11 @@ const bcrypt = require("bcryptjs");
 const { findUserByEmail, createUser } = require("../utils/users");
 const { generateAccessToken } = require("../utils");
 const { db } = require("../db");
-const { generateIndexFromUserId, generateAddress } = require("../utils/crypto");
+const {
+  generateIndexFromUserId,
+  generateAddress,
+  subscribeToAddressWebhook,
+} = require("../utils/crypto");
 
 const route = express.Router();
 
@@ -45,8 +49,6 @@ route.post("/", async (req, res) => {
     const userId = newUser.id;
     const userIndex = generateIndexFromUserId(userId);
 
-    console.log("userIndex: ", userIndex);
-
     // generate crypto wallet address
     const btcAddress = await generateAddress(
       "BTC",
@@ -70,11 +72,17 @@ route.post("/", async (req, res) => {
       let address;
       if (symbol === "BTC") {
         address = btcAddress;
+        subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "ETH") {
         address = ethAddress;
+        subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "USDT" || symbol === "USDC") {
         address = tronAddress;
       }
+
+      if (symbol === "BTC" || symbol === "ETH") {
+      }
+
       await db.wallet.create({
         data: {
           address,
