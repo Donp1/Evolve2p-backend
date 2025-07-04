@@ -6,6 +6,11 @@ function findUserByEmail(email) {
     where: {
       email,
     },
+
+    include: {
+      wallets: true,
+      transactions: true,
+    },
   });
 }
 
@@ -24,6 +29,10 @@ function findUserById(id) {
     where: {
       id,
     },
+    include: {
+      wallets: true,
+      transactions: true,
+    },
   });
 }
 
@@ -31,6 +40,10 @@ function findUserByUsername(username) {
   return db.user.findFirst({
     where: {
       username,
+    },
+    include: {
+      wallets: true,
+      transactions: true,
     },
   });
 }
