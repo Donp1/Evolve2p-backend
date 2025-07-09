@@ -48,17 +48,18 @@ model Wallet {
 }
 
 model Transaction {
-  id        String            @id @default(uuid())
-  userId    String
-  walletId  String
-  type      TransactionType
-  amount    Decimal
-  toAddress String
-  txHash    String?           @unique
-  status    TransactionStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  user      User              @relation(fields: [userId], references: [id])
-  wallet    Wallet            @relation(fields: [walletId], references: [id])
+  id          String            @id @default(uuid())
+  userId      String
+  walletId    String
+  type        TransactionType
+  amount      Decimal
+  toAddress   String
+  fromAddress String
+  txHash      String?           @unique
+  status      TransactionStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  user        User              @relation(fields: [userId], references: [id])
+  wallet      Wallet            @relation(fields: [walletId], references: [id])
 }
 
 // enums
@@ -69,7 +70,9 @@ enum OfferType {
 
 enum TransactionType {
   DEPOSIT
-  WITHDRAWAL
+  TRANSFER
+  INTERNAL_TRANSFER
+  WITHSRAWAL
   ESCROW_IN
   ESCROW_OUT
   TRADE_PAYMENT
