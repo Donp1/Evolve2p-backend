@@ -24,8 +24,6 @@ router.post("/", async (req, res) => {
       include: { user: true },
     });
 
-    console.log(wallet.currency);
-
     if (!wallet) {
       console.error(
         "❌ Wallet not found for address:",
@@ -54,17 +52,37 @@ router.post("/", async (req, res) => {
       },
     });
 
+    const data = {
+      amount: body.amount || body.value,
+      toAddress: body.address || body.to,
+      type: "DEPOSIT",
+      status: "COMPLETED",
+      txHash: body.txId,
+      userId: wallet.userId,
+      walletId: wallet.id,
+      fromAddress: body.counterAddress,
+    };
+
+    if (body.asset == "BTC") {
+      try {
+        const txDetails = await fetch(
+          `https://api.tatum.io/v3/bitcoin/transaction/${body.txId}`,
+          {
+            headers: {
+              "x-api-key": process.env.TATUM_API_KEY,
+            },
+          }
+        );
+        const tx = await txDetails.json();
+        const fromAddress = tx.inputs[0]?.coin?.address;
+        data.fromAddress = fromAddress || body.counterAddress;
+      } catch (err) {
+        console.error("❌ error:", err.message);
+      }
+    }
+
     await db.transaction.create({
-      data: {
-        amount: body.amount || body.value,
-        toAddress: body.address || body.to,
-        type: "DEPOSIT",
-        status: "COMPLETED",
-        txHash: body.txId,
-        userId: wallet.userId,
-        walletId: wallet.id,
-        fromAddress: body.counterAddress,
-      },
+      data,
     });
 
     console.log("📬 Webhook received:", body);

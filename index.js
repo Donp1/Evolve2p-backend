@@ -66,41 +66,32 @@ app.use("/api/verify-secrete", verifySecrete); // done
 app.use("/api/send-sms-otp", sendSmsOtp);
 app.use("/api/send", send);
 
-app.listen(PORT, (error) => {
-  if (error) {
-    console.log(error.message);
-  } else {
-    console.log(`Server running on PORT ${PORT}`);
-  }
-});
-
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
-
-// (async () => {
-//   try {
-//     // const webhookRes = await axios.post(
-//     //   "https://evolve2p-backend.onrender.com/api/deposit",
-//     //   payload,
-//     //   {
-//     //     headers: { "Content-Type": "application/json" },
-//     //   }
-//     // );
-//     const webhookRes = await fetch(
-//       "https://evolve2p-backend.onrender.com/api/deposit",
-//       {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({}),
-//       }
-//     );
-//     const data = await webhookRes.json();
-//     console.log(data);
-//     if (webhookRes.ok) {
-//       console.log("✅ Webhook sent");
-//     } else {
-//       console.warn("⚠️ Webhook failed:", await webhookRes.text());
-//     }
-//   } catch (err) {
-//     console.error("❌ Webhook error:", err.message);
+// app.listen(PORT, (error) => {
+//   if (error) {
+//     console.log(error.message);
+//   } else {
+//     console.log(`Server running on PORT ${PORT}`);
 //   }
-// })();
+// });
+
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+
+(async () => {
+  try {
+    const txDetails = await fetch(
+      `https://api.tatum.io/v3/bitcoin/transaction/3be873da0652dd4c873477d48d740e740c895f39ca0648d392b83e388ed640e3`,
+      {
+        headers: {
+          "x-api-key": process.env.TATUM_API_KEY,
+        },
+      }
+    );
+    const tx = await txDetails.json();
+    const fromAddress = tx.inputs[0]?.coin?.address;
+    console.log(fromAddress);
+  } catch (err) {
+    console.error("❌ error:", err.message);
+  }
+})();
+
+// tb1qf7exflc3r6mk7hjha8lh5zsfhj9sqst35h0274
