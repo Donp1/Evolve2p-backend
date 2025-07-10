@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
 
     const wallet = await db.wallet.findFirst({
       where: {
-        address: body.to || body.address,
+        address: body.address || body.to,
         currency: body.asset || "USDT",
       },
       include: { user: true },
@@ -57,12 +57,13 @@ router.post("/", async (req, res) => {
     await db.transaction.create({
       data: {
         amount: body.amount || body.value,
-        toAddress: body.to || body.address,
+        toAddress: body.address || body.to,
         type: "DEPOSIT",
         status: "COMPLETED",
         txHash: body.txId,
         userId: wallet.userId,
         walletId: wallet.id,
+        fromAddress: body.counterAddress,
       },
     });
 
