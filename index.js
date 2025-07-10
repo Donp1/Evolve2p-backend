@@ -6,6 +6,8 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const path = require("path");
 
+const axios = require("axios");
+
 const { startPolling, ERC20_CONTRACTS } = require("./utils/crypto.js");
 
 const register = require("./routes/register.js");
