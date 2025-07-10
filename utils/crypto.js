@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const { TronWeb } = require("tronweb");
+const cron = require("node-cron");
 
 const crypto = require("crypto");
 const { db } = require("../db");
@@ -246,18 +247,17 @@ const DECIMALS = 18n; // For USDT
 const POLL_INTERVAL_MS = 8000;
 
 async function pollTRC20Deposits(assetType = "USDT") {
-  const walletMap = new Map();
-  const wallets = await db.wallet.findMany();
-  wallets.forEach((wallet) => {
-    walletMap.set(wallet.address, wallet);
-  });
-
-  const CONTRACT_ADDRESS = ERC20_CONTRACTS[assetType.toUpperCase()];
-
-  if (!CONTRACT_ADDRESS)
-    throw new Error(`Unsupported TRC20 asset: ${assetType}`);
-
   try {
+    const walletMap = new Map();
+    const wallets = await db.wallet.findMany();
+    wallets.forEach((wallet) => {
+      walletMap.set(wallet.address, wallet);
+    });
+
+    const CONTRACT_ADDRESS = ERC20_CONTRACTS[assetType.toUpperCase()];
+
+    if (!CONTRACT_ADDRESS)
+      throw new Error(`Unsupported TRC20 asset: ${assetType}`);
     const url = `https://api.shasta.trongrid.io/v1/contracts/${CONTRACT_ADDRESS}/events?event_name=Transfer&only_confirmed=true`;
     const res = await fetch(url);
     const { data: events } = await res.json();
@@ -315,7 +315,7 @@ async function pollTRC20Deposits(assetType = "USDT") {
             body: JSON.stringify(payload),
           }
         );
-
+        console.log(webhookRes);
         if (webhookRes.ok) {
           console.log("✅ Webhook sent");
         } else {
@@ -332,9 +332,13 @@ async function pollTRC20Deposits(assetType = "USDT") {
 
 // startPolling();
 
+// function startPolling(assetType = "USDC") {
+//   console.log(`📡 Starting TRC20 monitoring for ${assetType}`);
+//   setInterval(() => pollTRC20Deposits(assetType), POLL_INTERVAL_MS);
+// }
 function startPolling(assetType = "USDC") {
   console.log(`📡 Starting TRC20 monitoring for ${assetType}`);
-  setInterval(() => pollTRC20Deposits(assetType), POLL_INTERVAL_MS);
+  cron.schedule("*/8 * * * * *", () => pollTRC20Deposits(assetType));
 }
 
 module.exports = {

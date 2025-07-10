@@ -6,6 +6,11 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const body = req.body;
 
+  if (!body) {
+    console.error("❌ No body in request");
+    return res.status(400).json({ message: "No body in request" });
+  }
+
   try {
     console.log("Data: ", body);
     console.log("txId: ", body.txId);
@@ -66,7 +71,7 @@ router.post("/", async (req, res) => {
     });
 
     console.log("📬 Webhook received:", body);
-    res.status(200).json({ message: "Processed" });
+    res.status(200).json({ success: true, message: "Processed" });
   } catch (err) {
     console.error("❌ Webhook error:", err.message);
     res.status(500).json({ message: "Server error" });

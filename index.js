@@ -43,6 +43,7 @@ const swaggerDocument = YAML.load(path.join(__dirname, "swagger.yaml"));
 // swagger middleware
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 //Routes
+app.use("/api/deposit", deposit);
 app.use("/api/auth/register", register); // done
 app.use("/api/auth/login", login); // done
 app.use("/api/send-otp", sendOTP); // done
@@ -62,7 +63,6 @@ app.use("/api/generate-secrete", generateSecret); // done
 app.use("/api/verify-secrete", verifySecrete); // done
 app.use("/api/send-sms-otp", sendSmsOtp);
 app.use("/api/send", send);
-app.use("/api/deposit", deposit);
 
 app.listen(PORT, (error) => {
   if (error) {

@@ -53,10 +53,12 @@ router.post("/", isAuthenticated, async (req, res) => {
 
     // ✅ INTERNAL TRANSFER
     if (toWallet) {
-      if (fromWallet.balance < amountNum)
+      if (fromWallet.balance < amountNum) {
+        console.log(fromWallet.balance, amountNum);
         return res
           .status(400)
           .json({ error: true, message: "Insufficient balance" });
+      }
 
       await db.$transaction([
         db.wallet.update({
@@ -75,7 +77,9 @@ router.post("/", isAuthenticated, async (req, res) => {
             amount: Number(amountNum.toFixed(8)),
             toAddress: toWallet.address,
             fromAddress: fromWallet.address,
-            txHash: "N/A",
+            txHash: `internal_${Date.now()}_${Math.random()
+              .toString(36)
+              .slice(2, 8)}`,
             status: "COMPLETED",
           },
         }),
