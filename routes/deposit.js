@@ -13,7 +13,8 @@ router.post("/", async (req, res) => {
     const existing = await db.transaction.findFirst({
       where: { txHash: body.txId },
     });
-    if (existing) return res.status(200).json({ message: "Already processed" });
+    if (existing)
+      return res.status(400).json({ erro: true, message: "Already processed" });
 
     const wallet = await db.wallet.findFirst({
       where: {
@@ -30,7 +31,7 @@ router.post("/", async (req, res) => {
         "❌ Wallet not found for address:",
         body.to || body.address
       );
-      return res.status(404).json({ message: "Wallet not found" });
+      return res.status(404).json({ error: true, message: "Wallet not found" });
     }
 
     // id: txId,

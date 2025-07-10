@@ -75,3 +75,32 @@ app.listen(PORT, (error) => {
 });
 
 Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+
+// (async () => {
+//   try {
+//     // const webhookRes = await axios.post(
+//     //   "https://evolve2p-backend.onrender.com/api/deposit",
+//     //   payload,
+//     //   {
+//     //     headers: { "Content-Type": "application/json" },
+//     //   }
+//     // );
+//     const webhookRes = await fetch(
+//       "https://evolve2p-backend.onrender.com/api/deposit",
+//       {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({}),
+//       }
+//     );
+//     const data = await webhookRes.json();
+//     console.log(data);
+//     if (webhookRes.ok) {
+//       console.log("✅ Webhook sent");
+//     } else {
+//       console.warn("⚠️ Webhook failed:", await webhookRes.text());
+//     }
+//   } catch (err) {
+//     console.error("❌ Webhook error:", err.message);
+//   }
+// })();

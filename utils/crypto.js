@@ -10,7 +10,7 @@ const { db } = require("../db");
 
 const ERC20_CONTRACTS = {
   USDT: process.env.CONTRACT_ADDRESS_USDT,
-  USDC: process.env.CONTRACT_ADDRESS_USDC,
+  // USDC: process.env.CONTRACT_ADDRESS_USDC,
 };
 
 async function generateAddress(currency, xpub, index) {
@@ -305,16 +305,8 @@ async function pollTRC20Deposits(assetType = "USDT") {
       };
 
       console.log("📥 New deposit detected:", payload);
-      // https://evolve2p-backend.onrender.com/api/deposit
-      // Send webhook
+
       try {
-        // const webhookRes = await axios.post(
-        //   "https://evolve2p-backend.onrender.com/api/deposit",
-        //   payload,
-        //   {
-        //     headers: { "Content-Type": "application/json" },
-        //   }
-        // );
         const webhookRes = await fetch(
           "https://evolve2p-backend.onrender.com/api/deposit",
           {
@@ -323,7 +315,7 @@ async function pollTRC20Deposits(assetType = "USDT") {
             body: JSON.stringify(payload),
           }
         );
-        console.log(webhookRes);
+
         if (webhookRes.ok) {
           console.log("✅ Webhook sent");
         } else {
