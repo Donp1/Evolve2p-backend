@@ -6,7 +6,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const body = req.body;
 
-  if (!body) {
+  if (!body.txId) {
     console.error("❌ No body in request");
     return res.status(400).json({ message: "No body in request" });
   }
