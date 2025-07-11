@@ -25,6 +25,7 @@ model User {
   authType         String?
   wallets          Wallet[]
   transactions     Transaction[]
+  swaps            Swap[]
 }
 
 model OTP {
@@ -60,6 +61,17 @@ model Transaction {
   createdAt   DateTime          @default(now())
   user        User              @relation(fields: [userId], references: [id])
   wallet      Wallet            @relation(fields: [walletId], references: [id])
+}
+
+model Swap {
+  id         String   @id @default(uuid())
+  userId     String
+  fromCoin   String // e.g. BTC
+  toCoin     String // e.g. USDT
+  fromAmount Float
+  toAmount   Float
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 // enums

@@ -29,6 +29,7 @@ const verifySecrete = require("./routes/verifySecrete.js");
 const checkPin = require("./routes/checkPin.js");
 const sendSmsOtp = require("./routes/sendSmsOtp.js");
 const send = require("./routes/send.js");
+const swap = require("./routes/swap.js");
 const deposit = require("./routes/deposit.js");
 
 const app = express();
@@ -65,6 +66,7 @@ app.use("/api/generate-secrete", generateSecret); // done
 app.use("/api/verify-secrete", verifySecrete); // done
 app.use("/api/send-sms-otp", sendSmsOtp);
 app.use("/api/send", send);
+app.use("/api/swap", swap);
 
 app.listen(PORT, (error) => {
   if (error) {
@@ -74,7 +76,7 @@ app.listen(PORT, (error) => {
   }
 });
 
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
 
 // (async () => {
 //   try {

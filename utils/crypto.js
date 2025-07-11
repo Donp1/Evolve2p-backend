@@ -3,7 +3,6 @@ dotenv.config();
 
 const { TronWeb } = require("tronweb");
 const cron = require("node-cron");
-const axios = require("axios");
 
 const crypto = require("crypto");
 const { db } = require("../db");
@@ -373,6 +372,50 @@ async function pollTRC20Deposits(assetType = "USDT") {
   }
 }
 
+const getLiveRate = async (fromSymbol, toSymbol) => {
+  const symbolToId = {
+    BTC: "bitcoin",
+    ETH: "ethereum",
+    USDT: "tether",
+    USDC: "usd-coin",
+  };
+
+  const fromId = symbolToId[fromSymbol];
+  const toId = symbolToId[toSymbol];
+
+  if (!fromId || !toId) {
+    throw new Error("Unsupported currency symbol");
+  }
+
+  const res = await fetch(
+    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd,btc,eth"
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch exchange rates");
+  }
+
+  const data = await res.json();
+
+  // Convert fromSymbol to USD, then USD to toSymbol
+  const fromToUSD = data[fromId]?.usd;
+  const toToUSD = data[toId]?.usd;
+
+  if (!fromToUSD || !toToUSD) {
+    throw new Error("Missing rate data");
+  }
+
+  const rate = fromToUSD / toToUSD;
+  return rate;
+};
+
+const convertCurrency = async (amount, fromSymbol, toSymbol) => {
+  if (fromSymbol === toSymbol) return amount;
+
+  const rate = await getLiveRate(fromSymbol, toSymbol);
+  return Number((Number(amount) * rate).toFixed(8)); // rounding to 8 decimal places
+};
+
 // startPolling();
 
 // function startPolling(assetType = "USDC") {
@@ -395,4 +438,5 @@ module.exports = {
   sendSweepTransaction,
   getUserPrivateKey,
   sendTRC20,
+  convertCurrency,
 };
