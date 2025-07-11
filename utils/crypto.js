@@ -94,7 +94,8 @@ async function sendETH(fromPrivateKey, toAddress, amount) {
     body: JSON.stringify({
       to: toAddress,
       currency: "ETH",
-      amount: Number(Number(amount).toFixed(18)), // ETH uses up to 18 decimals
+      // amount: Number(Number(amount).toFixed(18)), // ETH uses up to 18 decimals
+      amount: String(Number(amount).toFixed(18)), // Tatum expects string for large numbers
       fromPrivateKey: fromPrivateKey,
     }),
   });
