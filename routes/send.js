@@ -91,10 +91,11 @@ router.post("/", isAuthenticated, async (req, res) => {
     }
 
     // ✅ ON-CHAIN TRANSFER
-    if (fromWallet.balance < amountNum)
+    if (fromWallet.balance < amountNum) {
       return res
         .status(400)
         .json({ error: true, message: "Insufficient balance" });
+    }
 
     let privateKey;
     if (coin === "BTC") {
@@ -117,7 +118,13 @@ router.post("/", isAuthenticated, async (req, res) => {
       tx = await sendETH(privateKey, toAddress, amountNum);
     } else if (["USDT", "USDC"].includes(coin)) {
       const contractAddress = ERC20_CONTRACTS[coin];
-      tx = await sendTRC20(privateKey, toAddress, amountNum, contractAddress);
+      tx = await sendTRC20(
+        privateKey,
+        toAddress,
+        amountNum,
+        contractAddress,
+        coin
+      );
     } else {
       return res.status(400).json({ error: "Unsupported currency" });
     }

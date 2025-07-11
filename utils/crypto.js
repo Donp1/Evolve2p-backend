@@ -244,6 +244,48 @@ const getUserPrivateKey = async (asset, index) => {
   }
 };
 
+const sendTRC20 = async (
+  privateKey,
+  toAddress,
+  amount,
+  contractAddress,
+  asset
+) => {
+  if (!contractAddress) {
+    throw new Error(`Unsupported TRC20 Contract Address for ${asset}`);
+  }
+
+  try {
+    const payload = {
+      to: toAddress,
+      amount: String(amount), // TRC20 uses 6 decimals for USDT/USDC
+      fromPrivateKey: privateKey,
+      tokenAddress: contractAddress,
+      feeLimit: 600,
+    };
+
+    // console.log(payload);
+    // return;
+    const sendTRC20 = await fetch(
+      "https://api.tatum.io/v3/tron/trc20/transaction",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: {
+          "x-api-key": process.env.TATUM_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await sendTRC20.json();
+    // console.log(data);
+    return data;
+  } catch (error) {
+    console.log("Sending TRC20 ERROR: ", error);
+  }
+};
+
 const DECIMALS = 18n; // For USDT
 const POLL_INTERVAL_MS = 8000;
 
@@ -351,4 +393,5 @@ module.exports = {
   startPolling,
   sendSweepTransaction,
   getUserPrivateKey,
+  sendTRC20,
 };
