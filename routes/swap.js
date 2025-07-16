@@ -87,8 +87,6 @@ router.post("/", isAuthenticated, async (req, res) => {
         toAmount,
       },
     });
-
-    // return res.status(200).json({ success: true, message: "Swap operation successful", user });
   } catch (error) {
     return res.status(500).json({ error: true, message: error });
   }
