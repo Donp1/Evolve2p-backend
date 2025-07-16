@@ -76,23 +76,93 @@ app.listen(PORT, (error) => {
   }
 });
 
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+
+// const COINS = {
+//   bitcoin: "btc-bitcoin",
+//   ethereum: "eth-ethereum",
+//   tether: "usdt-tether",
+//   "usd-coin": "usdc-usd-coin",
+// };
+
+// async function getUSDPrice(id) {
+//   const res = await fetch(`https://api.coinpaprika.com/v1/tickers/${id}`);
+//   const data = await res.json();
+//   return parseFloat(data.quotes.USD.price);
+// }
+
+// async function fetchFormattedPrices() {
+//   const prices = {};
+
+//   for (const [key, id] of Object.entries(COINS)) {
+//     prices[key] = { usd: await getUSDPrice(id) };
+//   }
+
+//   const btcPrice = prices.bitcoin.usd;
+//   const ethPrice = prices.ethereum.usd;
+
+//   for (const key in prices) {
+//     const usd = prices[key].usd;
+//     prices[key].btc = parseFloat((usd / btcPrice).toFixed(8));
+//     prices[key].eth = parseFloat((usd / ethPrice).toFixed(8));
+//   }
+
+//   prices.bitcoin.btc = 1;
+//   prices.ethereum.eth = 1;
+
+//   return prices;
+// }
+
+// const getLiveRate = async (fromSymbol, toSymbol) => {
+//   const symbolToId = {
+//     BTC: "btc-bitcoin",
+//     ETH: "eth-ethereum",
+//     USDT: "usdt-tether",
+//     USDC: "usdc-usd-coin",
+//   };
+
+//   const fromId = symbolToId[fromSymbol];
+//   const toId = symbolToId[toSymbol];
+
+//   if (!fromId || !toId) {
+//     throw new Error("Unsupported currency symbol");
+//   }
+
+//   const fetchPrice = async (id) => {
+//     const res = await fetch(`https://api.coinpaprika.com/v1/tickers/${id}`);
+//     if (!res.ok) {
+//       throw new Error(`Failed to fetch price for ${id}`);
+//     }
+//     const data = await res.json();
+//     return parseFloat(data.quotes.USD.price);
+//   };
+
+//   const fromToUSD = await fetchPrice(fromId);
+//   const toToUSD = await fetchPrice(toId);
+
+//   if (!fromToUSD || !toToUSD) {
+//     throw new Error("Missing rate data");
+//   }
+
+//   const rate = fromToUSD / toToUSD;
+//   return rate;
+// };
+
+// const convertCurrency = async (amount, fromSymbol, toSymbol) => {
+//   if (fromSymbol === toSymbol) return amount;
+
+//   const rate = await getLiveRate(fromSymbol, toSymbol);
+//   return Number((Number(amount) * rate).toFixed(8)); // rounding to 8 decimal places
+// };
 
 // (async () => {
 //   try {
-//     const txDetails = await fetch(
-//       `https://api.tatum.io/v3/bitcoin/transaction/3be873da0652dd4c873477d48d740e740c895f39ca0648d392b83e388ed640e3`,
-//       {
-//         headers: {
-//           "x-api-key": process.env.TATUM_API_KEY,
-//         },
-//       }
-//     );
-//     const tx = await txDetails.json();
-//     const fromAddress = tx.inputs[0]?.coin?.address;
-//     console.log(fromAddress);
+//     // const prices = await fetchFormattedPrices();
+//     // const rate = await getLiveRate("ETH", "BTC");
+//     const convertedAmount = await convertCurrency("1", "BTC", "USDT");
+//     console.log(convertedAmount);
 //   } catch (err) {
-//     console.error("❌ error:", err.message);
+//     console.error("❌ error:", err);
 //   }
 // })();
 

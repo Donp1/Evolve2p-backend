@@ -372,12 +372,49 @@ async function pollTRC20Deposits(assetType = "USDT") {
   }
 }
 
+// const getLiveRate = async (fromSymbol, toSymbol) => {
+//   const symbolToId = {
+//     BTC: "bitcoin",
+//     ETH: "ethereum",
+//     USDT: "tether",
+//     USDC: "usd-coin",
+//   };
+
+//   const fromId = symbolToId[fromSymbol];
+//   const toId = symbolToId[toSymbol];
+
+//   if (!fromId || !toId) {
+//     throw new Error("Unsupported currency symbol");
+//   }
+
+//   const res = await fetch(
+//     "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd,btc,eth"
+//   );
+
+//   if (!res.ok) {
+//     throw new Error("Failed to fetch exchange rates");
+//   }
+
+//   const data = await res.json();
+
+//   // Convert fromSymbol to USD, then USD to toSymbol
+//   const fromToUSD = data[fromId]?.usd;
+//   const toToUSD = data[toId]?.usd;
+
+//   if (!fromToUSD || !toToUSD) {
+//     throw new Error("Missing rate data");
+//   }
+
+//   const rate = fromToUSD / toToUSD;
+//   return rate;
+// };
+
 const getLiveRate = async (fromSymbol, toSymbol) => {
   const symbolToId = {
-    BTC: "bitcoin",
-    ETH: "ethereum",
-    USDT: "tether",
-    USDC: "usd-coin",
+    BTC: "btc-bitcoin",
+    ETH: "eth-ethereum",
+    USDT: "usdt-tether",
+    USDC: "usdc-usd-coin",
   };
 
   const fromId = symbolToId[fromSymbol];
@@ -387,19 +424,17 @@ const getLiveRate = async (fromSymbol, toSymbol) => {
     throw new Error("Unsupported currency symbol");
   }
 
-  const res = await fetch(
-    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,usd-coin&vs_currencies=usd,btc,eth"
-  );
+  const fetchPrice = async (id) => {
+    const res = await fetch(`https://api.coinpaprika.com/v1/tickers/${id}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch price for ${id}`);
+    }
+    const data = await res.json();
+    return parseFloat(data.quotes.USD.price);
+  };
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch exchange rates");
-  }
-
-  const data = await res.json();
-
-  // Convert fromSymbol to USD, then USD to toSymbol
-  const fromToUSD = data[fromId]?.usd;
-  const toToUSD = data[toId]?.usd;
+  const fromToUSD = await fetchPrice(fromId);
+  const toToUSD = await fetchPrice(toId);
 
   if (!fromToUSD || !toToUSD) {
     throw new Error("Missing rate data");
