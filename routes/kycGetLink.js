@@ -29,6 +29,8 @@ router.post("/", isAuthenticated, async (req, res) => {
     );
 
     const inquiryJson = await createInquiry.json();
+
+    console.log(inquiryJson);
     return res.json({ success: true, inquiry_id: inquiryJson?.data?.id });
   } catch (error) {
     console.log(error);

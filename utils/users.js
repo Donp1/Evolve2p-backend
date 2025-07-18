@@ -10,6 +10,7 @@ function findUserByEmail(email) {
     include: {
       wallets: true,
       transactions: true,
+      swaps: true,
     },
   });
 }
@@ -32,6 +33,7 @@ function findUserById(id) {
     include: {
       wallets: true,
       transactions: true,
+      swaps: true,
     },
   });
 }
@@ -44,6 +46,7 @@ function findUserByUsername(username) {
     include: {
       wallets: true,
       transactions: true,
+      swaps: true,
     },
   });
 }

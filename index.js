@@ -76,7 +76,7 @@ app.listen(PORT, (error) => {
   }
 });
 
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
 
 // const COINS = {
 //   bitcoin: "btc-bitcoin",
@@ -155,12 +155,59 @@ Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
 //   return Number((Number(amount) * rate).toFixed(8)); // rounding to 8 decimal places
 // };
 
+// const fetchPrices = async () => {
+//   const symbolToId = {
+//     bitcoin: "btc-bitcoin",
+//     ethereum: "eth-ethereum",
+//     tether: "usdt-tether",
+//     "usd-coin": "usdc-usd-coin",
+//   };
+
+//   try {
+//     // Step 1: Fetch USD prices for all coins from CoinPaprika
+//     const entries = await Promise.all(
+//       Object.entries(symbolToId).map(async ([key, id]) => {
+//         const res = await fetch(`https://api.coinpaprika.com/v1/tickers/${id}`);
+//         const data = await res.json();
+//         return [key, parseFloat(data.quotes.USD.price)];
+//       })
+//     );
+
+//     const usdPrices = Object.fromEntries(entries);
+
+//     // Step 2: Calculate BTC and ETH rates
+//     const btcPrice = usdPrices.bitcoin;
+//     const ethPrice = usdPrices.ethereum;
+
+//     const formattedPrices = {};
+
+//     for (const key in usdPrices) {
+//       const usd = usdPrices[key];
+//       formattedPrices[key] = {
+//         usd: usd,
+//         btc: parseFloat((usd / btcPrice).toFixed(8)),
+//         eth: parseFloat((usd / ethPrice).toFixed(8)),
+//       };
+//     }
+
+//     // Set 1 for base units
+//     formattedPrices.bitcoin.btc = 1;
+//     formattedPrices.ethereum.eth = 1;
+
+//     // Step 3: Update state
+//     return { prices: formattedPrices };
+//   } catch (error) {
+//     console.error("Failed to fetch coin prices", error);
+//   }
+// };
+
 // (async () => {
 //   try {
 //     // const prices = await fetchFormattedPrices();
 //     // const rate = await getLiveRate("ETH", "BTC");
-//     const convertedAmount = await convertCurrency("1", "BTC", "USDT");
-//     console.log(convertedAmount);
+//     // const convertedAmount = await convertCurrency("1", "BTC", "USDT");
+//     const prices = await fetchPrices();
+//     console.log(prices);
 //   } catch (err) {
 //     console.error("❌ error:", err);
 //   }
