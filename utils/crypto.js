@@ -419,6 +419,72 @@ function startPolling(assetType = "USDC") {
   cron.schedule("*/8 * * * * *", () => pollTRC20Deposits(assetType));
 }
 
+async function convertCryptoToFiat(symbol, amount, fiat) {
+  try {
+    // Map tickers to CoinPaprika IDs
+    const symbolMap = {
+      BTC: "btc-bitcoin",
+      ETH: "eth-ethereum",
+      USDT: "usdt-tether",
+      USDC: "usdc-usd-coin",
+    };
+    const coinId = symbolMap[symbol.toUpperCase()];
+    if (!coinId) throw new Error(`Unsupported symbol: ${symbol}`);
+
+    // 1. Get crypto price in USD
+    const cryptoRes = await fetch(
+      `https://api.coinpaprika.com/v1/tickers/${coinId}`
+    );
+    if (!cryptoRes.ok) throw new Error("Failed to fetch crypto price");
+    const cryptoData = await cryptoRes.json();
+    const cryptoPriceUSD = cryptoData?.quotes?.USD?.price;
+    if (!cryptoPriceUSD) throw new Error("Invalid price data");
+
+    // 2. If fiat is USD, skip conversion
+    let usdToFiatRate = 1;
+    if (fiat.toUpperCase() !== "USD") {
+      const forexRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
+      if (!forexRes.ok) throw new Error("Failed to fetch forex rates");
+      const forexData = await forexRes.json();
+      usdToFiatRate = forexData?.rates?.[fiat.toUpperCase()];
+      if (!usdToFiatRate) throw new Error(`Unsupported fiat: ${fiat}`);
+    }
+
+    // 3. Calculate final amount
+    return amount * cryptoPriceUSD * usdToFiatRate;
+  } catch (err) {
+    console.error("Error converting:", err.message);
+    throw new Error("Failed to convert crypto to fiat");
+  }
+}
+
+async function getMarketPrice(symbol, fiat) {
+  const symbolMap = {
+    BTC: "btc-bitcoin",
+    ETH: "eth-ethereum",
+    USDT: "usdt-tether",
+    USDC: "usdc-usd-coin",
+  };
+  const coinId = symbolMap[symbol.toUpperCase()];
+  if (!coinId) throw new Error(`Unsupported symbol: ${symbol}`);
+
+  const cryptoRes = await fetch(
+    `https://api.coinpaprika.com/v1/tickers/${coinId}`
+  );
+  const cryptoData = await cryptoRes.json();
+  const priceUSD = cryptoData?.quotes?.USD?.price;
+  if (!priceUSD) throw new Error("Failed to fetch market price");
+
+  // If currency is USD, skip forex
+  if (fiat.toUpperCase() === "USD") return priceUSD;
+
+  const forexRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
+  const forexData = await forexRes.json();
+  const rate = forexData.rates[fiat.toUpperCase()];
+  if (!rate) throw new Error(`Unsupported fiat: ${fiat}`);
+  return priceUSD * rate;
+}
+
 module.exports = {
   generateAddress,
   generateIndexFromUserId,
@@ -431,4 +497,6 @@ module.exports = {
   getUserPrivateKey,
   sendTRC20,
   convertCurrency,
+  convertCryptoToFiat,
+  getMarketPrice,
 };

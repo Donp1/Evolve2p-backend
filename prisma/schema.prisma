@@ -23,9 +23,13 @@ model User {
   secret           String?
   is2faEnabled     Boolean?      @default(false)
   authType         String?
+  role             UserRole      @default(USER)
   wallets          Wallet[]
   transactions     Transaction[]
   swaps            Swap[]
+  offers           Offer[]
+  tradesAsBuyer    Trade[]       @relation("BuyerTrades")
+  tradesAsSeller   Trade[]       @relation("SellerTrades")
 }
 
 model OTP {
@@ -74,10 +78,83 @@ model Swap {
   user       User     @relation(fields: [userId], references: [id])
 }
 
+model PaymentMethod {
+  id        String   @id @default(uuid())
+  name      String
+  offers    Offer[]
+  createdAt DateTime @default(now())
+}
+
+model Offer {
+  id              String        @id @default(uuid())
+  userId          String
+  type            OfferType
+  crypto          String
+  currency        String
+  margin          Float
+  paymentMethodId String
+  minLimit        Float
+  maxLimit        Float
+  terms           String?
+  time            String
+  status          OfferStatus
+  createdAt       DateTime      @default(now())
+  user            User          @relation(fields: [userId], references: [id])
+  trades          Trade[]       @relation("OfferTrades")
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+}
+
+model Trade {
+  id             String      @id @default(uuid())
+  buyerId        String
+  sellerId       String
+  offerId        String
+  status         TradeStatus
+  amountFiat     Float
+  amountCrypto   Float
+  escrowReleased Boolean     @default(false)
+  paymentProof   String? // URL to uploaded proof image
+  createdAt      DateTime    @default(now())
+  buyer          User        @relation("BuyerTrades", fields: [buyerId], references: [id])
+  seller         User        @relation("SellerTrades", fields: [sellerId], references: [id])
+  offer          Offer       @relation("OfferTrades", fields: [offerId], references: [id])
+  dispute        Dispute[]
+}
+
+model Dispute {
+  id        String   @id @default(uuid())
+  tradeId   String
+  openedBy  String
+  reason    String
+  createdAt DateTime @default(now())
+  trade     Trade    @relation(fields: [tradeId], references: [id])
+}
+
 // enums
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
 enum OfferType {
   BUY
   SELL
+}
+
+enum OfferStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum TradeStatus {
+  PENDING
+  PAID
+  RELEASED
+  DISPUTED
+  COMPLETED
+  CANCELLED
 }
 
 enum TransactionType {

@@ -31,6 +31,8 @@ const sendSmsOtp = require("./routes/sendSmsOtp.js");
 const send = require("./routes/send.js");
 const swap = require("./routes/swap.js");
 const deposit = require("./routes/deposit.js");
+const createOffer = require("./routes/createOffer.js");
+const createTrade = require("./routes/createTrade.js");
 
 const app = express();
 
@@ -67,6 +69,8 @@ app.use("/api/verify-secrete", verifySecrete); // done
 app.use("/api/send-sms-otp", sendSmsOtp);
 app.use("/api/send", send);
 app.use("/api/swap", swap);
+app.use("/api/create-offer", createOffer);
+app.use("/api/create-trade", createTrade);
 
 app.listen(PORT, (error) => {
   if (error) {
@@ -76,7 +80,7 @@ app.listen(PORT, (error) => {
   }
 });
 
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
 
 // const COINS = {
 //   bitcoin: "btc-bitcoin",

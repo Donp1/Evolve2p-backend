@@ -67,6 +67,28 @@ function deleteAccount(email) {
   });
 }
 
+async function releaseTrade(tradeId) {
+  const trade = await db.trade.findUnique({
+    where: { id: tradeId },
+    include: { offer: true },
+  });
+  if (!trade || trade.status !== "PAID")
+    throw new Error("Trade not ready for release");
+
+  await prisma.$transaction([
+    prisma.wallet.update({
+      where: {
+        userId_asset: { userId: trade.buyerId, asset: trade.offer.asset },
+      },
+      data: { balance: { increment: trade.amountCrypto } },
+    }),
+    prisma.trade.update({
+      where: { id: tradeId },
+      data: { status: "COMPLETED", escrowReleased: true },
+    }),
+  ]);
+}
+
 module.exports = {
   findUserByEmail,
   findUserById,
@@ -75,4 +97,5 @@ module.exports = {
   createOTPUser,
   findUserByUsername,
   deleteAccount,
+  releaseTrade,
 };
