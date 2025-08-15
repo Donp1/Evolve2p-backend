@@ -39,10 +39,7 @@ router.post("/", isAuthenticated, async (req, res) => {
     return res
       .status(400)
       .json({ error: true, message: "currency is required" });
-  if (!amountCrypto)
-    return res
-      .status(400)
-      .json({ error: true, message: "Cypto amount is required" });
+
   if (!paymentMethod)
     return res
       .status(400)
@@ -66,23 +63,21 @@ router.post("/", isAuthenticated, async (req, res) => {
   }
 
   try {
-    const amountFiat = await convertCryptoToFiat(
-      String(crypto).toUpperCase(),
-      amountCrypto,
-      String(currency).toUpperCase()
-    );
+    // const amountFiat = await convertCryptoToFiat(
+    //   String(crypto).toUpperCase(),
+    //   amountCrypto,
+    //   String(currency).toUpperCase()
+    // );
 
     const offer = await db.offer.create({
       data: {
         type: String(type)?.toUpperCase(),
-        amountCrypto: Number(amountCrypto),
-        amountFiat,
         crypto: String(crypto).toUpperCase(),
         currency,
         margin: Number(margin),
-        paymentMethod,
+        paymentMethod: { connect: { id: paymentMethod } },
         status: "ACTIVE",
-        userId,
+        user: { connect: { id: userId } },
         maxLimit: Number(maxLimit),
         minLimit: Number(minLimit),
         terms: paymentTerms,
