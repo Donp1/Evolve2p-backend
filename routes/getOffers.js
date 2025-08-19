@@ -40,6 +40,10 @@ router.get("/", async (req, res) => {
           in: methods, // make case-insensitive
           // mode: "insensitive",
         },
+        // name: {
+        //   in: methods.map((m) => m.toLowerCase()),
+        //   mode: "insensitive",
+        // },
       };
     }
 
