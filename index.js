@@ -84,4 +84,4 @@ app.listen(PORT, (error) => {
   }
 });
 
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));

@@ -29,10 +29,17 @@ router.get("/", async (req, res) => {
     if (currency) filters.currency = currency.toUpperCase();
     if (status) filters.status = status.toUpperCase();
 
-    // Payment method filter (relation)
+    // ✅ Payment method filter (supports array)
     if (paymentMethod) {
+      const methods = Array.isArray(paymentMethod)
+        ? paymentMethod
+        : [paymentMethod]; // normalize into array
+
       filters.paymentMethod = {
-        name: { equals: paymentMethod, mode: "insensitive" },
+        id: {
+          in: methods, // make case-insensitive
+          // mode: "insensitive",
+        },
       };
     }
 
