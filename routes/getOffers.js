@@ -24,7 +24,13 @@ router.get("/", async (req, res) => {
 
     // Build filters
     const filters = {};
-    if (type) filters.type = type.toUpperCase();
+
+    // ✅ Invert type logic (if BUY → fetch SELL, if SELL → fetch BUY)
+    if (type) {
+      const normalized = type.toUpperCase();
+      filters.type = normalized === "BUY" ? "SELL" : "BUY";
+    }
+
     if (crypto) filters.crypto = crypto.toUpperCase();
     if (currency) filters.currency = currency.toUpperCase();
     if (status) filters.status = status.toUpperCase();
@@ -37,13 +43,8 @@ router.get("/", async (req, res) => {
 
       filters.paymentMethod = {
         id: {
-          in: methods, // make case-insensitive
-          // mode: "insensitive",
+          in: methods,
         },
-        // name: {
-        //   in: methods.map((m) => m.toLowerCase()),
-        //   mode: "insensitive",
-        // },
       };
     }
 
