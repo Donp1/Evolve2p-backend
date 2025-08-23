@@ -34,6 +34,7 @@ const deposit = require("./routes/deposit.js");
 const createOffer = require("./routes/createOffer.js");
 const createTrade = require("./routes/createTrade.js");
 const getOffers = require("./routes/getOffers.js");
+const getOffer = require("./routes/getOffer.js");
 const getPaymentMethods = require("./routes/getPaymentMethods.js");
 
 const app = express();
@@ -74,6 +75,7 @@ app.use("/api/swap", swap);
 app.use("/api/create-offer", createOffer);
 app.use("/api/create-trade", createTrade);
 app.use("/api/get-offers", getOffers); //
+app.use("/api/get-offer", getOffer); //
 app.use("/api/get-payment-methods", getPaymentMethods); //
 
 app.listen(PORT, (error) => {
