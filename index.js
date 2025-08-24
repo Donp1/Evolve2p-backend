@@ -33,9 +33,16 @@ const swap = require("./routes/swap.js");
 const deposit = require("./routes/deposit.js");
 const createOffer = require("./routes/createOffer.js");
 const createTrade = require("./routes/createTrade.js");
+const getTrade = require("./routes/getTrade.js");
+const releaseTrade = require("./routes/releaseTrade.js");
+const markTradeAsPaid = require("./routes/MarkTradeAsPaid.js");
+const cancleTrade = require("./routes/cancleTrade.js");
 const getOffers = require("./routes/getOffers.js");
 const getOffer = require("./routes/getOffer.js");
 const getPaymentMethods = require("./routes/getPaymentMethods.js");
+const openDispute = require("./routes/openDispute.js");
+const getDispute = require("./routes/getDispute.js");
+const resolveDispute = require("./routes/resolveDispute.js");
 
 const app = express();
 
@@ -72,11 +79,25 @@ app.use("/api/verify-secrete", verifySecrete); // done
 app.use("/api/send-sms-otp", sendSmsOtp);
 app.use("/api/send", send);
 app.use("/api/swap", swap);
-app.use("/api/create-offer", createOffer);
+
+// Trade
 app.use("/api/create-trade", createTrade);
+app.use("/api/get-trade", getTrade);
+app.use("/api/release-trade", releaseTrade);
+app.use("/api/mark-trade-as-paid", markTradeAsPaid);
+app.use("/api/cancle-trade", cancleTrade);
+// end Trade
+
+app.use("/api/create-offer", createOffer);
 app.use("/api/get-offers", getOffers); //
 app.use("/api/get-offer", getOffer); //
 app.use("/api/get-payment-methods", getPaymentMethods); //
+
+// Disput
+app.use("/api/open-dispute", openDispute);
+app.use("/api/get-dispute", getDispute);
+app.use("/api/resolve-dispute", resolveDispute);
+// End of Dispute
 
 app.listen(PORT, (error) => {
   if (error) {
@@ -86,4 +107,4 @@ app.listen(PORT, (error) => {
   }
 });
 
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));

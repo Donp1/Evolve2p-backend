@@ -35,6 +35,28 @@ function isAuthenticated(req, res, next) {
   }
 }
 
+// middlewares/isAdmin.js
+const isAdmin = (req, res, next) => {
+  try {
+    // Assuming req.payload is set by isAuthenticated middleware
+    const { role } = req.payload;
+
+    if (role !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ error: true, message: "Admin access required" });
+    }
+
+    next();
+  } catch (err) {
+    console.error("❌ isAdmin middleware error:", err);
+    return res
+      .status(500)
+      .json({ error: true, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   isAuthenticated,
+  isAdmin,
 };

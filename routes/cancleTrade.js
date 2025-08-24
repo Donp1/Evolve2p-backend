@@ -1,8 +1,6 @@
 const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
-const { convertCryptoToFiat } = require("../utils/crypto");
-const { releaseTrade } = require("../utils/users");
 
 const router = express.Router();
 
@@ -18,45 +16,41 @@ router.post("/:id", isAuthenticated, async (req, res) => {
 
     if (!trade)
       return res.status(404).json({ error: true, message: "Trade not found" });
-    if (trade.sellerId !== userId) {
-      return res
-        .status(403)
-        .json({ error: true, message: "Only seller can release escrow" });
-    }
-    if (trade.status !== "PAID") {
+    // Either party can cancel while PENDING (and not marked paid). Adjust policy as needed.
+    if (trade.status !== "PENDING" || trade.escrowReleased) {
       return res
         .status(400)
-        .json({ error: true, message: "Trade must be in PAID state" });
+        .json({ error: true, message: "Cannot cancel at this stage" });
     }
-    if (!trade.escrow || trade.escrow.released) {
-      return res
-        .status(400)
-        .json({ error: true, message: "Escrow already released or missing" });
+    if (trade.buyerId !== userId && trade.sellerId !== userId) {
+      return res.status(403).json({ error: true, message: "Not allowed" });
     }
 
-    const buyerWallet = await db.wallet.findFirst({
-      where: { userId: trade.buyerId, currency: trade.escrow.crypto },
+    // const sellerWallet = await ensureWallet(
+    //   trade.sellerId,
+    //   trade.escrow.crypto
+    // );
+    const sellerWallet = await db.wallet.findFirst({
+      where: { userId: trade.sellerId, currency: trade.escrow.crypto },
     });
 
-    // const buyerWallet = await ensureWallet(trade.buyerId, trade.escrow.crypto);
-
     const updated = await db.$transaction(async (tx) => {
-      // Credit buyer
+      // refund seller
       await tx.wallet.update({
-        where: { id: buyerWallet.id },
+        where: { id: sellerWallet.id },
         data: { balance: { increment: Number(trade.amountCrypto) } },
       });
 
-      // Mark escrow released
+      // mark escrow "released" to avoid re-use (optionally delete instead)
       await tx.escrow.update({
         where: { tradeId: trade.id },
         data: { released: true },
       });
 
-      // Complete trade
+      // cancel trade
       const t = await tx.trade.update({
         where: { id: trade.id },
-        data: { status: "COMPLETED", escrowReleased: true },
+        data: { status: "CANCELED" },
       });
 
       return t;
@@ -64,11 +58,11 @@ router.post("/:id", isAuthenticated, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Escrow released. Trade completed.",
+      message: "Trade canceled and funds returned.",
       trade: updated,
     });
   } catch (err) {
-    console.error("❌ Release escrow error:", err);
+    console.error("❌ Cancel trade error:", err);
     res.status(500).json({ error: true, message: "Internal server error" });
   }
 });

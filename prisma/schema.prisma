@@ -30,6 +30,7 @@ model User {
   offers           Offer[]
   tradesAsBuyer    Trade[]       @relation("BuyerTrades")
   tradesAsSeller   Trade[]       @relation("SellerTrades")
+  dispute          Dispute[]
 }
 
 model OTP {
@@ -109,28 +110,54 @@ model Trade {
   buyerId        String
   sellerId       String
   offerId        String
-  status         TradeStatus
+  status         TradeStatus @default(PENDING) // add default
   amountFiat     Float
   amountCrypto   Float
   escrowReleased Boolean     @default(false)
   paymentProof   String? // URL to uploaded proof image
   createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt // track last action time
+  completedAt    DateTime? // useful for analytics
+  canceledAt     DateTime? // if canceled
   buyer          User        @relation("BuyerTrades", fields: [buyerId], references: [id])
   seller         User        @relation("SellerTrades", fields: [sellerId], references: [id])
   offer          Offer       @relation("OfferTrades", fields: [offerId], references: [id])
   dispute        Dispute[]
+  escrow         Escrow?
 }
 
-model Dispute {
+model Escrow {
   id        String   @id @default(uuid())
-  tradeId   String
-  openedBy  String
-  reason    String
+  tradeId   String   @unique
+  sellerId  String
+  crypto    String
+  amount    Decimal
+  released  Boolean  @default(false)
   createdAt DateTime @default(now())
   trade     Trade    @relation(fields: [tradeId], references: [id])
 }
 
+model Dispute {
+  id         String        @id @default(uuid())
+  tradeId    String
+  openedBy   String // userId of who opened dispute
+  reason     String
+  status     DisputeStatus @default(OPEN)
+  evidence   String? // optional URL to file/image proof
+  createdAt  DateTime      @default(now())
+  resolvedAt DateTime?
+  trade      Trade         @relation(fields: [tradeId], references: [id])
+  user       User          @relation(fields: [openedBy], references: [id])
+}
+
 // enums
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED_BUYER
+  RESOLVED_SELLER
+  CANCELLED
+}
 
 enum UserRole {
   USER

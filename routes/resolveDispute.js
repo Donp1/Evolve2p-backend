@@ -1,68 +1,104 @@
+// routes/disputes.js
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/index");
+const { isAuthenticated, isAdmin } = require("../middlewares");
 const { db } = require("../db");
-const { convertCryptoToFiat } = require("../utils/crypto");
-const { releaseTrade } = require("../utils/users");
 
 const router = express.Router();
 
-router.post("/", isAuthenticated, async (req, res) => {
-  try {
-    const { tradeId, action } = req.body; // "release_to_buyer" or "refund_to_seller"
-    const { userId } = req.payload;
+router.post("/:id", isAuthenticated, isAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { winner } = req.body; // "BUYER" or "SELLER"
 
-    // Ensure only admins can do this
-    const admin = await db.user.findUnique({ where: { id: userId } });
-    if (!admin || admin.role !== "ADMIN")
-      return res.status(403).json({ error: true, message: "Unauthorized" });
-
-    const trade = await db.trade.findUnique({
-      where: { id: tradeId },
-      include: { offer: true },
+  if (!["BUYER", "SELLER"].includes(winner)) {
+    return res.status(400).json({
+      error: true,
+      message: "Winner must be either 'BUYER' or 'SELLER'",
     });
-    if (!trade || trade.status !== "DISPUTED")
+  }
+
+  try {
+    const dispute = await db.dispute.findUnique({
+      where: { id },
+      include: {
+        trade: {
+          include: { escrow: true },
+        },
+      },
+    });
+
+    if (!dispute) {
+      return res
+        .status(404)
+        .json({ error: true, message: "Dispute not found" });
+    }
+    if (dispute.status === "RESOLVED") {
       return res
         .status(400)
-        .json({ error: true, message: "Trade is not in dispute" });
-
-    if (action === "release_to_buyer") {
-      // Move escrow to buyer
-      await db.$transaction([
-        db.wallet.update({
-          where: {
-            userId: trade.buyerId,
-            currency: trade.offer.crypto,
-          },
-          data: { balance: { increment: trade.amountCrypto } },
-        }),
-        db.trade.update({
-          where: { id: tradeId },
-          data: { status: "COMPLETED", escrowReleased: true },
-        }),
-      ]);
-    } else if (action === "refund_to_seller") {
-      // Refund escrow to seller
-      await prisma.$transaction([
-        prisma.wallet.update({
-          where: {
-            userId: trade.sellerId,
-            asset: trade.offer.crypto,
-          },
-          data: { balance: { increment: trade.amountCrypto } },
-        }),
-        db.trade.update({
-          where: { id: tradeId },
-          data: { status: "CANCELLED", escrowReleased: false },
-        }),
-      ]);
-    } else {
-      return res.status(400).json({ error: true, message: "Invalid action" });
+        .json({ error: true, message: "Dispute already resolved" });
     }
 
-    res.json({ success: true, message: "Dispute resolved successfully" });
+    const { trade } = dispute;
+
+    if (!trade || !trade.escrow || trade.escrow.released) {
+      return res.status(400).json({
+        error: true,
+        message: "Escrow not available for release",
+      });
+    }
+
+    const updated = await db.$transaction(async (tx) => {
+      let winnerId = winner === "BUYER" ? trade.buyerId : trade.sellerId;
+
+      // Credit winner’s wallet
+      const wallet = await tx.wallet.findFirst({
+        where: { userId: winnerId, currency: trade.escrow.crypto },
+      });
+
+      if (!wallet) {
+        throw new Error("Winner wallet not found");
+      }
+
+      await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { increment: Number(trade.amountCrypto) } },
+      });
+
+      // Mark escrow as released
+      await tx.escrow.update({
+        where: { tradeId: trade.id },
+        data: { released: true },
+      });
+
+      // Update trade status
+      await tx.trade.update({
+        where: { id: trade.id },
+        data: {
+          status: "COMPLETED",
+          escrowReleased: true,
+        },
+      });
+
+      // Update dispute status
+      return tx.dispute.update({
+        where: { id: dispute.id },
+        data: {
+          status:
+            String(winner).toLowerCase() == "buyer"
+              ? "RESOLVED_BUYER"
+              : "RESOLVED_SELLER",
+          resolvedAt: new Date(),
+        },
+      });
+    });
+
+    res.json({
+      success: true,
+      message: `Dispute resolved. Winner: ${winner}`,
+      dispute: updated,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: true, message: "Failed to resolve dispute" });
+    console.error("❌ Resolve dispute error:", err);
+    res.status(500).json({ error: true, message: "Internal server error" });
   }
 });
 
