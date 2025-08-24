@@ -20,6 +20,7 @@ router.get("/:id", async (req, res) => {
             // add other fields you want exposed
           },
         },
+        paymentMethod: true,
       },
     });
 
