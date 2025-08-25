@@ -99,6 +99,10 @@ app.use("/api/get-dispute", getDispute);
 app.use("/api/resolve-dispute", resolveDispute);
 // End of Dispute
 
+// chats
+
+// End Chats
+
 app.listen(PORT, (error) => {
   if (error) {
     console.log(error.message);

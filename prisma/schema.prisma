@@ -31,6 +31,7 @@ model User {
   tradesAsBuyer    Trade[]       @relation("BuyerTrades")
   tradesAsSeller   Trade[]       @relation("SellerTrades")
   dispute          Dispute[]
+  // chatMessages     ChatMessage[]
 }
 
 model OTP {
@@ -124,6 +125,7 @@ model Trade {
   offer          Offer       @relation("OfferTrades", fields: [offerId], references: [id])
   dispute        Dispute[]
   escrow         Escrow?
+  // chatMessages   ChatMessage[]
 }
 
 model Escrow {
@@ -150,7 +152,24 @@ model Dispute {
   user       User          @relation(fields: [openedBy], references: [id])
 }
 
+// model ChatMessage {
+//   id         String     @id @default(uuid())
+//   tradeId    String
+//   trade      Trade      @relation(fields: [tradeId], references: [id])
+//   senderId   String? // null for ADMIN
+//   sender     User?      @relation(fields: [senderId], references: [id])
+//   senderType SenderType
+//   message    String
+//   createdAt  DateTime   @default(now())
+// }
+
 // enums
+
+// enum SenderType {
+//   BUYER
+//   SELLER
+//   ADMIN
+// }
 
 enum DisputeStatus {
   OPEN
