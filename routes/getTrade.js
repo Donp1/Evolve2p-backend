@@ -14,7 +14,11 @@ router.get("/:id", isAuthenticated, async (req, res) => {
       include: {
         buyer: { select: { id: true, username: true } },
         seller: { select: { id: true, username: true } },
-        offer: true,
+        offer: {
+          include: {
+            paymentMethod: true, // 👈 include payment method relation
+          },
+        },
         escrow: true,
       },
     });
