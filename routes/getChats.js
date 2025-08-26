@@ -1,53 +1,55 @@
-// routes/disputes.js
+// routes/chat.js
 const express = require("express");
-const { isAuthenticated, isAdmin } = require("../middlewares");
 const { db } = require("../db");
 
 const router = express.Router();
 
-// GET /api/trades/:tradeId/chat
-router.get("/:tradeId", isAuthenticated, async (req, res) => {
-  const { tradeId } = req.params;
-  const { userId, role } = req.payload; // role instead of isAdmin
-
+// ✅ Get all chats for a user
+router.get("/:userId", async (req, res) => {
   try {
-    const trade = await db.trade.findUnique({ where: { id: tradeId } });
-    if (!trade)
-      return res.status(404).json({ error: true, message: "Trade not found" });
+    const { userId } = req.params;
 
-    // Only buyer, seller, or admin can view messages
-    if (
-      role !== "ADMIN" &&
-      trade.buyerId !== userId &&
-      trade.sellerId !== userId
-    ) {
-      return res.status(403).json({ error: true, message: "Not authorized" });
-    }
-
-    const messages = await db.chatMessage.findMany({
-      where: { tradeId },
-      include: {
-        sender: { select: { id: true, username: true } },
+    const chats = await db.chat.findMany({
+      where: {
+        participants: {
+          some: { userId },
+        },
       },
+      include: {
+        participants: {
+          include: { user: true },
+        },
+        messages: {
+          orderBy: { createdAt: "desc" },
+          take: 1, // last message preview
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json(chats);
+  } catch (err) {
+    console.error("❌ Error fetching user chats:", err);
+    res.status(500).json({ error: "Failed to fetch chats" });
+  }
+});
+
+// ✅ Get messages for a chat
+router.get("/:chatId/messages", async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const messages = await db.message.findMany({
+      where: { chatId },
+      include: { sender: true },
       orderBy: { createdAt: "asc" },
     });
 
-    res.json({
-      success: true,
-      messages: messages.map((msg) => ({
-        id: msg.id,
-        tradeId: msg.tradeId,
-        message: msg.message,
-        createdAt: msg.createdAt,
-        senderType: msg.senderType,
-        sender: msg.sender
-          ? { id: msg.sender.id, username: msg.sender.username }
-          : null,
-      })),
-    });
+    res.json(messages);
   } catch (err) {
-    console.error("❌ Chat fetch error:", err);
-    res.status(500).json({ error: true, message: "Internal server error" });
+    console.error("❌ Error fetching messages:", err);
+    res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
+
 module.exports = router;

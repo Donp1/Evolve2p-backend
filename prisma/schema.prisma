@@ -8,30 +8,31 @@ datasource db {
 }
 
 model User {
-  id               String        @id @default(uuid())
-  email            String        @unique
+  id               String            @id @default(uuid())
+  email            String            @unique
   name             String?
   phone            String
   password         String
   username         String
   country          String
-  kycVerified      Boolean?      @default(false)
-  emailVerified    Boolean?      @default(false)
+  kycVerified      Boolean?          @default(false)
+  emailVerified    Boolean?          @default(false)
   pin              String?
-  preferedCurrency String?       @default("USD")
+  preferedCurrency String?           @default("USD")
   DOB              String?
   secret           String?
-  is2faEnabled     Boolean?      @default(false)
+  is2faEnabled     Boolean?          @default(false)
   authType         String?
-  role             UserRole      @default(USER)
+  role             UserRole          @default(USER)
   wallets          Wallet[]
   transactions     Transaction[]
   swaps            Swap[]
   offers           Offer[]
-  tradesAsBuyer    Trade[]       @relation("BuyerTrades")
-  tradesAsSeller   Trade[]       @relation("SellerTrades")
+  tradesAsBuyer    Trade[]           @relation("BuyerTrades")
+  tradesAsSeller   Trade[]           @relation("SellerTrades")
   dispute          Dispute[]
-  // chatMessages     ChatMessage[]
+  chatParticipants ChatParticipant[]
+  messages         Message[]
 }
 
 model OTP {
@@ -125,7 +126,7 @@ model Trade {
   offer          Offer       @relation("OfferTrades", fields: [offerId], references: [id])
   dispute        Dispute[]
   escrow         Escrow?
-  // chatMessages   ChatMessage[]
+  chatMessages   Chat[]
 }
 
 model Escrow {
@@ -155,15 +156,62 @@ model Dispute {
 // model ChatMessage {
 //   id         String     @id @default(uuid())
 //   tradeId    String
-//   trade      Trade      @relation(fields: [tradeId], references: [id])
 //   senderId   String? // null for ADMIN
-//   sender     User?      @relation(fields: [senderId], references: [id])
 //   senderType SenderType
 //   message    String
 //   createdAt  DateTime   @default(now())
+//   sender     User?      @relation(fields: [senderId], references: [id])
+//   trade      Trade      @relation(fields: [tradeId], references: [id])
 // }
 
+model Chat {
+  id           String            @id @default(uuid())
+  tradeId      String
+  trade        Trade             @relation(fields: [tradeId], references: [id])
+  participants ChatParticipant[]
+  messages     Message[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model ChatParticipant {
+  id       String   @id @default(uuid())
+  chatId   String
+  userId   String
+  role     ChatRole // buyer, seller, or admin
+  chat     Chat     @relation(fields: [chatId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  joinedAt DateTime @default(now())
+
+  @@unique([chatId, userId]) // avoid duplicates
+}
+
+model Message {
+  id         String      @id @default(uuid())
+  chatId     String
+  senderId   String
+  chat       Chat        @relation(fields: [chatId], references: [id])
+  sender     User        @relation(fields: [senderId], references: [id])
+  content    String?
+  attachment String? // e.g., image or file path
+  type       MessageType @default(TEXT)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM // for auto system messages like "Trade started", "Payment confirmed"
+}
+
 // enums
+
+enum ChatRole {
+  BUYER
+  SELLER
+  ADMIN
+}
 
 // enum SenderType {
 //   BUYER

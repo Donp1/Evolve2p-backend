@@ -1,12 +1,15 @@
 const dotenv = require("dotenv");
 dotenv.config();
+
 const express = require("express");
-var cors = require("cors");
+const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
+
+// docs settings
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const path = require("path");
-
-const axios = require("axios");
 
 const { startPolling, ERC20_CONTRACTS } = require("./utils/crypto.js");
 
@@ -43,8 +46,18 @@ const getPaymentMethods = require("./routes/getPaymentMethods.js");
 const openDispute = require("./routes/openDispute.js");
 const getDispute = require("./routes/getDispute.js");
 const resolveDispute = require("./routes/resolveDispute.js");
+const { db } = require("./db.js");
 
 const app = express();
+const server = http.createServer(app);
+
+// setup socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "*", // set your frontend URL later for security
+    methods: ["GET", "POST"],
+  },
+});
 
 const PORT = process.env.PORT || 5000;
 
@@ -52,6 +65,53 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+io.on("connection", (socket) => {
+  console.log("🔌 Connected:", socket.id);
+
+  // Step 3: Join chat room
+  socket.on("join_chat", (chatId) => {
+    socket.join(chatId);
+    console.log(`📥 ${socket.id} joined chat ${chatId}`);
+  });
+
+  socket.on("leave_chat", (chatId) => {
+    socket.leave(chatId);
+    console.log(`📤 ${socket.id} left chat ${chatId}`);
+  });
+
+  // Step 4: Send + broadcast messages
+  socket.on("send_message", async ({ chatId, senderId, content, type }) => {
+    try {
+      const chat = await db.chat.findUnique({
+        where: { id: chatId },
+      });
+
+      if (!chat) {
+        return socket.emit("error_message", { error: "Chat not found" });
+      }
+
+      const message = await db.message.create({
+        data: {
+          chatId,
+          senderId,
+          content,
+          type: type || "TEXT",
+        },
+        include: { sender: true },
+      });
+
+      io.to(chatId).emit("new_message", message);
+      console.log("📩 Message sent in chat:", chatId);
+    } catch (err) {
+      console.error("❌ Error sending message:", err);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ Disconnected:", socket.id);
+  });
+});
 
 const swaggerDocument = YAML.load(path.join(__dirname, "swagger.yaml"));
 
@@ -103,7 +163,7 @@ app.use("/api/resolve-dispute", resolveDispute);
 
 // End Chats
 
-app.listen(PORT, (error) => {
+server.listen(PORT, (error) => {
   if (error) {
     console.log(error.message);
   } else {

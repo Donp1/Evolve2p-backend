@@ -1,47 +1,45 @@
 const express = require("express");
-const { isAuthenticated, isAdmin } = require("../middlewares");
 const { db } = require("../db");
-
 const router = express.Router();
 
-// POST /api/trades/:tradeId/chat
-router.post("/:tradeId", isAuthenticated, async (req, res) => {
-  const { tradeId } = req.params;
-  const { message } = req.body;
-  const { userId, role } = req.payload; // role instead of isAdmin
-
+/**
+ * Send a message to a chat
+ */
+router.post("/", async (req, res) => {
   try {
-    const trade = await db.trade.findUnique({ where: { id: tradeId } });
-    if (!trade)
-      return res.status(404).json({ error: true, message: "Trade not found" });
+    const { chatId, senderId, content, type } = req.body;
 
-    let senderType;
+    // Validate chat exists
+    const chat = await db.chat.findUnique({
+      where: { id: chatId },
+      include: { participants: true },
+    });
 
-    if (role === "ADMIN") {
-      senderType = "ADMIN";
-    } else if (trade.buyerId === userId) {
-      senderType = "BUYER";
-    } else if (trade.sellerId === userId) {
-      senderType = "SELLER";
-    } else {
-      return res
-        .status(403)
-        .json({ error: true, message: "Not authorized for this trade" });
+    if (!chat) {
+      return res.status(404).json({ error: "Chat not found" });
     }
 
-    const chatMsg = await db.chatMessage.create({
+    // Create message
+    const message = await db.message.create({
       data: {
-        tradeId,
-        senderId: role === "ADMIN" ? null : userId, // admins don't need senderId
-        senderType,
-        message,
+        chatId,
+        senderId,
+        content,
+        type: type || "TEXT",
+      },
+      include: {
+        sender: true,
       },
     });
 
-    res.status(201).json({ success: true, message: "Message sent", chatMsg });
+    // Emit real-time update with socket.io
+    const io = req.app.get("io");
+    io.to(chatId).emit("new_message", message);
+
+    return res.status(201).json(message);
   } catch (err) {
-    console.error("❌ Chat send error:", err);
-    res.status(500).json({ error: true, message: "Internal server error" });
+    console.error("Error sending message:", err);
+    return res.status(500).json({ error: "Failed to send message" });
   }
 });
 

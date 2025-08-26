@@ -22,7 +22,7 @@ router.post("/", isAuthenticated, async (req, res) => {
 
     const offer = await db.offer.findUnique({
       where: { id: offerId },
-      include: { user: true },
+      include: { user: true, paymentMethod: true },
     });
 
     if (!offer)
@@ -92,6 +92,40 @@ router.post("/", isAuthenticated, async (req, res) => {
           sellerId,
           crypto: offer.crypto.toUpperCase(),
           amount: amountCrypto,
+        },
+      });
+
+      await tx.chat.create({
+        data: {
+          tradeId: trade.id,
+          participants: {
+            create: [
+              { userId: buyerId, role: "BUYER" },
+              { userId: sellerId, role: "SELLER" },
+            ],
+          },
+          messages: {
+            create: [
+              {
+                type: "SYSTEM",
+                content: `You're buying ${trade.amountCrypto} ${offer.crypto} for ${trade.amountFiat} ${offer.currency} via ${offer.paymentMethod.name}. The ${trade.amountCrypto} is now in escrow and it's safe to make your payment.`,
+              },
+              {
+                type: "SYSTEM",
+                content:
+                  "Third-party payment s are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
+              },
+              {
+                type: "SYSTEM",
+                content:
+                  "Please wait for the seller to share their bank account details.",
+              },
+            ],
+          },
+        },
+        include: {
+          participants: true,
+          messages: true,
         },
       });
 
