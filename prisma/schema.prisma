@@ -126,7 +126,7 @@ model Trade {
   offer          Offer       @relation("OfferTrades", fields: [offerId], references: [id])
   dispute        Dispute[]
   escrow         Escrow?
-  chatMessages   Chat[]
+  chat           Chat?
 }
 
 model Escrow {
@@ -166,7 +166,7 @@ model Dispute {
 
 model Chat {
   id           String            @id @default(uuid())
-  tradeId      String
+  tradeId      String            @unique
   trade        Trade             @relation(fields: [tradeId], references: [id])
   participants ChatParticipant[]
   messages     Message[]

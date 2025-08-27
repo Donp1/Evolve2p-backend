@@ -20,6 +20,12 @@ router.get("/:id", isAuthenticated, async (req, res) => {
           },
         },
         escrow: true,
+        chat: {
+          include: {
+            messages: true,
+            participants: true,
+          },
+        },
       },
     });
 
