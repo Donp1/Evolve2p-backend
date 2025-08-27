@@ -189,9 +189,9 @@ model ChatParticipant {
 model Message {
   id         String      @id @default(uuid())
   chatId     String
-  senderId   String
+  senderId   String?
   chat       Chat        @relation(fields: [chatId], references: [id])
-  sender     User        @relation(fields: [senderId], references: [id])
+  sender     User?       @relation(fields: [senderId], references: [id])
   content    String?
   attachment String? // e.g., image or file path
   type       MessageType @default(TEXT)

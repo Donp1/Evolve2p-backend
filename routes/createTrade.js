@@ -65,72 +65,81 @@ router.post("/", isAuthenticated, async (req, res) => {
     }
 
     // Transaction: decrement seller balance, create trade + escrow
-    const result = await db.$transaction(async (tx) => {
-      // Deduct from seller (lock)
-      await tx.wallet.update({
-        where: { id: sellerWallet.id },
-        data: { balance: { decrement: amountCrypto } },
-      });
+    const result = await db.$transaction(
+      async (tx) => {
+        // Deduct from seller (lock)
+        await tx.wallet.update({
+          where: { id: sellerWallet.id },
+          data: { balance: { decrement: amountCrypto } },
+        });
 
-      // Create trade
-      const trade = await tx.trade.create({
-        data: {
-          offerId,
-          buyerId,
-          sellerId,
-          amountCrypto: Number(amountCrypto),
-          amountFiat: Number(amountFiat),
-          status: "PENDING", // PENDING → PAID → COMPLETED or CANCELED
-          escrowReleased: false,
-        },
-      });
-
-      // Create escrow row
-      await tx.escrow.create({
-        data: {
-          tradeId: trade.id,
-          sellerId,
-          crypto: offer.crypto.toUpperCase(),
-          amount: amountCrypto,
-        },
-      });
-
-      await tx.chat.create({
-        data: {
-          tradeId: trade.id,
-          participants: {
-            create: [
-              { userId: buyerId, role: "BUYER" },
-              { userId: sellerId, role: "SELLER" },
-            ],
+        // Create trade
+        const trade = await tx.trade.create({
+          data: {
+            offerId,
+            buyerId,
+            sellerId,
+            amountCrypto: Number(amountCrypto),
+            amountFiat: Number(amountFiat),
+            status: "PENDING", // PENDING → PAID → COMPLETED or CANCELED
+            escrowReleased: false,
           },
-          messages: {
-            create: [
-              {
-                type: "SYSTEM",
-                content: `You're buying ${trade.amountCrypto} ${offer.crypto} for ${trade.amountFiat} ${offer.currency} via ${offer.paymentMethod.name}. The ${trade.amountCrypto} is now in escrow and it's safe to make your payment.`,
-              },
-              {
-                type: "SYSTEM",
-                content:
-                  "Third-party payment s are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
-              },
-              {
-                type: "SYSTEM",
-                content:
-                  "Please wait for the seller to share their bank account details.",
-              },
-            ],
-          },
-        },
-        include: {
-          participants: true,
-          messages: true,
-        },
-      });
+        });
 
-      return trade;
-    });
+        // Create escrow row
+        await tx.escrow.create({
+          data: {
+            tradeId: trade.id,
+            sellerId,
+            crypto: offer.crypto.toUpperCase(),
+            amount: amountCrypto,
+          },
+        });
+
+        await tx.chat.create({
+          data: {
+            tradeId: trade.id,
+            participants: {
+              create: [
+                { userId: buyerId, role: "BUYER" },
+                { userId: sellerId, role: "SELLER" },
+              ],
+            },
+            messages: {
+              create: [
+                {
+                  senderId: null,
+                  type: "SYSTEM",
+                  content: `You're buying ${trade.amountCrypto} ${offer.crypto} for ${trade.amountFiat} ${offer.currency} via ${offer.paymentMethod.name}. The ${trade.amountCrypto} is now in escrow and it's safe to make your payment.`,
+                },
+                {
+                  type: "SYSTEM",
+                  content:
+                    "Third-party payment s are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
+                  senderId: null,
+                },
+                {
+                  type: "SYSTEM",
+                  content:
+                    "Please wait for the seller to share their bank account details.",
+                  senderId: null,
+                },
+              ],
+            },
+          },
+          include: {
+            participants: true,
+            messages: true,
+          },
+        });
+
+        return trade;
+      },
+      {
+        timeout: 15000, // 15 seconds
+        maxWait: 5000, // how long Prisma waits to acquire a transaction slot
+      }
+    );
 
     return res.status(201).json({
       success: true,
