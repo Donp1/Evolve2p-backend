@@ -96,43 +96,6 @@ router.post("/", isAuthenticated, async (req, res) => {
           },
         });
 
-        await tx.chat.create({
-          data: {
-            tradeId: trade.id,
-            participants: {
-              create: [
-                { userId: buyerId, role: "BUYER" },
-                { userId: sellerId, role: "SELLER" },
-              ],
-            },
-            messages: {
-              create: [
-                {
-                  senderId: null,
-                  type: "SYSTEM",
-                  content: `You're buying ${trade.amountCrypto} ${offer.crypto} for ${trade.amountFiat} ${offer.currency} via ${offer.paymentMethod.name}. The ${trade.amountCrypto} is now in escrow and it's safe to make your payment.`,
-                },
-                {
-                  type: "SYSTEM",
-                  content:
-                    "Third-party payment s are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
-                  senderId: null,
-                },
-                {
-                  type: "SYSTEM",
-                  content:
-                    "Please wait for the seller to share their bank account details.",
-                  senderId: null,
-                },
-              ],
-            },
-          },
-          include: {
-            participants: true,
-            messages: true,
-          },
-        });
-
         return trade;
       },
       {
@@ -140,6 +103,43 @@ router.post("/", isAuthenticated, async (req, res) => {
         maxWait: 5000, // how long Prisma waits to acquire a transaction slot
       }
     );
+
+    await db.chat.create({
+      data: {
+        tradeId: result.id,
+        participants: {
+          create: [
+            { userId: buyerId, role: "BUYER" },
+            { userId: sellerId, role: "SELLER" },
+          ],
+        },
+        messages: {
+          create: [
+            {
+              senderId: null,
+              type: "SYSTEM",
+              content: `You're buying ${result.amountCrypto} ${offer.crypto} for ${result.amountFiat} ${offer.currency} via ${offer.paymentMethod.name}. The ${result.amountCrypto} is now in escrow and it's safe to make your payment.`,
+            },
+            {
+              type: "SYSTEM",
+              content:
+                "Third-party payment s are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
+              senderId: null,
+            },
+            {
+              type: "SYSTEM",
+              content:
+                "Please wait for the seller to share their bank account details.",
+              senderId: null,
+            },
+          ],
+        },
+      },
+      include: {
+        participants: true,
+        messages: true,
+      },
+    });
 
     return res.status(201).json({
       success: true,
