@@ -46,6 +46,9 @@ const getPaymentMethods = require("./routes/getPaymentMethods.js");
 const openDispute = require("./routes/openDispute.js");
 const getDispute = require("./routes/getDispute.js");
 const resolveDispute = require("./routes/resolveDispute.js");
+
+const getChats = require("./routes/getChats.js");
+const sendChat = require("./routes/sendChat.js");
 const { db } = require("./db.js");
 
 const app = express();
@@ -58,6 +61,9 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
+
+// Attach io to app
+app.set("io", io);
 
 const PORT = process.env.PORT || 5000;
 
@@ -160,7 +166,8 @@ app.use("/api/resolve-dispute", resolveDispute);
 // End of Dispute
 
 // chats
-
+app.use("/api/send-chat", sendChat);
+app.use("/api/get-chats", getChats);
 // End Chats
 
 server.listen(PORT, (error) => {

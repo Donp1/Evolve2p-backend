@@ -1,13 +1,15 @@
 const express = require("express");
 const { db } = require("../db");
+const { isAuthenticated } = require("../middlewares");
 const router = express.Router();
 
 /**
  * Send a message to a chat
  */
-router.post("/", async (req, res) => {
+router.post("/", isAuthenticated, async (req, res) => {
   try {
-    const { chatId, senderId, content, type } = req.body;
+    const { userId: senderId } = req.payload;
+    const { chatId, content, type } = req.body;
 
     // Validate chat exists
     const chat = await db.chat.findUnique({

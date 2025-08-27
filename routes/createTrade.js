@@ -118,7 +118,7 @@ router.post("/", isAuthenticated, async (req, res) => {
             {
               senderId: null,
               type: "SYSTEM",
-              content: `You're buying ${result.amountCrypto} ${offer.crypto} for ${result.amountFiat} ${offer.currency} via ${offer.paymentMethod.name}. The ${result.amountCrypto} is now in escrow and it's safe to make your payment.`,
+              content: `You're buying ${result.amountCrypto} ${offer.crypto} for ${result.amountFiat} ${offer.currency} via ${offer.paymentMethod.name}. The ${result.amountCrypto} ${offer.crypto} is now in escrow and it's safe to make your payment.`,
             },
             {
               type: "SYSTEM",
