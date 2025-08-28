@@ -46,6 +46,7 @@ const getPaymentMethods = require("./routes/getPaymentMethods.js");
 const openDispute = require("./routes/openDispute.js");
 const getDispute = require("./routes/getDispute.js");
 const resolveDispute = require("./routes/resolveDispute.js");
+const uploadChatProofs = require("./routes/uploadChatProofs.js");
 
 const getChats = require("./routes/getChats.js");
 const sendChat = require("./routes/sendChat.js");
@@ -168,6 +169,7 @@ app.use("/api/resolve-dispute", resolveDispute);
 // chats
 app.use("/api/send-chat", sendChat);
 app.use("/api/get-chats", getChats);
+app.use("/api/upload-chat-proofs", uploadChatProofs);
 // End Chats
 
 server.listen(PORT, (error) => {

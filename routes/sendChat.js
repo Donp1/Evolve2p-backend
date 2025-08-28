@@ -36,7 +36,10 @@ router.post("/", isAuthenticated, async (req, res) => {
 
     // Emit real-time update with socket.io
     const io = req.app.get("io");
-    io.to(chatId).emit("new_message", message);
+    console.log(io);
+    if (io) {
+      io.to(chatId).emit("new_message", message);
+    }
 
     return res.status(201).json(message);
   } catch (err) {
