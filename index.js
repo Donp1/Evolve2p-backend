@@ -77,6 +77,13 @@ app.use(express.json());
 io.on("connection", (socket) => {
   console.log("🔌 Connected:", socket.id);
 
+  const userId = socket.handshake.query.userId;
+
+  if (userId) {
+    socket.join(userId); // join a room with the userId
+    console.log(`User ${userId} connected and joined room: ${userId}`);
+  }
+
   // Step 3: Join chat room
   socket.on("join_chat", (chatId) => {
     socket.join(chatId);
@@ -118,6 +125,7 @@ io.on("connection", (socket) => {
 
   // when trade is create
   socket.on("new_trade", async (userId) => {
+    console.log(userId);
     try {
       const user = await findUserById(userId);
 
