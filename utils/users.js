@@ -15,7 +15,11 @@ function findUserByEmail(email) {
         include: { offer: { include: { paymentMethod: true } } },
       },
       tradesAsBuyer: {
-        include: { offer: { include: { paymentMethod: true } } },
+        include: {
+          offer: { include: { paymentMethod: true } },
+          buyer: true,
+          seller: true,
+        },
       },
     },
   });
@@ -40,8 +44,16 @@ function findUserById(id) {
       wallets: true,
       transactions: true,
       swaps: true,
-      tradesAsSeller: true,
-      tradesAsBuyer: true,
+      tradesAsSeller: {
+        include: { offer: { include: { paymentMethod: true } } },
+      },
+      tradesAsBuyer: {
+        include: {
+          offer: { include: { paymentMethod: true } },
+          buyer: true,
+          seller: true,
+        },
+      },
     },
   });
 }
