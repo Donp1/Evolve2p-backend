@@ -11,8 +11,12 @@ function findUserByEmail(email) {
       wallets: true,
       transactions: true,
       swaps: true,
-      tradesAsSeller: true,
-      tradesAsBuyer: true,
+      tradesAsSeller: {
+        include: { offer: { include: { paymentMethod: true } } },
+      },
+      tradesAsBuyer: {
+        include: { offer: { include: { paymentMethod: true } } },
+      },
     },
   });
 }
