@@ -11,6 +11,8 @@ function findUserByEmail(email) {
       wallets: true,
       transactions: true,
       swaps: true,
+      tradesAsSeller: true,
+      tradesAsBuyer: true,
     },
   });
 }
@@ -34,6 +36,8 @@ function findUserById(id) {
       wallets: true,
       transactions: true,
       swaps: true,
+      tradesAsSeller: true,
+      tradesAsBuyer: true,
     },
   });
 }

@@ -51,6 +51,7 @@ const uploadChatProofs = require("./routes/uploadChatProofs.js");
 const getChats = require("./routes/getChats.js");
 const sendChat = require("./routes/sendChat.js");
 const { db } = require("./db.js");
+const { findUserById } = require("./utils/users.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -112,6 +113,19 @@ io.on("connection", (socket) => {
       console.log("📩 Message sent in chat:", chatId);
     } catch (err) {
       console.error("❌ Error sending message:", err);
+    }
+  });
+
+  // when trade is create
+  socket.on("new_trade", async (userId) => {
+    try {
+      const user = await findUserById(userId);
+
+      if (user) {
+        io.to(userId).emit("new_trade", user);
+      }
+    } catch (error) {
+      console.log("Error: ", error);
     }
   });
 

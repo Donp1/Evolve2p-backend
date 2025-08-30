@@ -104,7 +104,7 @@ router.post("/", isAuthenticated, async (req, res) => {
       }
     );
 
-    await db.chat.create({
+    const newChat = await db.chat.create({
       data: {
         tradeId: result.id,
         participants: {
@@ -140,6 +140,11 @@ router.post("/", isAuthenticated, async (req, res) => {
         messages: true,
       },
     });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(buyerId).emit("new_trade", result);
+    }
 
     return res.status(201).json({
       success: true,
