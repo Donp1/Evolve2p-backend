@@ -84,6 +84,11 @@ router.post("/", isAuthenticated, async (req, res) => {
             status: "PENDING", // PENDING → PAID → COMPLETED or CANCELED
             escrowReleased: false,
           },
+          include: {
+            offer: { include: { paymentMethod: true } },
+            buyer: true,
+            seller: true,
+          },
         });
 
         // Create escrow row
