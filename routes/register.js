@@ -72,10 +72,10 @@ route.post("/", async (req, res) => {
       let address;
       if (symbol === "BTC") {
         address = btcAddress;
-        subscribeToAddressWebhook(address, symbol);
+        // subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "ETH") {
         address = ethAddress;
-        subscribeToAddressWebhook(address, symbol);
+        // subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "USDT" || symbol === "USDC") {
         address = tronAddress;
       }
