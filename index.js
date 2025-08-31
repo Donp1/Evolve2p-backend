@@ -125,7 +125,6 @@ io.on("connection", (socket) => {
 
   // when trade is create
   socket.on("new_trade", async (userId) => {
-    console.log(userId);
     try {
       const user = await findUserById(userId);
 
