@@ -85,9 +85,10 @@ router.post("/", isAuthenticated, async (req, res) => {
             escrowReleased: false,
           },
           include: {
-            offer: { include: { paymentMethod: true } },
             buyer: true,
             seller: true,
+            offer: { include: { paymentMethod: true } },
+            chat: { include: { messages: true, participants: true } },
           },
         });
 

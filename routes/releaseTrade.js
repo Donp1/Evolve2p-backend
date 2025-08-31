@@ -56,11 +56,28 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       // Complete trade
       const t = await tx.trade.update({
         where: { id: trade.id },
-        data: { status: "COMPLETED", escrowReleased: true },
+        data: {
+          status: "COMPLETED",
+          escrowReleased: true,
+          include: {
+            buyer: true,
+            seller: true,
+            offer: { include: { paymentMethod: true } },
+            chat: { include: { messages: true, participants: true } },
+          },
+        },
       });
 
       return t;
     });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(updated.buyerId).emit("new_trade", updated);
+
+      // ✅ Notify the seller
+      io.to(updated.sellerId).emit("new_trade", updated);
+    }
 
     res.json({
       success: true,

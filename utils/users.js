@@ -13,7 +13,7 @@ function findUserByEmail(email) {
       swaps: true,
       tradesAsSeller: {
         include: {
-          offer: { include: { paymentMethod: true } },
+          offer: { include: { paymentMethod: true, user: true } },
           buyer: true,
           seller: true,
         },
@@ -50,7 +50,7 @@ function findUserById(id) {
       swaps: true,
       tradesAsSeller: {
         include: {
-          offer: { include: { paymentMethod: true } },
+          offer: { include: { paymentMethod: true, user: true } },
           buyer: true,
           seller: true,
         },
@@ -75,6 +75,20 @@ function findUserByUsername(username) {
       wallets: true,
       transactions: true,
       swaps: true,
+      tradesAsSeller: {
+        include: {
+          offer: { include: { paymentMethod: true, user: true } },
+          buyer: true,
+          seller: true,
+        },
+      },
+      tradesAsBuyer: {
+        include: {
+          offer: { include: { paymentMethod: true } },
+          buyer: true,
+          seller: true,
+        },
+      },
     },
   });
 }
