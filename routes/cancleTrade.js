@@ -50,7 +50,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       // cancel trade
       const t = await tx.trade.update({
         where: { id: trade.id },
-        data: { status: "CANCELED" },
+        data: { status: "CANCELLED" },
       });
 
       return t;
