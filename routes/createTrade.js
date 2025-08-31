@@ -143,10 +143,10 @@ router.post("/", isAuthenticated, async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      io.to(buyerId).emit("new_trade", buyerId);
+      io.to(buyerId).emit("new_trade", result);
 
       // ✅ Notify the seller
-      io.to(sellerId).emit("new_trade", sellerId);
+      io.to(sellerId).emit("new_trade", result);
     }
 
     return res.status(201).json({
