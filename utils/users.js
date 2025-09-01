@@ -20,7 +20,7 @@ function findUserByEmail(email) {
       },
       tradesAsBuyer: {
         include: {
-          offer: { include: { paymentMethod: true } },
+          offer: { include: { paymentMethod: true, user: true } },
           buyer: true,
           seller: true,
         },
@@ -57,7 +57,7 @@ function findUserById(id) {
       },
       tradesAsBuyer: {
         include: {
-          offer: { include: { paymentMethod: true } },
+          offer: { include: { paymentMethod: true, user: true } },
           buyer: true,
           seller: true,
         },
@@ -84,7 +84,7 @@ function findUserByUsername(username) {
       },
       tradesAsBuyer: {
         include: {
-          offer: { include: { paymentMethod: true } },
+          offer: { include: { paymentMethod: true, user: true } },
           buyer: true,
           seller: true,
         },
