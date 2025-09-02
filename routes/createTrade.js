@@ -2,8 +2,22 @@ const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
 const { getMarketPrice } = require("../utils/crypto");
+const { addMinutes, addHours } = require("date-fns");
 
 const router = express.Router();
+
+function calculateExpiration(createdAt, paymentWindow) {
+  const [valueStr, unit] = paymentWindow.split(" "); // e.g. "15 minutes"
+  const value = parseInt(valueStr, 10);
+
+  if (unit.startsWith("minute")) {
+    return addMinutes(createdAt, value);
+  } else if (unit.startsWith("hour")) {
+    return addHours(createdAt, value);
+  }
+
+  throw new Error("Unsupported paymentWindow format");
+}
 
 router.post("/", isAuthenticated, async (req, res) => {
   const { offerId, amountFiat, amountCrypto } = req.body;
@@ -64,6 +78,9 @@ router.post("/", isAuthenticated, async (req, res) => {
         .json({ error: true, message: "Seller does not have enough balance" });
     }
 
+    // Parse payment window
+    let expiresAt = calculateExpiration(offer?.createdAt, offer?.time);
+
     // Transaction: decrement seller balance, create trade + escrow
     const result = await db.$transaction(
       async (tx) => {
@@ -73,17 +90,33 @@ router.post("/", isAuthenticated, async (req, res) => {
           data: { balance: { decrement: amountCrypto } },
         });
 
-        // Create trade
-        const trade = await tx.trade.create({
+        // Create trade (no expiresAt yet)
+        let trade = await tx.trade.create({
           data: {
             offerId,
             buyerId,
             sellerId,
             amountCrypto: Number(amountCrypto),
             amountFiat: Number(amountFiat),
-            status: "PENDING", // PENDING → PAID → COMPLETED or CANCELED
+            status: "PENDING",
             escrowReleased: false,
           },
+          include: {
+            buyer: true,
+            seller: true,
+            offer: { include: { paymentMethod: true } },
+            chat: { include: { messages: true, participants: true } },
+          },
+        });
+
+        // Now compute expiration from trade.createdAt and offer.paymentWindow
+        const expiresAt = calculateExpiration(trade.createdAt, offer.time);
+        // 👆 You'll write addDuration to handle "15 minutes", "1 hour", etc.
+
+        // Update trade with expiresAt
+        trade = await tx.trade.update({
+          where: { id: trade.id },
+          data: { expiresAt },
           include: {
             buyer: true,
             seller: true,
@@ -105,8 +138,8 @@ router.post("/", isAuthenticated, async (req, res) => {
         return trade;
       },
       {
-        timeout: 15000, // 15 seconds
-        maxWait: 5000, // how long Prisma waits to acquire a transaction slot
+        timeout: 15000,
+        maxWait: 5000,
       }
     );
 

@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const cron = require("node-cron");
 
 // docs settings
 const swaggerUi = require("swagger-ui-express");
@@ -192,6 +193,21 @@ app.use("/api/send-chat", sendChat);
 app.use("/api/get-chats", getChats);
 app.use("/api/upload-chat-proofs", uploadChatProofs);
 // End Chats
+
+// worker to check expired trades
+cron.schedule("* * * * *", async () => {
+  // every 1 min
+  await db.trade.updateMany({
+    where: {
+      status: "PENDING",
+      expiresAt: { lt: new Date() },
+    },
+    data: {
+      status: "CANCELLED",
+      canceledAt: new Date(),
+    },
+  });
+});
 
 server.listen(PORT, (error) => {
   if (error) {

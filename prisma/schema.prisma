@@ -112,21 +112,26 @@ model Trade {
   buyerId        String
   sellerId       String
   offerId        String
-  status         TradeStatus @default(PENDING) // add default
+  status         TradeStatus @default(PENDING) // PENDING, PAID, COMPLETED, CANCELED
   amountFiat     Float
   amountCrypto   Float
   escrowReleased Boolean     @default(false)
   paymentProof   String? // URL to uploaded proof image
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt // track last action time
-  completedAt    DateTime? // useful for analytics
-  canceledAt     DateTime? // if canceled
-  buyer          User        @relation("BuyerTrades", fields: [buyerId], references: [id])
-  seller         User        @relation("SellerTrades", fields: [sellerId], references: [id])
-  offer          Offer       @relation("OfferTrades", fields: [offerId], references: [id])
-  dispute        Dispute[]
-  escrow         Escrow?
-  chat           Chat?
+  completedAt    DateTime? // when trade is marked completed
+  canceledAt     DateTime? // when trade is canceled
+
+  // 🔹 New field: actual expiration timestamp
+  expiresAt DateTime?
+
+  // Relations
+  buyer   User      @relation("BuyerTrades", fields: [buyerId], references: [id])
+  seller  User      @relation("SellerTrades", fields: [sellerId], references: [id])
+  offer   Offer     @relation("OfferTrades", fields: [offerId], references: [id])
+  dispute Dispute[]
+  escrow  Escrow?
+  chat    Chat?
 }
 
 model Escrow {
