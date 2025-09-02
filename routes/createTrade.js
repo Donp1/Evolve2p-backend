@@ -116,7 +116,7 @@ router.post("/", isAuthenticated, async (req, res) => {
         // Update trade with expiresAt
         trade = await tx.trade.update({
           where: { id: trade.id },
-          data: { expiresAt },
+          data: { expiresAt: expiresAt },
           include: {
             buyer: true,
             seller: true,

@@ -40,36 +40,42 @@ router.post("/:id", isAuthenticated, async (req, res) => {
 
     // const buyerWallet = await ensureWallet(trade.buyerId, trade.escrow.crypto);
 
-    const updated = await db.$transaction(async (tx) => {
-      // Credit buyer
-      await tx.wallet.update({
-        where: { id: buyerWallet.id },
-        data: { balance: { increment: Number(trade.amountCrypto) } },
-      });
+    const updated = await db.$transaction(
+      async (tx) => {
+        // Credit buyer
+        await tx.wallet.update({
+          where: { id: buyerWallet.id },
+          data: { balance: { increment: Number(trade.amountCrypto) } },
+        });
 
-      // Mark escrow released
-      await tx.escrow.update({
-        where: { tradeId: trade.id },
-        data: { released: true },
-      });
+        // Mark escrow released
+        await tx.escrow.update({
+          where: { tradeId: trade.id },
+          data: { released: true },
+        });
 
-      // Complete trade
-      const t = await tx.trade.update({
-        where: { id: trade.id },
-        data: {
-          status: "COMPLETED",
-          escrowReleased: true,
+        // Complete trade
+        const t = await tx.trade.update({
+          where: { id: trade.id },
+          data: {
+            status: "COMPLETED",
+            escrowReleased: true,
+          },
           include: {
             buyer: true,
             seller: true,
             offer: { include: { paymentMethod: true } },
             chat: { include: { messages: true, participants: true } },
           },
-        },
-      });
+        });
 
-      return t;
-    });
+        return t;
+      },
+      {
+        timeout: 15000,
+        maxWait: 5000,
+      }
+    );
 
     const io = req.app.get("io");
     if (io) {
