@@ -32,7 +32,7 @@ router.post(
       }
 
       // Find trade
-      const trade = await db.trade.findUnique({ where: { id: tradeId } });
+      const trade = await db.trade.findFirst({ where: { id: tradeId } });
       if (!trade) {
         return res
           .status(404)
@@ -56,11 +56,15 @@ router.post(
       }
 
       let evidenceUrl = null;
+
       // Upload evidence if provided
       if (evidence) {
         evidenceUrl = await new Promise((resolve, reject) => {
           const cld_upload_stream = cloudinary.uploader.upload_stream(
-            { resource_type: "auto", folder: "dispute-evidence" },
+            {
+              resource_type: "auto",
+              folder: "dispute-evidence",
+            },
             (error, result) => {
               if (error) reject(error);
               else resolve(result.secure_url);
