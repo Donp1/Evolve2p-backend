@@ -124,19 +124,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // when trade is create
-  socket.on("new_trade", async (userId) => {
-    try {
-      const user = await findUserById(userId);
-
-      if (user) {
-        io.to(userId).emit("new_trade", user);
-      }
-    } catch (error) {
-      console.log("Error: ", error);
-    }
-  });
-
   socket.on("disconnect", () => {
     console.log("❌ Disconnected:", socket.id);
   });

@@ -15,9 +15,6 @@ cloudinary.config({
   secure: true,
 });
 
-/**
- * Send a message to a chat
- */
 router.post(
   "/",
   isAuthenticated,

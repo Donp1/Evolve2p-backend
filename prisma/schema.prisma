@@ -146,16 +146,17 @@ model Escrow {
 }
 
 model Dispute {
-  id         String        @id @default(uuid())
-  tradeId    String
-  openedBy   String // userId of who opened dispute
-  reason     String
-  status     DisputeStatus @default(OPEN)
-  evidence   String? // optional URL to file/image proof
-  createdAt  DateTime      @default(now())
-  resolvedAt DateTime?
-  trade      Trade         @relation(fields: [tradeId], references: [id])
-  user       User          @relation(fields: [openedBy], references: [id])
+  id          String        @id @default(uuid())
+  tradeId     String
+  openedBy    String // userId of who opened dispute
+  reason      String
+  description String? // added description field
+  status      DisputeStatus @default(OPEN)
+  evidence    String? // optional URL to file/image proof
+  createdAt   DateTime      @default(now())
+  resolvedAt  DateTime?
+  trade       Trade         @relation(fields: [tradeId], references: [id])
+  user        User          @relation(fields: [openedBy], references: [id])
 }
 
 // model ChatMessage {
