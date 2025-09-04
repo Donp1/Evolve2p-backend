@@ -25,6 +25,7 @@ function findUserByEmail(email) {
           seller: true,
         },
       },
+      notifications: true,
     },
   });
 }
