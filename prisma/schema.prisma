@@ -33,6 +33,8 @@ model User {
   dispute          Dispute[]
   chatParticipants ChatParticipant[]
   messages         Message[]
+  notifications    Notification[]
+  createdAt        DateTime          @default(now())
 }
 
 model OTP {
@@ -205,13 +207,32 @@ model Message {
   updatedAt  DateTime    @updatedAt
 }
 
+model Notification {
+  id        String               @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  category  NotificationCategory
+  data      Json? // extra info e.g. tradeId
+  read      Boolean              @default(false)
+  createdAt DateTime             @default(now())
+  user      User                 @relation(fields: [userId], references: [id])
+}
+
+// enums
 enum MessageType {
   TEXT
   IMAGE
   SYSTEM // for auto system messages like "Trade started", "Payment confirmed"
 }
 
-// enums
+enum NotificationCategory {
+  TRADE
+  CHAT
+  WALLET // deposits, withdrawals, swaps, sends, receives
+  PROFILE // profile updates
+  SYSTEM // announcements, maintenance messages, etc.
+}
 
 enum ChatRole {
   BUYER

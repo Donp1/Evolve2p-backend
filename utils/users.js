@@ -62,6 +62,7 @@ function findUserById(id) {
           seller: true,
         },
       },
+      notifications: true,
     },
   });
 }
@@ -89,6 +90,7 @@ function findUserByUsername(username) {
           seller: true,
         },
       },
+      notifications: true,
     },
   });
 }
