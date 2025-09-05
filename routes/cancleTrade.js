@@ -1,6 +1,7 @@
 const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
+const { sendPushNotification } = require("../utils/users");
 
 const router = express.Router();
 
@@ -62,13 +63,51 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       return t;
     });
 
+    const sellserNotification = await db.notification.create({
+      data: {
+        title: "Trade Canceled",
+        message: `Your trade with ${updated?.buyer.username} has been canceled. Funds have been returned to your wallet.`,
+        category: "TRADE",
+        data: { tradeId: id },
+        read: false,
+        userId: updatedTrade.sellerId,
+      },
+    });
+
+    const buyerNotification = await db.notification.create({
+      data: {
+        title: "Trade Canceled",
+        message: `Your trade with ${updated?.seller.username} has been canceled.`,
+        category: "TRADE",
+        data: { tradeId: id },
+        read: false,
+        userId: updatedTrade.buyerId,
+      },
+    });
+
     const io = req.app.get("io");
     if (io) {
       io.to(updated.sellerId).emit("new_trade", updated);
 
       // ✅ Notify the seller
       io.to(updated.buyerId).emit("new_trade", updated);
+
+      io.to(updated?.buyerId).emit("new_notification", buyerNotification);
+
+      // ✅ Notify the seller
+      io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
+
+    await sendPushNotification(
+      updated.buyerId,
+      "Trade Canceled",
+      `Your trade with ${updated?.seller.username} has been canceled.`
+    );
+    await sendPushNotification(
+      updated.sellerId,
+      "Trade Canceled",
+      `Your trade with ${updated?.buyer.username} has been canceled. Funds have been returned to your wallet.`
+    );
 
     res.json({
       success: true,

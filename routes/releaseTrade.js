@@ -2,7 +2,7 @@ const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
 const { convertCryptoToFiat } = require("../utils/crypto");
-const { releaseTrade } = require("../utils/users");
+const { releaseTrade, sendPushNotification } = require("../utils/users");
 
 const router = express.Router();
 
@@ -111,6 +111,17 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       // ✅ Notify the seller
       io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
+
+    await sendPushNotification(
+      trade.buyerId,
+      "Escrow Released 🎉",
+      `Your trade with ${updated?.seller?.username} has been completed successfully .`
+    );
+    await sendPushNotification(
+      trade.sellerId,
+      "Escrow Released 🎉",
+      `Your trade with ${updated?.buyer?.username} has been completed successfully.`
+    );
 
     res.json({
       success: true,

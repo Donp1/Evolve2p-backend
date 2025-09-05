@@ -3,6 +3,7 @@ const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
 const { getMarketPrice } = require("../utils/crypto");
 const { addMinutes, addHours } = require("date-fns");
+const { sendPushNotification } = require("../utils/users");
 
 const router = express.Router();
 
@@ -211,6 +212,17 @@ router.post("/", isAuthenticated, async (req, res) => {
       io.to(buyerId).emit("new_notification", buyerNotification);
       io.to(result?.sellerId).emit("new_notification", sellerNotification);
     }
+
+    await sendPushNotification(
+      buyerId,
+      "Escrow Released 🎉",
+      `Your trade request to buy ${result.amountCrypto} ${offer.crypto} from ${result?.seller?.username} has been created successfully.`
+    );
+    await sendPushNotification(
+      sellerId,
+      "Escrow Released 🎉",
+      `${result?.buyer?.username} wants to buy ${result?.amountCrypto} ${offer?.crypto} from your offer. Please respond promptly.`
+    );
 
     return res.status(201).json({
       success: true,
