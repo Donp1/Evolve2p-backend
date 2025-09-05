@@ -34,7 +34,16 @@ model User {
   chatParticipants ChatParticipant[]
   messages         Message[]
   notifications    Notification[]
+  pushTokens       PushToken[]
   createdAt        DateTime          @default(now())
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model OTP {

@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const { db } = require("../db");
+const fetch = require("node-fetch");
 
 function findUserByEmail(email) {
   return db.user.findUnique({
@@ -134,6 +135,24 @@ async function releaseTrade(tradeId) {
   ]);
 }
 
+async function sendPushNotification(userId, title, body) {
+  const tokens = await db.pushToken.findMany({ where: { userId } });
+  if (!tokens.length) return;
+
+  const messages = tokens.map((t) => ({
+    to: t.token,
+    sound: "default",
+    title,
+    body,
+  }));
+
+  await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(messages),
+  });
+}
+
 module.exports = {
   findUserByEmail,
   findUserById,
@@ -143,4 +162,5 @@ module.exports = {
   findUserByUsername,
   deleteAccount,
   releaseTrade,
+  sendPushNotification,
 };

@@ -48,6 +48,8 @@ const openDispute = require("./routes/openDispute.js");
 const getDispute = require("./routes/getDispute.js");
 const resolveDispute = require("./routes/resolveDispute.js");
 const uploadChatProofs = require("./routes/uploadChatProofs.js");
+const registerPushToken = require("./routes/registerPushToken.js");
+const sendPushNotification = require("./routes/sendPushNotification.js");
 
 const getChats = require("./routes/getChats.js");
 const sendChat = require("./routes/sendChat.js");
@@ -155,6 +157,8 @@ app.use("/api/verify-secrete", verifySecrete); // done
 app.use("/api/send-sms-otp", sendSmsOtp);
 app.use("/api/send", send);
 app.use("/api/swap", swap);
+app.use("/api/register-push-token", registerPushToken);
+app.use("/api/send-push-notification", sendPushNotification);
 
 // Trade
 app.use("/api/create-trade", createTrade);
