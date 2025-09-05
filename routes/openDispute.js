@@ -104,18 +104,18 @@ router.post(
 
       const sellserNotification = await db.notification.create({
         data: {
-          title: "Funds Released 🎉",
+          title: "Dispute Opened ⚠️",
           message: `Trade with buyer ${trade?.buyer?.username} is now in dispute and the trade has been paused`,
           category: "TRADE",
           data: { tradeId: tradeId },
           read: false,
-          userId: updatedTrade.buyerId,
+          userId: updatedTrade.sellerId,
         },
       });
 
       const buyerNotification = await db.notification.create({
         data: {
-          title: "Funds Released 🎉",
+          title: "Dispute Opened ⚠️",
           message: `Trade with seller ${trade?.seller?.username} is now in dispute and the trade has been paused`,
           category: "TRADE",
           data: { tradeId: tradeId },
