@@ -109,7 +109,7 @@ router.post(
           category: "TRADE",
           data: { tradeId: tradeId },
           read: false,
-          userId: updated.buyerId,
+          userId: updatedTrade.buyerId,
         },
       });
 
@@ -120,7 +120,7 @@ router.post(
           category: "TRADE",
           data: { tradeId: tradeId },
           read: false,
-          userId: updated.buyerId,
+          userId: updatedTrade.buyerId,
         },
       });
 
