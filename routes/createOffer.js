@@ -86,6 +86,21 @@ router.post("/", isAuthenticated, async (req, res) => {
     });
 
     if (offer) {
+      const notification = await db.notification.create({
+        data: {
+          category: "SYSTEM",
+          title: "Offer Created",
+          message: `Your offer to ${type} ${crypto} has been created successfully.`,
+          read: false,
+          userId: userId,
+        },
+      });
+
+      const io = req.app.get("io");
+      if (io) {
+        io.to(userId).emit("new_notification", notification);
+      }
+
       return res
         .status(201)
         .json({ success: true, message: "Offer created successfully", offer });

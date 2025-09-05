@@ -94,6 +94,22 @@ route.post("/", async (req, res) => {
       });
     }
 
+    const notification = await db.notification.create({
+      data: {
+        userId: newUser.id,
+        message:
+          "Welcome to Evolve2p. Your account has been created successfully.",
+        read: false,
+        title: "Welcome Message",
+        category: "SYSTEM",
+      },
+    });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(newUser.id).emit("new_notification", notification);
+    }
+
     const accessToken = generateAccessToken(newUser);
     return res.status(201).json({
       accessToken,

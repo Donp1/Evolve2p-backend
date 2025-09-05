@@ -77,12 +77,39 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       }
     );
 
+    const buyerNotification = await db.notification.create({
+      data: {
+        title: "Funds Released 🎉",
+        message: `${updated?.seller?.username} has released ${trade.amountCrypto} ${trade.escrow.crypto}. The trade is now completed successfully.`,
+        category: "TRADE",
+        data: { tradeId: id },
+        read: false,
+        userId: updated.buyerId,
+      },
+    });
+
+    const sellserNotification = await db.notification.create({
+      data: {
+        title: "Funds Released 🎉",
+        message: `${updated?.seller?.username} has released ${trade.amountCrypto} ${trade.escrow.crypto}. The trade is now completed successfully.`,
+        category: "TRADE",
+        data: { tradeId: id },
+        read: false,
+        userId: updated.buyerId,
+      },
+    });
+
     const io = req.app.get("io");
     if (io) {
       io.to(updated.buyerId).emit("new_trade", updated);
 
       // ✅ Notify the seller
       io.to(updated.sellerId).emit("new_trade", updated);
+
+      io.to(updated.buyerId).emit("new_notification", buyerNotification);
+
+      // ✅ Notify the seller
+      io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
 
     res.json({

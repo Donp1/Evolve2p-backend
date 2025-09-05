@@ -32,7 +32,10 @@ router.post(
       }
 
       // Find trade
-      const trade = await db.trade.findFirst({ where: { id: tradeId } });
+      const trade = await db.trade.findFirst({
+        where: { id: tradeId },
+        include: { buyer: true, seller: true },
+      });
       if (!trade) {
         return res
           .status(404)
@@ -98,6 +101,36 @@ router.post(
           chat: { include: { messages: true, participants: true } },
         },
       });
+
+      const sellserNotification = await db.notification.create({
+        data: {
+          title: "Funds Released 🎉",
+          message: `Trade with buyer ${trade?.buyer?.username} is now in dispute and the trade has been paused`,
+          category: "TRADE",
+          data: { tradeId: tradeId },
+          read: false,
+          userId: updated.buyerId,
+        },
+      });
+
+      const buyerNotification = await db.notification.create({
+        data: {
+          title: "Funds Released 🎉",
+          message: `Trade with seller ${trade?.seller?.username} is now in dispute and the trade has been paused`,
+          category: "TRADE",
+          data: { tradeId: tradeId },
+          read: false,
+          userId: updated.buyerId,
+        },
+      });
+
+      const io = req.app.get("io");
+      if (io) {
+        io.to(trade?.buyerId).emit("new_notification", buyerNotification);
+
+        // ✅ Notify the seller
+        io.to(trade.sellerId).emit("new_notification", sellserNotification);
+      }
 
       return res.status(201).json({
         success: true,

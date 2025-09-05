@@ -9,7 +9,10 @@ router.post("/:id", isAuthenticated, async (req, res) => {
   const { userId } = req.payload;
 
   try {
-    const trade = await db.trade.findUnique({ where: { id } });
+    const trade = await db.trade.findUnique({
+      where: { id },
+      include: { seller: true, buyer: true, offer: true },
+    });
     if (!trade)
       return res.status(404).json({ error: true, message: "Trade not found" });
     if (trade.buyerId !== userId) {
@@ -27,6 +30,34 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       where: { id },
       data: { status: "PAID" },
     });
+
+    const buyerNotification = await db.notification.create({
+      data: {
+        title: "Trade Marked as Paid ✅",
+        message: `You have marked your trade with ${trade?.seller?.username} as paid. Please wait for the seller to release ${trade.amountCrypto} ${trade?.offer?.crypto}.`,
+        category: "TRADE",
+        data: { tradeId: id },
+        read: false,
+        userId: userId,
+      },
+    });
+
+    const sellerNotification = await db.notification.create({
+      data: {
+        title: "Trade Marked as Paid ✅",
+        message: `${trade?.buyer?.username} has marked the trade as paid. Please confirm and release ${trade.amountCrypto} ${trade?.offer?.crypto}.`,
+        category: "TRADE",
+        data: { tradeId: result.id },
+        read: false,
+        userId: result?.sellerId,
+      },
+    });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(trade?.buyerId).emit("new_notification", buyerNotification);
+      io.to(trade?.sellerId).emit("new_notification", sellerNotification);
+    }
 
     res.json({ success: true, message: "Marked as paid", trade: updated });
   } catch (err) {
