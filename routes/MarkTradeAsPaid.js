@@ -39,7 +39,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
         category: "TRADE",
         data: { tradeId: id },
         read: false,
-        userId: userId,
+        userId: trade?.buyerId,
       },
     });
 
@@ -48,9 +48,9 @@ router.post("/:id", isAuthenticated, async (req, res) => {
         title: "Trade Marked as Paid ✅",
         message: `${trade?.buyer?.username} has marked the trade as paid. Please confirm and release ${trade.amountCrypto} ${trade?.offer?.crypto}.`,
         category: "TRADE",
-        data: { tradeId: result.id },
+        data: { tradeId: id },
         read: false,
-        userId: result?.sellerId,
+        userId: trade?.sellerId,
       },
     });
 
