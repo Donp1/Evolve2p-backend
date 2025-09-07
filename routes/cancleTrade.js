@@ -98,16 +98,16 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
 
-    await sendPushNotification(
-      updated.buyerId,
-      "Trade Canceled",
-      `Your trade with ${updated?.seller.username} has been canceled.`
-    );
-    await sendPushNotification(
-      updated.sellerId,
-      "Trade Canceled",
-      `Your trade with ${updated?.buyer.username} has been canceled. Funds have been returned to your wallet.`
-    );
+    // await sendPushNotification(
+    //   updated.buyerId,
+    //   "Trade Canceled",
+    //   `Your trade with ${updated?.seller.username} has been canceled.`
+    // );
+    // await sendPushNotification(
+    //   updated.sellerId,
+    //   "Trade Canceled",
+    //   `Your trade with ${updated?.buyer.username} has been canceled. Funds have been returned to your wallet.`
+    // );
 
     res.json({
       success: true,

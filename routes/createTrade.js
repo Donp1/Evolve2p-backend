@@ -213,16 +213,16 @@ router.post("/", isAuthenticated, async (req, res) => {
       io.to(result?.sellerId).emit("new_notification", sellerNotification);
     }
 
-    await sendPushNotification(
-      buyerId,
-      "Escrow Released 🎉",
-      `Your trade request to buy ${result.amountCrypto} ${offer.crypto} from ${result?.seller?.username} has been created successfully.`
-    );
-    await sendPushNotification(
-      sellerId,
-      "Escrow Released 🎉",
-      `${result?.buyer?.username} wants to buy ${result?.amountCrypto} ${offer?.crypto} from your offer. Please respond promptly.`
-    );
+    // await sendPushNotification(
+    //   buyerId,
+    //   "Trade Created 🛒",
+    //   `Your trade request to buy ${result.amountCrypto} ${offer.crypto} from ${result?.seller?.username} has been created successfully.`
+    // );
+    // await sendPushNotification(
+    //   sellerId,
+    //   "Trade Created 🛒",
+    //   `${result?.buyer?.username} wants to buy ${result?.amountCrypto} ${offer?.crypto} from your offer. Please respond promptly.`
+    // );
 
     return res.status(201).json({
       success: true,

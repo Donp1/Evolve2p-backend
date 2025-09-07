@@ -60,16 +60,16 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       io.to(trade?.sellerId).emit("new_notification", sellerNotification);
     }
 
-    await sendPushNotification(
-      result?.buyerId,
-      "Escrow Released 🎉",
-      `You have marked your trade with ${trade?.seller?.username} as paid. Please wait for the seller to release ${trade.amountCrypto} ${trade?.offer?.crypto}.`
-    );
-    await sendPushNotification(
-      result?.sellerId,
-      "Escrow Released 🎉",
-      `${trade?.buyer?.username} has marked the trade as paid. Please confirm and release ${trade.amountCrypto} ${trade?.offer?.crypto}.`
-    );
+    // await sendPushNotification(
+    //   result?.buyerId,
+    //   "Marked as Paid ✅",
+    //   `You have marked your trade with ${trade?.seller?.username} as paid. Please wait for the seller to release ${trade.amountCrypto} ${trade?.offer?.crypto}.`
+    // );
+    // await sendPushNotification(
+    //   result?.sellerId,
+    //   "Marked as Paid ✅",
+    //   `${trade?.buyer?.username} has marked the trade as paid. Please confirm and release ${trade.amountCrypto} ${trade?.offer?.crypto}.`
+    // );
 
     res.json({ success: true, message: "Marked as paid", trade: updated });
   } catch (err) {

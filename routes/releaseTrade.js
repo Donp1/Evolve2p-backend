@@ -112,16 +112,16 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
 
-    await sendPushNotification(
-      trade.buyerId,
-      "Escrow Released 🎉",
-      `Your trade with ${updated?.seller?.username} has been completed successfully .`
-    );
-    await sendPushNotification(
-      trade.sellerId,
-      "Escrow Released 🎉",
-      `Your trade with ${updated?.buyer?.username} has been completed successfully.`
-    );
+    // await sendPushNotification(
+    //   trade.buyerId,
+    //   "Funds Released 🎉",
+    //   `Your trade with ${updated?.seller?.username} has been completed successfully .`
+    // );
+    // await sendPushNotification(
+    //   trade.sellerId,
+    //   "Funds Released 🎉",
+    //   `Your trade with ${updated?.buyer?.username} has been completed successfully.`
+    // );
 
     res.json({
       success: true,
