@@ -16,8 +16,6 @@ router.get("/:id", async (req, res) => {
             id: true,
             username: true,
             email: true,
-
-            // add other fields you want exposed
           },
         },
         paymentMethod: true,

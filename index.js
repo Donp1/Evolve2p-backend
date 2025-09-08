@@ -24,6 +24,7 @@ const updateUser = require("./routes/updateUser.js");
 const forgotPassword = require("./routes/forgotPassword.js");
 const checkToken = require("./routes/checkToken.js");
 const getUser = require("./routes/getUser.js");
+const getUserById = require("./routes/getUserById.js");
 const kycGetLink = require("./routes/kycGetLink.js");
 const kycVerification = require("./routes/kycVerify.js");
 const deleteAccount = require("./routes/deleteAccount.js");
@@ -148,6 +149,7 @@ app.use("/api/forgot-password", forgotPassword); // done
 app.use("/api/check-token", checkToken); //done
 app.use("/api/check-pin", checkPin); // done
 app.use("/api/get-user", getUser); // done
+app.use("/api/get-user-by-id", getUserById);
 app.use("/api/kyc-get-link", kycGetLink); // done
 app.use("/api/kyc-verification", kycVerification); // done
 app.use("/api/delete-account", deleteAccount); // done
