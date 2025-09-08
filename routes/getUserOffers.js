@@ -5,7 +5,7 @@ const { isAuthenticated } = require("../middlewares");
 const router = express.Router();
 
 // GET /offers - Fetch offers with pagination, filters, and payment method
-router.get("/", isAuthenticated, async (req, res) => {
+router.post("/", isAuthenticated, async (req, res) => {
   try {
     const { userId } = req.body;
     // Query DB
