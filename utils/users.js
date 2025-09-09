@@ -27,6 +27,7 @@ function findUserByEmail(email) {
         },
       },
       notifications: true,
+      trustedBy: true,
     },
   });
 }
@@ -65,6 +66,7 @@ function findUserById(id) {
         },
       },
       notifications: true,
+      trustedBy: true,
     },
   });
 }
@@ -93,6 +95,7 @@ function findUserByUsername(username) {
         },
       },
       notifications: true,
+      trustedBy: true,
     },
   });
 }
