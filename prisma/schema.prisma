@@ -35,6 +35,7 @@ model User {
   messages         Message[]
   notifications    Notification[]
   pushTokens       PushToken[]
+  trustedBy        Trust[]
   createdAt        DateTime          @default(now())
 }
 
@@ -226,6 +227,16 @@ model Notification {
   read      Boolean              @default(false)
   createdAt DateTime             @default(now())
   user      User                 @relation(fields: [userId], references: [id])
+}
+
+model Trust {
+  id        String   @id @default(cuid())
+  trusterId String
+  trustedId String
+  createdAt DateTime @default(now())
+
+  // relation to User
+  trusted User @relation(fields: [trustedId], references: [id])
 }
 
 // enums

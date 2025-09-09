@@ -52,6 +52,7 @@ const resolveDispute = require("./routes/resolveDispute.js");
 const uploadChatProofs = require("./routes/uploadChatProofs.js");
 const registerPushToken = require("./routes/registerPushToken.js");
 const sendPushNotification = require("./routes/sendPushNotification.js");
+const createTrust = require("./routes/createTrust.js");
 
 const getChats = require("./routes/getChats.js");
 const sendChat = require("./routes/sendChat.js");
@@ -163,6 +164,7 @@ app.use("/api/send", send);
 app.use("/api/swap", swap);
 app.use("/api/register-push-token", registerPushToken);
 app.use("/api/send-push-notification", sendPushNotification);
+app.use("/api/create-trust", createTrust);
 
 // Trade
 app.use("/api/create-trade", createTrade);
