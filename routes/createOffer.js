@@ -90,7 +90,9 @@ router.post("/", isAuthenticated, async (req, res) => {
         data: {
           category: "SYSTEM",
           title: "Offer Created",
-          message: `Your offer to ${type} ${crypto} has been created successfully.`,
+          message: `Your offer to ${type} ${String(
+            crypto
+          ).toUpperCase()} has been created successfully.`,
           read: false,
           userId: userId,
         },

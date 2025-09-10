@@ -10,7 +10,9 @@ router.post("/", isAuthenticated, async (req, res) => {
   const { userId: trusterId } = req.payload;
 
   if (trusterId === trustedId) {
-    return res.status(400).json({ error: "You cannot trust yourself" });
+    return res
+      .status(400)
+      .json({ error: true, message: "You cannot trust yourself" });
   }
 
   try {
@@ -20,7 +22,7 @@ router.post("/", isAuthenticated, async (req, res) => {
     });
 
     if (existing) {
-      return res.status(400).json({ error: "Already trusted" });
+      return res.status(400).json({ error: true, message: "Already trusted" });
     }
 
     await db.trust.create({
