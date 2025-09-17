@@ -56,6 +56,13 @@ const createTrust = require("./routes/createTrust.js");
 
 const getChats = require("./routes/getChats.js");
 const sendChat = require("./routes/sendChat.js");
+
+// Admin
+const getUsers = require("./routes/admin/getUsers.js");
+const loginAdmin = require("./routes/admin/login.js");
+const createAdmin = require("./routes/admin/createAdmin.js");
+const getOverview = require("./routes/admin/getOverview.js");
+
 const { db } = require("./db.js");
 const { findUserById } = require("./utils/users.js");
 
@@ -190,6 +197,13 @@ app.use("/api/send-chat", sendChat);
 app.use("/api/get-chats", getChats);
 app.use("/api/upload-chat-proofs", uploadChatProofs);
 // End Chats
+
+// Admin
+app.use("/api/admin/auth/register", createAdmin);
+app.use("/api/admin/auth/login", loginAdmin);
+app.use("/api/admin/users", getUsers);
+app.use("/api/admin/overview", getOverview);
+// End of Admin
 
 // worker to check expired trades
 cron.schedule("* * * * *", async () => {

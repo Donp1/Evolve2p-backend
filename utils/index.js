@@ -13,6 +13,22 @@ function generateAccessToken(user) {
   );
 }
 
+function generateAccessTokenAdmin(user) {
+  return jwt.sign(
+    { userId: user.id, email: user.email, isAdmin: true },
+    process.env.JWT_ACCESS_SECRET,
+    {
+      expiresIn: "1d",
+    }
+  );
+}
+
+// {
+//   "id": "uuid-of-admin",
+//   "email": "admin@example.com",
+//   "isAdmin": true
+// }
+
 const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 function generateOTP() {
   let otp = "";
@@ -42,4 +58,5 @@ module.exports = {
   generateAccessToken,
   generateOTP,
   getTimeDifferenceInMinutes,
+  generateAccessTokenAdmin,
 };

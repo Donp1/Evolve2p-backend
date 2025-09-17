@@ -163,7 +163,7 @@ router.post("/", isAuthenticated, async (req, res) => {
             {
               type: "SYSTEM",
               content:
-                "Third-party payment s are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
+                "Third-party payments are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
               senderId: null,
             },
             {
