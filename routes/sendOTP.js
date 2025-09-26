@@ -1,6 +1,54 @@
 const dotenv = require("dotenv");
 dotenv.config();
 
+// const Mailgun = require("mailgun.js");
+// const FormData = require("form-data");
+
+// const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
+
+// const mailerSend = new MailerSend({
+//   apiKey: process.env.MAILERSEND_API_KEY,
+// });
+
+// (async () => {
+//   try {
+//     const sentFrom = new Sender(
+//       "no-reply@test-p7kx4xwvo72g9yjr.mlsender.net", // full email
+//       "Evolve2p"
+//     );
+
+//     const recipients = [
+//       new Recipient("contact@evolve2p.com", "Joseph Precious"),
+//     ];
+
+//     const personalization = [
+//       {
+//         email: "contact@evolve2p.com",
+//         data: {
+//           otp: "12345",
+//           user_name: "JPTech",
+//           expiry_minutes: "20",
+//         },
+//       },
+//     ];
+
+//     const emailParams = new EmailParams()
+//       .setFrom(sentFrom)
+//       .setTo(recipients)
+//       .setTemplateId("vywj2lp7kwql7oqz")
+//       .setPersonalization(personalization)
+//       .setSubject("One-time password (OTP) for Evolve2p")
+//       .setReplyTo(
+//         new Sender("support@test-p7kx4xwvo72g9yjr.mlsender.net", "Support")
+//       );
+
+//     const res = await mailerSend.email.send(emailParams);
+//     console.log(res);
+//   } catch (error) {
+//     console.log("Error Sending Mail: ", error);
+//   }
+// })();
+
 const express = require("express");
 const nodemailer = require("nodemailer");
 const { generateOTP } = require("../utils");

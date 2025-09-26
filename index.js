@@ -59,6 +59,7 @@ const sendChat = require("./routes/sendChat.js");
 
 // Admin
 const getUsers = require("./routes/admin/getUsers.js");
+const getUserAdmin = require("./routes/admin/getUser.js");
 const loginAdmin = require("./routes/admin/login.js");
 const createAdmin = require("./routes/admin/createAdmin.js");
 const getOverview = require("./routes/admin/getOverview.js");
@@ -202,6 +203,7 @@ app.use("/api/upload-chat-proofs", uploadChatProofs);
 app.use("/api/admin/auth/register", createAdmin);
 app.use("/api/admin/auth/login", loginAdmin);
 app.use("/api/admin/users", getUsers);
+app.use("/api/admin/user", getUserAdmin);
 app.use("/api/admin/overview", getOverview);
 // End of Admin
 
