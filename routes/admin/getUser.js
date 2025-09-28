@@ -10,19 +10,19 @@ const router = express.Router();
 router.get("/:userId", isAdmin, async (req, res) => {
   const { userId } = req.params;
 
+  // ✅ Ensure the token payload has admin flag
+  if (!req.payload || !req.payload.isAdmin) {
+    return res
+      .status(403)
+      .json({ error: true, message: "Forbidden: Admin access required" });
+  }
+
   if (!userId) {
     return res
       .status(404)
       .json({ error: true, message: "No User ID provided" });
   }
   try {
-    // ✅ Ensure the token payload has admin flag
-    if (!req.payload || !req.payload.isAdmin) {
-      return res
-        .status(403)
-        .json({ error: true, message: "Forbidden: Admin access required" });
-    }
-
     // ✅ Fetch users
     const user = await db.user.findFirst({
       where: {
@@ -39,6 +39,14 @@ router.get("/:userId", isAdmin, async (req, res) => {
         phone: true,
         DOB: true,
         is2faEnabled: true,
+      },
+
+      include: {
+        offers: {
+          include: { paymentMethod: true },
+        },
+        tradesAsBuyer: true,
+        tradesAsSeller: true,
       },
     });
 

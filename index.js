@@ -63,6 +63,16 @@ const getUserAdmin = require("./routes/admin/getUser.js");
 const loginAdmin = require("./routes/admin/login.js");
 const createAdmin = require("./routes/admin/createAdmin.js");
 const getOverview = require("./routes/admin/getOverview.js");
+const adminPerformAction = require("./routes/admin/adminPerformAction.js");
+const adminResetUserPassword = require("./routes/admin/adminResetUserPassword.js");
+const adminGetTrades = require("./routes/admin/getTrades.js");
+const adminGetOffers = require("./routes/admin/getOffers.js");
+const adminGetDisputes = require("./routes/admin/getDisputes.js");
+const adminGetTransactions = require("./routes/admin/getTransactions.js");
+const adminGetSwaps = require("./routes/admin/getSwaps.js");
+const adminGetPaymentMethods = require("./routes/admin/getPaymentMethods.js");
+const adminCreatePaymentMethod = require("./routes/admin/createPaymentMethod.js");
+const adminDeletePaymentMethod = require("./routes/admin/deletePaymentMethod.js");
 
 const { db } = require("./db.js");
 const { findUserById } = require("./utils/users.js");
@@ -205,6 +215,16 @@ app.use("/api/admin/auth/login", loginAdmin);
 app.use("/api/admin/users", getUsers);
 app.use("/api/admin/user", getUserAdmin);
 app.use("/api/admin/overview", getOverview);
+app.use("/api/admin/perform-action-user", adminPerformAction);
+app.use("/api/admin/reset-user-password", adminResetUserPassword);
+app.use("/api/admin/get-offers", adminGetOffers);
+app.use("/api/admin/get-trades", adminGetTrades);
+app.use("/api/admin/get-transactions", adminGetTransactions);
+app.use("/api/admin/get-swaps", adminGetSwaps);
+app.use("/api/admin/get-disputes", adminGetDisputes);
+app.use("/api/admin/get-payment-methods", adminGetPaymentMethods);
+app.use("/api/admin/create-payment-method", adminCreatePaymentMethod);
+app.use("/api/admin/delete-payment-method", adminDeletePaymentMethod);
 // End of Admin
 
 // worker to check expired trades
