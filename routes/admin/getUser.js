@@ -28,18 +28,6 @@ router.get("/:userId", isAdmin, async (req, res) => {
       where: {
         id: userId,
       },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        country: true,
-        kycVerified: true,
-        status: true,
-        createdAt: true,
-        phone: true,
-        DOB: true,
-        is2faEnabled: true,
-      },
 
       include: {
         offers: {
