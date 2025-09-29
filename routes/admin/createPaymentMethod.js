@@ -22,7 +22,7 @@ router.post("/", isAdmin, async (req, res) => {
 
   try {
     // Check if it already exists
-    const existing = await db.paymentMethod.findUnique({
+    const existing = await db.paymentMethod.findFirst({
       where: { name },
     });
 
