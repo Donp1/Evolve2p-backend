@@ -33,8 +33,8 @@ router.get("/:userId", isAdmin, async (req, res) => {
         offers: {
           include: { paymentMethod: true },
         },
-        tradesAsBuyer: true,
-        tradesAsSeller: true,
+        tradesAsBuyer: { include: { offer: true } },
+        tradesAsSeller: { include: { offer: true } },
       },
     });
 
