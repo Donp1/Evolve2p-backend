@@ -16,6 +16,12 @@ router.get("/", isAdmin, async (req, res) => {
     // Fetch all offers
     const offers = await db.offer.findMany({
       orderBy: { createdAt: "desc" }, // optional: newest first
+      include: {
+        paymentMethod: true,
+        user: {
+          select: { email: true, username: true },
+        },
+      },
     });
 
     return res.json({
