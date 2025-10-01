@@ -18,10 +18,29 @@ router.get("/", isAdmin, async (req, res) => {
         trade: {
           select: {
             id: true,
-            buyerId: true,
-            sellerId: true,
-            amount: true,
+            buyer: {
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
+            },
+            seller: {
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
+            },
             status: true,
+            amountCrypto: true,
+            amountFiat: true,
+            offer: {
+              select: {
+                crypto: true,
+                currency: true,
+              },
+            },
           },
         },
         user: {
