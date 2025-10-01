@@ -73,6 +73,9 @@ const adminGetSwaps = require("./routes/admin/getSwaps.js");
 const adminGetPaymentMethods = require("./routes/admin/getPaymentMethods.js");
 const adminCreatePaymentMethod = require("./routes/admin/createPaymentMethod.js");
 const adminDeletePaymentMethod = require("./routes/admin/deletePaymentMethod.js");
+const performOfferAction = require("./routes/admin/performOfferAction.js");
+const deleteOffer = require("./routes/admin/deleteOffer.js");
+const getOffer = require("./routes/admin/getOffer.js");
 
 const { db } = require("./db.js");
 const { findUserById } = require("./utils/users.js");
@@ -224,7 +227,10 @@ app.use("/api/admin/get-swaps", adminGetSwaps);
 app.use("/api/admin/get-disputes", adminGetDisputes);
 app.use("/api/admin/get-payment-methods", adminGetPaymentMethods);
 app.use("/api/admin/create-payment-method", adminCreatePaymentMethod);
+app.use("/api/admin/delete-offer", deleteOffer);
 app.use("/api/admin/delete-payment-method", adminDeletePaymentMethod);
+app.use("/api/admin/perform-offer-action", performOfferAction);
+app.use("/api/admin/get-offer", getOffer);
 // End of Admin
 
 // worker to check expired trades

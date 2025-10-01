@@ -122,7 +122,7 @@ model Offer {
   maxLimit        Float
   terms           String?
   time            String
-  status          OfferStatus
+  status          OfferStatus 
   createdAt       DateTime      @default(now())
   user            User          @relation(fields: [userId], references: [id])
   trades          Trade[]       @relation("OfferTrades")
