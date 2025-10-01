@@ -14,7 +14,6 @@ router.get("/", isAdmin, async (req, res) => {
 
   try {
     const disputes = await db.dispute.findMany({
-      where: { status: "OPEN" }, // Only active disputes
       include: {
         trade: {
           select: {
