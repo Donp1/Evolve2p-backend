@@ -46,11 +46,9 @@ router.post("/", isAdmin, async (req, res) => {
         .json({ error: true, message: "Unable to update offer status" });
     }
 
-    if (updateUser) {
-      return res
-        .status(200)
-        .json({ success: true, message: "Offer Status updated successfully" });
-    }
+    return res
+      .status(200)
+      .json({ success: true, message: "Offer Status updated successfully" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
