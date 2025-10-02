@@ -68,6 +68,7 @@ const adminResetUserPassword = require("./routes/admin/adminResetUserPassword.js
 const adminGetTrades = require("./routes/admin/getTrades.js");
 const adminGetOffers = require("./routes/admin/getOffers.js");
 const adminGetDisputes = require("./routes/admin/getDisputes.js");
+const adminGetDispute = require("./routes/admin/getDispute.js");
 const adminGetTransactions = require("./routes/admin/getTransactions.js");
 const adminGetSwaps = require("./routes/admin/getSwaps.js");
 const adminGetPaymentMethods = require("./routes/admin/getPaymentMethods.js");
@@ -225,6 +226,7 @@ app.use("/api/admin/get-trades", adminGetTrades);
 app.use("/api/admin/get-transactions", adminGetTransactions);
 app.use("/api/admin/get-swaps", adminGetSwaps);
 app.use("/api/admin/get-disputes", adminGetDisputes);
+app.use("/api/admin/get-dispute", adminGetDispute);
 app.use("/api/admin/get-payment-methods", adminGetPaymentMethods);
 app.use("/api/admin/create-payment-method", adminCreatePaymentMethod);
 app.use("/api/admin/delete-offer", deleteOffer);
