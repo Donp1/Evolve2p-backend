@@ -1,13 +1,26 @@
 // routes/disputes.js
 const express = require("express");
-const { isAuthenticated, isAdmin } = require("../middlewares");
-const { db } = require("../db");
+const { isAdmin } = require("../../middlewares");
+const { db } = require("../../db");
 
 const router = express.Router();
 
-router.post("/:id", isAuthenticated, isAdmin, async (req, res) => {
+router.post("/:id", isAdmin, async (req, res) => {
   const { id } = req.params;
   const { winner } = req.body; // "BUYER" or "SELLER"
+
+  if (!req.payload || !req.payload.isAdmin) {
+    return res
+      .status(403)
+      .json({ error: true, message: "Forbidden: Admin access required" });
+  }
+
+  if (!id) {
+    return res.status(400).json({
+      error: true,
+      message: "Dispute ID is required",
+    });
+  }
 
   if (!["BUYER", "SELLER"].includes(winner)) {
     return res.status(400).json({
@@ -31,7 +44,11 @@ router.post("/:id", isAuthenticated, isAdmin, async (req, res) => {
         .status(404)
         .json({ error: true, message: "Dispute not found" });
     }
-    if (dispute.status === "RESOLVED") {
+
+    if (
+      dispute.status === "RESOLVED_BUYER" ||
+      dispute.status === "RESOLVED_SELLER"
+    ) {
       return res
         .status(400)
         .json({ error: true, message: "Dispute already resolved" });
@@ -55,7 +72,10 @@ router.post("/:id", isAuthenticated, isAdmin, async (req, res) => {
       });
 
       if (!wallet) {
-        throw new Error("Winner wallet not found");
+        return res.status(404).json({
+          error: true,
+          message: "Winner wallet not found",
+        });
       }
 
       await tx.wallet.update({

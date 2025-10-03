@@ -48,7 +48,6 @@ const getOffer = require("./routes/getOffer.js");
 const getPaymentMethods = require("./routes/getPaymentMethods.js");
 const openDispute = require("./routes/openDispute.js");
 const getDispute = require("./routes/getDispute.js");
-const resolveDispute = require("./routes/resolveDispute.js");
 const uploadChatProofs = require("./routes/uploadChatProofs.js");
 const registerPushToken = require("./routes/registerPushToken.js");
 const sendPushNotification = require("./routes/sendPushNotification.js");
@@ -77,6 +76,7 @@ const adminDeletePaymentMethod = require("./routes/admin/deletePaymentMethod.js"
 const performOfferAction = require("./routes/admin/performOfferAction.js");
 const deleteOffer = require("./routes/admin/deleteOffer.js");
 const admingetOffer = require("./routes/admin/getOffer.js");
+const resolveDispute = require("./routes/admin/resolveDispute.js");
 
 const { db } = require("./db.js");
 const { findUserById } = require("./utils/users.js");
@@ -204,7 +204,6 @@ app.use("/api/get-payment-methods", getPaymentMethods); //
 // Disput
 app.use("/api/open-dispute", openDispute);
 app.use("/api/get-dispute", getDispute);
-app.use("/api/resolve-dispute", resolveDispute);
 // End of Dispute
 
 // chats
@@ -233,6 +232,7 @@ app.use("/api/admin/delete-offer", deleteOffer);
 app.use("/api/admin/delete-payment-method", adminDeletePaymentMethod);
 app.use("/api/admin/perform-offer-action", performOfferAction);
 app.use("/api/admin/get-offer", admingetOffer);
+app.use("/api/admin/resolve-dispute", resolveDispute);
 // End of Admin
 
 // worker to check expired trades
