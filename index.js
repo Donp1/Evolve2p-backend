@@ -77,6 +77,7 @@ const performOfferAction = require("./routes/admin/performOfferAction.js");
 const deleteOffer = require("./routes/admin/deleteOffer.js");
 const admingetOffer = require("./routes/admin/getOffer.js");
 const resolveDispute = require("./routes/admin/resolveDispute.js");
+const adminSendChat = require("./routes/admin/adminSendChat.js");
 
 const { db } = require("./db.js");
 const { findUserById } = require("./utils/users.js");
@@ -233,6 +234,7 @@ app.use("/api/admin/delete-payment-method", adminDeletePaymentMethod);
 app.use("/api/admin/perform-offer-action", performOfferAction);
 app.use("/api/admin/get-offer", admingetOffer);
 app.use("/api/admin/resolve-dispute", resolveDispute);
+app.use("/api/admin/send-chat", adminSendChat);
 // End of Admin
 
 // worker to check expired trades
