@@ -157,6 +157,11 @@ const usersGrowth = async () => {
 };
 
 router.get("/", isAdmin, async (req, res) => {
+  if (!req.payload || !req.payload.isAdmin) {
+    return res
+      .status(403)
+      .json({ error: true, message: "Forbidden: Admin access required" });
+  }
   try {
     const [
       totalUsers,
