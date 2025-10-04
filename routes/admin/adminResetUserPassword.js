@@ -27,18 +27,6 @@ router.post("/", isAdmin, async (req, res) => {
       .json({ error: true, message: "No password provided" });
   }
 
-  // ✅ simplified regex for strong password
-  const strongPassword =
-    /^(?=.{6,}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
-
-  if (!strongPassword.test(password)) {
-    return res.status(400).json({
-      error: true,
-      message:
-        "Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
-    });
-  }
-
   try {
     const user = await db.user.findFirst({ where: { id: userId } });
 
@@ -46,6 +34,18 @@ router.post("/", isAdmin, async (req, res) => {
       return res
         .status(400)
         .json({ error: true, message: "Invalid User ID provided" });
+    }
+
+    // ✅ simplified regex for strong password
+    const strongPassword =
+      /^(?=.{6,}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+
+    if (!strongPassword.test(password)) {
+      return res.status(400).json({
+        error: true,
+        message:
+          "Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      });
     }
 
     const securePassword = await bcrypt.hash(password, 10);
