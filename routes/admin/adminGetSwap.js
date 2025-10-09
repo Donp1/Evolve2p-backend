@@ -29,7 +29,9 @@ router.get("/:swapId", isAdmin, async (req, res) => {
         id: swapId,
       },
       include: {
-        user: { select: { username: true, email: true, id: true } },
+        user: {
+          select: { username: true, email: true, id: true, country: true },
+        },
       },
     });
 
