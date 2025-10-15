@@ -82,6 +82,7 @@ const admingetOffer = require("./routes/admin/getOffer.js");
 const resolveDispute = require("./routes/admin/resolveDispute.js");
 const adminSendChat = require("./routes/admin/adminSendChat.js");
 const adminCancleTrade = require("./routes/admin/adminCancleTrade.js");
+const adminSendMail = require("./routes/admin/sendMail.js");
 
 const { db } = require("./db.js");
 const { findUserById } = require("./utils/users.js");
@@ -243,6 +244,7 @@ app.use("/api/admin/get-offer", admingetOffer);
 app.use("/api/admin/resolve-dispute", resolveDispute);
 app.use("/api/admin/send-chat", adminSendChat);
 app.use("/api/admin/cancle-trade", adminCancleTrade);
+app.use("/api/admin/send-mail", adminSendMail);
 // End of Admin
 
 // worker to check expired trades
