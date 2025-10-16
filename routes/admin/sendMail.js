@@ -30,6 +30,8 @@ router.post("/", isAdmin, async (req, res) => {
 
     const sent = await sendAdminMail(email, subject, title, message);
 
+    console.log("📧 Email send response:", sent);
+
     if (!sent?.transaction_id) {
       return res.status(500).json({
         error: true,
