@@ -19,7 +19,6 @@
     "bcryptjs": "^3.0.2",
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.7",
-    "bullmq": "^5.61.0",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
