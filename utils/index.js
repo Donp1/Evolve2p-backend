@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { Queue } = require("bullmq");
 
 function generateAccessToken(user) {
   return jwt.sign(
@@ -166,6 +167,10 @@ const sendAdminMail = async (email, subject, messageTitle, messageBody) => {
   }
 };
 
+const connection = { host: "localhost", port: 6379 }; // Redis
+
+const emailQueue = new Queue("bulk-email", { connection });
+
 module.exports = {
   generateAccessToken,
   generateOTP,
@@ -173,4 +178,5 @@ module.exports = {
   generateAccessTokenAdmin,
   sendOtp,
   sendAdminMail,
+  emailQueue,
 };

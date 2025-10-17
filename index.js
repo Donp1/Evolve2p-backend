@@ -58,6 +58,7 @@ const sendChat = require("./routes/sendChat.js");
 
 // Admin
 const getUsers = require("./routes/admin/getUsers.js");
+const getAdmins = require("./routes/admin/getAdmins.js");
 const getUserAdmin = require("./routes/admin/getUser.js");
 const loginAdmin = require("./routes/admin/login.js");
 const createAdmin = require("./routes/admin/createAdmin.js");
@@ -83,6 +84,7 @@ const resolveDispute = require("./routes/admin/resolveDispute.js");
 const adminSendChat = require("./routes/admin/adminSendChat.js");
 const adminCancleTrade = require("./routes/admin/adminCancleTrade.js");
 const adminSendMail = require("./routes/admin/sendMail.js");
+// const adminSendBulkEmail = require("./routes/admin/adminSendBulkEmails.js");
 
 const { db } = require("./db.js");
 const { findUserById } = require("./utils/users.js");
@@ -222,6 +224,7 @@ app.use("/api/upload-chat-proofs", uploadChatProofs);
 app.use("/api/admin/auth/register", createAdmin);
 app.use("/api/admin/auth/login", loginAdmin);
 app.use("/api/admin/users", getUsers);
+app.use("/api/admin/admins", getAdmins);
 app.use("/api/admin/user", getUserAdmin);
 app.use("/api/admin/overview", getOverview);
 app.use("/api/admin/perform-action-user", adminPerformAction);
@@ -245,6 +248,7 @@ app.use("/api/admin/resolve-dispute", resolveDispute);
 app.use("/api/admin/send-chat", adminSendChat);
 app.use("/api/admin/cancle-trade", adminCancleTrade);
 app.use("/api/admin/send-mail", adminSendMail);
+// app.use("/api/admin/send-bulk-mail", adminSendBulkEmail);
 // End of Admin
 
 // worker to check expired trades

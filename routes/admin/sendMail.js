@@ -12,6 +12,12 @@ router.post("/", isAdmin, async (req, res) => {
   try {
     const { email, title, subject, message } = req.body;
 
+    if (!req.payload || !req.payload.isAdmin) {
+      return res
+        .status(403)
+        .json({ error: true, message: "Forbidden: Admin access required" });
+    }
+
     if (!email || !subject || !title || !message) {
       return res.status(400).json({
         error: true,
@@ -30,7 +36,7 @@ router.post("/", isAdmin, async (req, res) => {
 
     const sent = await sendAdminMail(email, subject, title, message);
 
-    console.log("📧 Email send response:", sent);
+    // console.log("📧 Email send response:", sent);
 
     if (!sent?.transaction_id) {
       return res.status(500).json({
