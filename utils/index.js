@@ -167,9 +167,9 @@ const sendAdminMail = async (email, subject, messageTitle, messageBody) => {
   }
 };
 
-const connection = { host: "localhost", port: 6379 }; // Redis
+// const connection = { host: "localhost", port: 6379 }; // Redis
 
-const emailQueue = new Queue("bulk-email", { connection });
+// const emailQueue = new Queue("bulk-email", { connection });
 
 module.exports = {
   generateAccessToken,
@@ -178,5 +178,5 @@ module.exports = {
   generateAccessTokenAdmin,
   sendOtp,
   sendAdminMail,
-  emailQueue,
+  // emailQueue,
 };
