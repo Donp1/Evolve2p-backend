@@ -61,9 +61,8 @@ router.post("/", async (req, res) => {
     });
 
     return res.status(201).json({
-      error: false,
+      success: true,
       message: "Admin created successfully",
-      admin: newAdmin,
     });
   } catch (error) {
     console.error("❌ Error creating admin:", error);
