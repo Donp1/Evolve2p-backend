@@ -87,6 +87,7 @@ const resolveDispute = require("./routes/admin/resolveDispute.js");
 const adminSendChat = require("./routes/admin/adminSendChat.js");
 const adminCancleTrade = require("./routes/admin/adminCancleTrade.js");
 const adminSendMail = require("./routes/admin/sendMail.js");
+const settings = require("./routes/admin/settings.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -247,6 +248,7 @@ app.use("/api/admin/resolve-dispute", resolveDispute);
 app.use("/api/admin/send-chat", adminSendChat);
 app.use("/api/admin/cancle-trade", adminCancleTrade);
 app.use("/api/admin/send-mail", adminSendMail);
+app.use("/api/admin/settings", settings);
 // End of Admin
 
 // worker to check expired trades

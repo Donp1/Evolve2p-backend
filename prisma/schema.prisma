@@ -122,7 +122,7 @@ model Offer {
   maxLimit        Float
   terms           String?
   time            String
-  status          OfferStatus 
+  status          OfferStatus
   createdAt       DateTime      @default(now())
   user            User          @relation(fields: [userId], references: [id])
   trades          Trade[]       @relation("OfferTrades")
@@ -247,6 +247,20 @@ model Trust {
 
   // relation to User
   trusted User @relation(fields: [trustedId], references: [id])
+}
+
+model Settings {
+  id                 String  @id @default(uuid())
+  withdrawalLimit    Float   @default(0.0)
+  depositLimit       Float   @default(0.0)
+  sendCryptoFee      Float   @default(0.0)
+  tradingFee         Float   @default(0.0)
+  maintenanceMode    Boolean @default(false)
+  supportEmail       String?
+  supportPhoneNumber String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // enums
