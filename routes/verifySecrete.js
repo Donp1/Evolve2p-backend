@@ -39,7 +39,11 @@ router.post("/", isAuthenticated, async (req, res) => {
   });
 
   if (!verification) {
-    return res.status(400).json({ error: true, message: "Invalid token" });
+    return res.status(400).json({
+      error: true,
+      message:
+        "The 2FA code you entered is invalid. Please check your authentication app and try again.",
+    });
   }
 
   res.json({ success: true, message: "Token verified successfully" });
