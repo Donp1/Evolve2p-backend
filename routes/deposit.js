@@ -14,7 +14,9 @@ router.post("/", async (req, res) => {
       where: { txHash: body.txId },
     });
     if (existing)
-      return res.status(400).json({ erro: true, message: "Already processed" });
+      return res
+        .status(400)
+        .json({ error: true, message: "Already processed" });
 
     const wallet = await db.wallet.findFirst({
       where: {

@@ -235,8 +235,9 @@ paths:
                   type: string
               required:
                 - email
-      headers:
-        Authorization:
+      parameters:
+        - in: header
+          name: Authorization
           description: Bearer token for authentication
           required: true
           schema:
@@ -277,8 +278,9 @@ paths:
                   type: string
               required:
                 - email
-      headers:
-        Authorization:
+      parameters:
+        - in: header
+          name: Authorization
           description: Bearer token for authentication
           required: true
           schema:
@@ -296,8 +298,9 @@ paths:
     post:
       summary: Checks if the token is valid.
       description: This endpoint allows you to check if the token is valid.
-      headers:
-        Authorization:
+      parameters:
+        - in: header
+          name: Authorization
           description: Bearer token for authentication
           required: true
           schema:
@@ -351,8 +354,13 @@ paths:
             schema:
               type: object
               properties:
-      headers:
-        Authorization:
+                email:
+                  type: string
+              required:
+                - email
+      parameters:
+        - in: header
+          name: Authorization
           description: Bearer token for authentication
           required: true
           schema:
@@ -388,8 +396,9 @@ paths:
               required:
                 - current_password
                 - new_password
-      headers:
-        Authorization:
+      parameters:
+        - in: header
+          name: Authorization
           description: Bearer token for authentication
           required: true
           schema:
@@ -417,12 +426,6 @@ paths:
           application/json:
             schema:
               type: object
-      headers:
-        Authorization:
-          description: Bearer token for authentication
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: KYC link retrieved successfully.
@@ -449,12 +452,6 @@ paths:
                   type: object
               required:
                 - inquiry_id
-      headers:
-        Authorization:
-          description: Bearer token for authentication
-          required: true
-          schema:
-            type: string
       responses:
         "200":
           description: KYC verified successfully.
@@ -476,8 +473,9 @@ paths:
           application/json:
             schema:
               type: object
-      headers:
-        Authorization:
+      parameters:
+        - in: header
+          name: Authorization
           description: Bearer token for authentication
           required: true
           schema:
@@ -496,7 +494,6 @@ paths:
       security:
         - BearerAuth: [] # This security is applied to this specific endpoint
       summary: Verifies the secret key for the user.
-      description: This endpoint allows you to verify the secret key for the user for 2fa authentication.
       requestBody:
         required: true
         content:
@@ -508,8 +505,9 @@ paths:
                   type: string
               required:
                 - token
-      headers:
-        Authorization:
+      parameters:
+        - in: header
+          name: Authorization
           description: Bearer token for authentication
           required: true
           schema:
@@ -521,3 +519,310 @@ paths:
           description: User not found.
         "500":
           description: Internal server error.
+  /api/swap:
+    post:
+      summary: Swap cryptocurrency between two user wallets
+      description: Performs a crypto swap by converting an amount from one coin to another for an authenticated user.
+      tags:
+        - Swap
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fromCoin
+                - toCoin
+                - fromAmount
+              properties:
+                fromCoin:
+                  type: string
+                  example: BTC
+                  description: The coin to swap from.
+                toCoin:
+                  type: string
+                  example: USDT
+                  description: The coin to swap to.
+                fromAmount:
+                  type: number
+                  example: 0.05
+                  description: The amount to convert.
+      responses:
+        "200":
+          description: Swap completed successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Swap completed
+                  data:
+                    type: object
+                    properties:
+                      fromCoin:
+                        type: string
+                        example: BTC
+                      toCoin:
+                        type: string
+                        example: USDT
+                      fromAmount:
+                        type: number
+                        example: 0.05
+                      toAmount:
+                        type: number
+                        example: 3200.75
+        "400":
+          description: Invalid request or insufficient balance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Missing required fields or insufficient balance
+        "404":
+          description: User or wallet not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Wallets for BTC or USDT not found
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Internal server error
+  /api/transfer:
+    post:
+      summary: Send cryptocurrency to a wallet or username
+      description: |
+        Performs an internal or on-chain crypto transfer for an authenticated user.
+        The system automatically detects if the destination address belongs to an internal user.
+      tags:
+        - Transfer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        description: Transfer request payload
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - toAddress
+                - amount
+                - coin
+              properties:
+                toAddress:
+                  type: string
+                  example: 0xAbC1234ef5678901234567890abcdef123456789
+                  description: |
+                    The recipient username or wallet address (internal or on-chain).
+                amount:
+                  type: number
+                  example: 0.05
+                  description: Amount to send.
+                coin:
+                  type: string
+                  example: BTC
+                  description: |
+                    The cryptocurrency symbol (e.g., BTC, ETH, USDT, USDC).
+      responses:
+        "200":
+          description: Transfer successful (internal or on-chain).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: On-chain transfer successful
+                  txId:
+                    type: string
+                    example: 0x9f8b12c3de4f56a7b8c9d0e1a2b3c4d5e6f7a8b9c0d1e2f3
+                    description: Transaction hash (for on-chain transfers only).
+        "400":
+          description: Bad request (missing fields, insufficient balance, or unsupported currency).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Missing fields or unsupported currency
+        "404":
+          description: Wallet not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Sender wallet not found
+        "500":
+          description: Internal server error or failed transaction.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Transfer failed
+  /api/trades/cancel/{id}:
+    post:
+      summary: Cancel a pending trade
+      description: |
+        Cancels a pending trade and refunds the seller’s escrowed funds.  
+        Only the buyer or seller involved in the trade can cancel while status is **PENDING** and not marked as paid.
+      tags:
+        - Trades
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the trade to cancel.
+          schema:
+            type: string
+            example: "clx9bhsz2001a0t2z5w2w5t6r"
+      responses:
+        "200":
+          description: Trade successfully canceled and funds returned to seller.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Trade canceled and funds returned.
+                  trade:
+                    type: object
+                    description: Updated trade details after cancellation.
+                    properties:
+                      id:
+                        type: string
+                        example: clx9bhsz2001a0t2z5w2w5t6r
+                      status:
+                        type: string
+                        example: CANCELLED
+                      amountCrypto:
+                        type: string
+                        example: "0.005"
+                      buyer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: clx9b9k1v0003a0t2zgbr9cjp
+                          username:
+                            type: string
+                            example: buyer123
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: clx9b9k1v0004a0t2zgbr9cjp
+                          username:
+                            type: string
+                            example: seller456
+        "400":
+          description: Invalid trade status or cannot cancel at current stage.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Cannot cancel at this stage
+        "403":
+          description: User not authorized to cancel this trade.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Not allowed
+        "404":
+          description: Trade not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Trade not found
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Internal server error
