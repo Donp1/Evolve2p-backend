@@ -65,6 +65,11 @@ route.post("/", async (req, res) => {
       process.env.TRON_WALLET_XPUB,
       userIndex
     );
+    const bnbAddress = await generateAddress(
+      "USDC",
+      process.env.BNB_WALLET_XPUB,
+      userIndex
+    );
 
     const CURRENCIES = ["BTC", "ETH", "USDT", "USDC"];
     // create wallet
@@ -76,11 +81,11 @@ route.post("/", async (req, res) => {
       } else if (symbol === "ETH") {
         address = ethAddress;
         // subscribeToAddressWebhook(address, symbol);
-      } else if (symbol === "USDT" || symbol === "USDC") {
+      } else if (symbol === "USDT") {
         address = tronAddress;
-      }
-
-      if (symbol === "BTC" || symbol === "ETH") {
+      } else if (symbol === "USDC") {
+        address = bnbAddress;
+        subscribeToAddressWebhook(address, symbol);
       }
 
       await db.wallet.create({

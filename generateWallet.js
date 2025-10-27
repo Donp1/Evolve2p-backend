@@ -83,6 +83,31 @@ async function getTRONMasterPrivateKey() {
   return data.key;
 }
 
+async function getBNBMasterPrivateKey() {
+  const res = await fetch("https://api.tatum.io/v3/bsc/wallet/priv", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mnemonic: process.env.BNB_WALLET_MNEMONIC,
+      index: 0, // master key (first child at index 0)
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("❌ Error:", data);
+    return;
+  }
+
+  console.log(data);
+
+  return data.key;
+}
+
 async function getBtcMasterAddress() {
   // const addressRes = await axios.get(
   //   `https://api.tatum.io/v3/bitcoin/address/${xpub}/0`,
@@ -481,6 +506,24 @@ async function generateTronWallet() {
   }
 }
 
+async function generateBNBWallet() {
+  try {
+    const res = await fetch("https://api.tatum.io/v3/bsc/wallet", {
+      method: "GET",
+      headers: {
+        "x-api-key": process.env.TATUM_API_KEY,
+      },
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.error("❌ Error generating BNB wallet:", error);
+  }
+}
+
 async function generateTronMasterWallet() {
   const url = "https://api.tatum.io/v3/tron/wallet";
 
@@ -504,7 +547,7 @@ async function generateTronMasterWallet() {
 }
 
 async function getAddressFromXpub(index = 0) {
-  const url = `https://api.tatum.io/v3/tron/address/${process.env.TRON_WALLET_XPUB}/${index}`;
+  const url = `https://api.tatum.io/v3/bsc/address/${process.env.BNB_WALLET_XPUB}/${index}`;
 
   const res = await fetch(url, {
     method: "GET",
@@ -518,7 +561,13 @@ async function getAddressFromXpub(index = 0) {
   return data.address;
 }
 
-getAddressFromXpub();
+getBNBMasterPrivateKey();
+
+// getAddressFromXpub();
+
+// generateBNBWallet();
+
+// getAddressFromXpub();
 
 // generateTronWallet();
 

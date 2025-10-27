@@ -34,17 +34,6 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: true, message: "Wallet not found" });
     }
 
-    // id: txId,
-    //     address: body.to || body.address,
-    //     asset: body.asset || "UNKNOWN",
-    //     type: body.type || "incoming",
-    //     amount: body.amount,
-    //     blockNumber: body.blockNumber || 0,
-    //     txId,
-    //     from: body.from,
-    //     to: body.to || body.address,
-    //     timestamp: body.timestamp || new Date().toISOString(),
-
     await db.wallet.update({
       where: { id: wallet.id },
       data: {

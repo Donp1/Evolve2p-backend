@@ -18,8 +18,10 @@ async function generateAddress(currency, xpub, index) {
     url = `https://api.tatum.io/v3/bitcoin/address/${xpub}/${index}`;
   } else if (currency === "ETH") {
     url = `https://api.tatum.io/v3/ethereum/address/${xpub}/${index}`;
-  } else if (currency === "USDT" || currency === "USDC") {
+  } else if (currency === "USDT") {
     url = `https://api.tatum.io/v3/tron/address/${xpub}/${index}`;
+  } else if (currency === "USDC") {
+    url = `https://api.tatum.io/v3/bsc/address/${xpub}/${index}`;
   }
 
   const response = await fetch(url, {
@@ -105,18 +107,29 @@ async function sendETH(fromPrivateKey, toAddress, amount) {
 }
 // assetType: 'BTC' | 'ETH'
 async function subscribeToAddressWebhook(userAddress, assetType) {
-  const TATUM_API_URL = "https://api.tatum.io/v3/subscription";
+  const TATUM_API_URL = "https://api.tatum.io/v4/subscription";
   let subscriptionType, attr;
 
   switch (assetType.toUpperCase()) {
     case "BTC":
-      subscriptionType = "ADDRESS_TRANSACTION";
+      subscriptionType = "ADDRESS_EVENT";
       attr = { address: userAddress, chain: "bitcoin-testnet" };
       break;
+
     case "ETH":
-      subscriptionType = "ADDRESS_TRANSACTION";
+      subscriptionType = "ADDRESS_EVENT";
       attr = { address: userAddress, chain: "ethereum-sepolia" };
       break;
+
+    case "USDC":
+      subscriptionType = "CONTRACT_ADDRESS_LOG_EVENT";
+      attr = {
+        chain: "bsc-testnet", // change to "BSC" for mainnet
+        contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
+        event: "Transfer(address,address,uint256)",
+      };
+      break;
+
     default:
       throw new Error(`Unsupported asset type: ${assetType}`);
   }
@@ -125,7 +138,7 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
     type: subscriptionType,
     attr: {
       ...attr,
-      url: `https://evolve2p-backend.onrender.com/api/deposit`, // Your webhook URL
+      url: `https://evolve2p-backend.onrender.com/api/deposit`,
     },
   };
 
@@ -146,9 +159,7 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
       throw new Error(data.message || "Subscription failed");
     }
 
-    console.log(
-      `✅ Webhook subscribed for ${assetType} address: ${userAddress}`
-    );
+    console.log(`✅ Webhook subscribed for ${assetType}:`, data);
     return data;
   } catch (err) {
     console.error("Error subscribing webhook:", err.message);
