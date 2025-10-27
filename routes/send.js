@@ -36,8 +36,15 @@ router.post("/", isAuthenticated, async (req, res) => {
 
     // Check internal user by username or address
     const isUsername = await db.user.findFirst({
-      where: { username: toAddress },
-      include: { wallets: true },
+      where: {
+        username: {
+          equals: toAddress,
+          mode: "insensitive",
+        },
+      },
+      include: {
+        wallets: true,
+      },
     });
 
     let toWallet = null;
