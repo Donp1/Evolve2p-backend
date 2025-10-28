@@ -9,7 +9,6 @@ const { db } = require("../db");
 
 const ERC20_CONTRACTS = {
   USDT: process.env.CONTRACT_ADDRESS_USDT,
-  // USDC: process.env.CONTRACT_ADDRESS_USDC,
 };
 
 async function generateAddress(currency, xpub, index) {
@@ -122,11 +121,11 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
       break;
 
     case "USDC":
-      subscriptionType = "CONTRACT_ADDRESS_LOG_EVENT";
+      subscriptionType = "INCOMING_FUNGIBLE_TX";
       attr = {
         chain: "bsc-testnet", // change to "BSC" for mainnet
-        contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
-        event: "Transfer(address,address,uint256)",
+        // contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
+        address: userAddress,
       };
       break;
 
@@ -425,7 +424,7 @@ const convertCurrency = async (amount, fromSymbol, toSymbol) => {
   return Number((Number(amount) * rate).toFixed(8)); // rounding to 8 decimal places
 };
 
-function startPolling(assetType = "USDC") {
+function startPolling(assetType = "USDT") {
   console.log(`📡 Starting TRC20 monitoring for ${assetType}`);
   cron.schedule("*/8 * * * * *", () => pollTRC20Deposits(assetType));
 }
