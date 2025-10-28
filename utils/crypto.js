@@ -356,8 +356,6 @@ async function pollTRC20Deposits(assetType = "USDT") {
         transactionType: "PAYMENT",
       };
 
-      console.log("📥 New deposit detected:", payload);
-
       try {
         const webhookRes = await fetch(
           "https://evolve2p-backend.onrender.com/api/deposit",

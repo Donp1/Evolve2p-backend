@@ -85,7 +85,7 @@ route.post("/", async (req, res) => {
         address = tronAddress;
       } else if (symbol === "USDC") {
         address = bnbAddress;
-        subscribeToAddressWebhook(address, symbol);
+        // subscribeToAddressWebhook(address, symbol);
       }
 
       await db.wallet.create({

@@ -1,6 +1,5 @@
 const express = require("express");
 const { db } = require("../db");
-const fetch = require("node-fetch");
 
 const router = express.Router();
 
@@ -110,7 +109,6 @@ router.post("/", async (req, res) => {
 
     await db.transaction.create({ data: txData });
 
-    console.log("✅ Deposit processed successfully:", txData);
     res.status(200).json({ success: true, message: "Processed", data: txData });
   } catch (err) {
     console.error("❌ Webhook error:", err.message);
