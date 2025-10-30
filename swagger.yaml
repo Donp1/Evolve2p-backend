@@ -826,3 +826,1593 @@ paths:
                   message:
                     type: string
                     example: Internal server error
+
+  /api/create-trade:
+    post:
+      summary: Create a new trade
+      description: |
+        Creates a trade from an existing offer. Requires authentication (buyer).
+        - Validates the offer and limits.
+        - Locks seller's crypto balance into escrow.
+        - Creates trade, chat, and notifications.
+      tags:
+        - Trades
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - offerId
+                - amountFiat
+                - amountCrypto
+              properties:
+                offerId:
+                  type: string
+                  description: Unique identifier of the offer.
+                  example: "c7b3f90d-a452-4af4-9e50-13b4ad7e4d99"
+                amountFiat:
+                  type: number
+                  description: Fiat amount the buyer is paying.
+                  example: 15000
+                amountCrypto:
+                  type: number
+                  description: Crypto amount to be purchased.
+                  example: 0.0021
+      responses:
+        "201":
+          description: Trade created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade created. Please proceed with payment."
+                  trade:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "b97e4e35-8b4c-4a82-94aa-b1d8d8f9a29d"
+                      offerId:
+                        type: string
+                        example: "c7b3f90d-a452-4af4-9e50-13b4ad7e4d99"
+                      buyerId:
+                        type: string
+                        example: "user-uuid-buyer"
+                      sellerId:
+                        type: string
+                        example: "user-uuid-seller"
+                      amountCrypto:
+                        type: number
+                        example: 0.0021
+                      amountFiat:
+                        type: number
+                        example: 15000
+                      status:
+                        type: string
+                        example: "PENDING"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2025-10-30T12:30:00Z"
+                      escrowReleased:
+                        type: boolean
+                        example: false
+                      offer:
+                        type: object
+                        description: Offer details including payment method.
+                        properties:
+                          crypto:
+                            type: string
+                            example: "BTC"
+                          currency:
+                            type: string
+                            example: "USD"
+                          paymentMethod:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "pm-bank-transfer"
+                              name:
+                                type: string
+                                example: "Bank Transfer"
+                      buyer:
+                        type: object
+                        description: Buyer user info.
+                        properties:
+                          id:
+                            type: string
+                            example: "user-uuid-buyer"
+                          username:
+                            type: string
+                            example: "john_doe"
+                      seller:
+                        type: object
+                        description: Seller user info.
+                        properties:
+                          id:
+                            type: string
+                            example: "user-uuid-seller"
+                          username:
+                            type: string
+                            example: "crypto_queen"
+        "400":
+          description: Bad request due to invalid data or offer restrictions.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade amount outside offer limits"
+        "401":
+          description: Unauthorized — Missing or invalid token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Unauthorized"
+        "404":
+          description: Offer not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Offer not found"
+        "500":
+          description: Internal server error while processing trade creation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Internal server error"
+
+  /api/release-trade/{id}:
+    post:
+      summary: Release escrow for a trade
+      description: |
+        Marks a trade as completed by releasing escrow funds to the buyer.
+        Only the **seller** can perform this action, and the trade must be in the **PAID** state.
+      tags:
+        - Trades
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Unique ID of the trade to release.
+          schema:
+            type: string
+            example: "b97e4e35-8b4c-4a82-94aa-b1d8d8f9a29d"
+      responses:
+        "200":
+          description: Escrow released successfully and trade completed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Escrow released. Trade completed."
+                  trade:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "b97e4e35-8b4c-4a82-94aa-b1d8d8f9a29d"
+                      status:
+                        type: string
+                        example: "COMPLETED"
+                      amountCrypto:
+                        type: number
+                        example: 0.0021
+                      escrowReleased:
+                        type: boolean
+                        example: true
+                      buyer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "user-uuid-buyer"
+                          username:
+                            type: string
+                            example: "john_doe"
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "user-uuid-seller"
+                          username:
+                            type: string
+                            example: "crypto_queen"
+                      offer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "offer-uuid-1234"
+                          crypto:
+                            type: string
+                            example: "BTC"
+                          currency:
+                            type: string
+                            example: "USD"
+                          paymentMethod:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: "Bank Transfer"
+        "400":
+          description: Invalid trade state or escrow already released.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade must be in PAID state"
+        "403":
+          description: Seller-only action.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Only seller can release escrow"
+        "404":
+          description: Trade not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade not found"
+        "500":
+          description: Internal server error during escrow release.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Internal server error"
+  /api/mark-trade-as-paid/{id}:
+    post:
+      summary: Mark a trade as paid
+      description: |
+        Marks a trade as paid by the buyer.  
+        The trade must be in a **PENDING** state.  
+        After marking, both buyer and seller receive notifications.
+      tags:
+        - Trades
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Unique ID of the trade to mark as paid.
+          schema:
+            type: string
+            example: "b97e4e35-8b4c-4a82-94aa-b1d8d8f9a29d"
+      responses:
+        "200":
+          description: Trade successfully marked as paid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Marked as paid"
+                  trade:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "b97e4e35-8b4c-4a82-94aa-b1d8d8f9a29d"
+                      status:
+                        type: string
+                        example: "PAID"
+                      amountCrypto:
+                        type: number
+                        example: 0.0021
+                      amountFiat:
+                        type: number
+                        example: 15000
+                      buyerId:
+                        type: string
+                        example: "user-uuid-buyer"
+                      sellerId:
+                        type: string
+                        example: "user-uuid-seller"
+        "400":
+          description: Invalid trade state or already marked as paid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade not in PENDING state"
+        "403":
+          description: Unauthorized — only buyer can mark trade as paid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Only buyer can mark paid"
+        "404":
+          description: Trade not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade not found"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Internal server error"
+  /api/get-trade/{id}:
+    get:
+      summary: Get Trade Details
+      description: >
+        Retrieve full details of a specific trade by its ID.  
+        Only the buyer or seller involved in the trade can access this endpoint.
+      tags:
+        - Trades
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the trade
+          schema:
+            type: string
+            example: "c1a8d7f9-3b3a-4a8a-9b8c-5d7b4e2d4c9f"
+      responses:
+        "200":
+          description: Trade retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "c1a8d7f9-3b3a-4a8a-9b8c-5d7b4e2d4c9f"
+                      status:
+                        type: string
+                        example: "PENDING"
+                      amountCrypto:
+                        type: number
+                        example: 0.015
+                      cryptoType:
+                        type: string
+                        example: "BTC"
+                      buyer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "user_123"
+                          username:
+                            type: string
+                            example: "john_doe"
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "user_456"
+                          username:
+                            type: string
+                            example: "satoshi"
+                      offer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "offer_789"
+                          crypto:
+                            type: string
+                            example: "BTC"
+                          rate:
+                            type: number
+                            example: 95000
+                          paymentMethod:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "pm_123"
+                              name:
+                                type: string
+                                example: "Bank Transfer"
+                              type:
+                                type: string
+                                example: "FIAT"
+                      escrow:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            example: "escrow_001"
+                          amount:
+                            type: number
+                            example: 0.015
+                          status:
+                            type: string
+                            example: "HELD"
+                      chat:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "chat_001"
+                          messages:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "msg_001"
+                                senderId:
+                                  type: string
+                                  example: "user_123"
+                                content:
+                                  type: string
+                                  example: "Hi, I’ve sent the payment."
+                                createdAt:
+                                  type: string
+                                  format: date-time
+                                  example: "2025-10-29T08:12:00Z"
+                          participants:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "user_123"
+                                username:
+                                  type: string
+                                  example: "john_doe"
+        "403":
+          description: User is not authorized to view this trade
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Not allowed"
+        "404":
+          description: Trade not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Internal server error"
+  /api/create-offer:
+    post:
+      summary: Create a new crypto offer
+      description: >
+        Allows an authenticated user to create a new **buy** or **sell** offer
+        for a specific cryptocurrency.  
+        The offer includes limits, payment method, margin, and payment terms.
+      tags:
+        - Offers
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - crypto
+                - currency
+                - margin
+                - paymentMethod
+                - minLimit
+                - maxLimit
+                - paymentTerms
+                - paymentTime
+              properties:
+                type:
+                  type: string
+                  enum: [buy, sell]
+                  example: "buy"
+                  description: The type of offer (buy or sell)
+                crypto:
+                  type: string
+                  example: "BTC"
+                  description: The cryptocurrency being traded
+                currency:
+                  type: string
+                  example: "USD"
+                  description: The fiat currency used for pricing
+                margin:
+                  type: number
+                  example: 2.5
+                  description: Margin percentage applied to market rate
+                paymentMethod:
+                  type: string
+                  example: "pm_12345"
+                  description: The ID of the payment method to use
+                minLimit:
+                  type: number
+                  example: 10
+                  description: The minimum trade amount in fiat
+                maxLimit:
+                  type: number
+                  example: 1000
+                  description: The maximum trade amount in fiat
+                paymentTerms:
+                  type: string
+                  example: "Send only from your verified bank account."
+                  description: Terms and conditions for payment
+                paymentTime:
+                  type: string
+                  example: "30 minutes"
+                  description: The allowed time for the buyer to complete payment
+      responses:
+        "201":
+          description: Offer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Offer created successfully"
+                  offer:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "offer_12345"
+                      type:
+                        type: string
+                        example: "BUY"
+                      crypto:
+                        type: string
+                        example: "BTC"
+                      currency:
+                        type: string
+                        example: "USD"
+                      margin:
+                        type: number
+                        example: 2.5
+                      minLimit:
+                        type: number
+                        example: 10
+                      maxLimit:
+                        type: number
+                        example: 1000
+                      terms:
+                        type: string
+                        example: "Send only from your verified bank account."
+                      time:
+                        type: string
+                        example: "30 minutes"
+                      status:
+                        type: string
+                        example: "ACTIVE"
+                      userId:
+                        type: string
+                        example: "user_67890"
+        "400":
+          description: Invalid input or missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Type must be 'buy' or 'sell'"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User not found"
+        "500":
+          description: Server error while creating offer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Internal server error"
+  /api/get-offers:
+    get:
+      summary: Fetch crypto offers
+      description: >
+        Retrieves a paginated list of **buy/sell offers** from the marketplace.  
+        Supports filtering by type, crypto, currency, status, payment method, and sorting.  
+        Automatically inverts the offer type logic (e.g. a buyer sees SELL offers).
+      tags:
+        - Offers
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [BUY, SELL]
+          description: >
+            Filter offers by type.  
+            **Note:** When "BUY" is passed, "SELL" offers are fetched (and vice versa).
+          example: BUY
+        - in: query
+          name: crypto
+          schema:
+            type: string
+          description: Cryptocurrency symbol (e.g., BTC, ETH)
+          example: BTC
+        - in: query
+          name: currency
+          schema:
+            type: string
+          description: Fiat currency code (e.g., USD, NGN)
+          example: USD
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE]
+          description: Filter offers by status
+          example: ACTIVE
+        - in: query
+          name: paymentMethod
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: >
+            Filter offers by one or more payment method IDs.  
+            Can be repeated or passed as an array.
+          example: ["pm_12345", "pm_67890"]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Current page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Number of items per page
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            default: createdAt
+          description: Field to sort by
+          example: margin
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sorting order (ascending or descending)
+      responses:
+        "200":
+          description: Successful response with offers list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    description: List of available offers
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "offer_12345"
+                        type:
+                          type: string
+                          example: "SELL"
+                        crypto:
+                          type: string
+                          example: "BTC"
+                        currency:
+                          type: string
+                          example: "USD"
+                        margin:
+                          type: number
+                          example: 2.5
+                        minLimit:
+                          type: number
+                          example: 50
+                        maxLimit:
+                          type: number
+                          example: 5000
+                        status:
+                          type: string
+                          example: "ACTIVE"
+                        time:
+                          type: string
+                          example: "30 minutes"
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2025-10-30T12:45:00.000Z"
+                        user:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "user_7890"
+                            username:
+                              type: string
+                              example: "CryptoMaster"
+                        paymentMethod:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "pm_12345"
+                            name:
+                              type: string
+                              example: "Bank Transfer"
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 20
+                      total:
+                        type: integer
+                        example: 137
+                      totalPages:
+                        type: integer
+                        example: 7
+        "500":
+          description: Server error while fetching offers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to fetch offers"
+  /api/get-offer/{id}:
+    get:
+      summary: Get a specific offer
+      description: Retrieve detailed information about a specific offer, including user details and payment method information.
+      tags:
+        - Offers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique ID of the offer.
+          schema:
+            type: string
+            example: "clz9e2tuv0001pvy4z0x5e0p1"
+      responses:
+        "200":
+          description: Offer retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "clz9e2tuv0001pvy4z0x5e0p1"
+                  type:
+                    type: string
+                    example: "BUY"
+                  crypto:
+                    type: string
+                    example: "BTC"
+                  currency:
+                    type: string
+                    example: "USD"
+                  margin:
+                    type: number
+                    example: 2.5
+                  minLimit:
+                    type: number
+                    example: 50
+                  maxLimit:
+                    type: number
+                    example: 1000
+                  status:
+                    type: string
+                    example: "ACTIVE"
+                  time:
+                    type: string
+                    example: "30 minutes"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2025-10-30T14:12:23.000Z"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "usr_abc123"
+                      username:
+                        type: string
+                        example: "john_doe"
+                      email:
+                        type: string
+                        example: "john@example.com"
+                  paymentMethod:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "pm_001"
+                      name:
+                        type: string
+                        example: "Bank Transfer"
+        "404":
+          description: Offer not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Offer not found
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
+  /api/get-payment-methods:
+    get:
+      summary: Get all payment methods
+      description: Retrieve a list of all available payment methods, sorted alphabetically by name.
+      tags:
+        - Payment Methods
+      responses:
+        "200":
+          description: List of payment methods retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 3
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "pm_001"
+                        name:
+                          type: string
+                          example: "Bank Transfer"
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2025-10-30T14:12:23.000Z"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Failed to fetch payment methods
+  /api/open-dispute:
+    post:
+      summary: Open a dispute for a trade
+      description: >
+        Creates a new dispute for a specific trade.  
+        Users must be authenticated and part of the trade (either buyer or seller).  
+        Optionally allows uploading an evidence file (image, document, etc.) via multipart/form-data.
+      tags:
+        - Disputes
+      security:
+        - bearerAuth: [] # JWT-based authentication
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - tradeId
+                - reason
+              properties:
+                tradeId:
+                  type: string
+                  example: "trd_abc123"
+                  description: ID of the trade for which the dispute is being opened.
+                reason:
+                  type: string
+                  example: "Seller did not release funds"
+                  description: The reason for opening the dispute.
+                description:
+                  type: string
+                  example: "The seller confirmed payment but did not release the crypto."
+                  description: Additional details about the dispute.
+                evidence:
+                  type: string
+                  format: binary
+                  description: Optional file evidence (image, document, etc.) uploaded to Cloudinary.
+      responses:
+        "201":
+          description: Dispute created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Dispute created successfully
+                  trade:
+                    type: object
+                    description: Updated trade details after marking it as disputed.
+                    properties:
+                      id:
+                        type: string
+                        example: "trd_abc123"
+                      status:
+                        type: string
+                        example: "DISPUTED"
+                      buyer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "usr_buyer01"
+                          username:
+                            type: string
+                            example: "john_doe"
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "usr_seller02"
+                          username:
+                            type: string
+                            example: "crypto_seller"
+                      offer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: "off_001"
+                          crypto:
+                            type: string
+                            example: "BTC"
+                          paymentMethod:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "pm_001"
+                              name:
+                                type: string
+                                example: "Bank Transfer"
+        "400":
+          description: Bad request – missing or invalid fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "tradeId and reason are required"
+        "403":
+          description: Forbidden – user not authorized for this trade.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "You are not part of this trade"
+        "404":
+          description: Trade not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Trade not found"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Internal server error"
+  /api/get-dispute/{id}:
+    get:
+      summary: Get dispute details by ID
+      description: >
+        Retrieve details of a specific dispute.  
+        Accessible only to the buyer, seller, or an admin associated with the dispute.
+      tags:
+        - Disputes
+      security:
+        - bearerAuth: [] # JWT authentication
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "dsp_001"
+          description: Unique identifier of the dispute.
+      responses:
+        "200":
+          description: Dispute details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  dispute:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "dsp_001"
+                      reason:
+                        type: string
+                        example: "Seller did not release funds"
+                      description:
+                        type: string
+                        example: "The seller confirmed payment but never released the crypto."
+                      evidence:
+                        type: string
+                        example: "https://res.cloudinary.com/app/dispute-evidence/abc123.png"
+                      status:
+                        type: string
+                        example: "OPEN"
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: "2025-10-30T12:45:23.000Z"
+                      user:
+                        type: object
+                        description: The user who opened the dispute.
+                        properties:
+                          id:
+                            type: string
+                            example: "usr_123"
+                          username:
+                            type: string
+                            example: "buyer123"
+                      trade:
+                        type: object
+                        description: The trade associated with the dispute.
+                        properties:
+                          id:
+                            type: string
+                            example: "trd_abc123"
+                          buyer:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "usr_001"
+                              username:
+                                type: string
+                                example: "buyer01"
+                          seller:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "usr_002"
+                              username:
+                                type: string
+                                example: "seller02"
+        "403":
+          description: Forbidden – user not authorized to view this dispute.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "You are not authorized to view this dispute"
+        "404":
+          description: Dispute not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Dispute not found"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Internal server error"
+  /api/send-chat:
+    post:
+      summary: Send a message in a chat
+      description: |
+        Sends a new message to a chat. Supports both text and file attachments.  
+        Requires authentication and multipart form data upload.
+      tags:
+        - Messages
+      security:
+        - BearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - chatId
+              properties:
+                chatId:
+                  type: string
+                  description: The unique ID of the chat where the message is sent.
+                  example: "clq1abcde0001xyz12e9pqrst"
+                content:
+                  type: string
+                  description: The text content of the message.
+                  example: "Hey there!"
+                attachment:
+                  type: string
+                  format: binary
+                  description: Optional file attachment (image, video, or document).
+      responses:
+        "201":
+          description: Message successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "msg_12345"
+                  chatId:
+                    type: string
+                    example: "clq1abcde0001xyz12e9pqrst"
+                  senderId:
+                    type: string
+                    example: "usr_67890"
+                  content:
+                    type: string
+                    example: "Hello!"
+                  type:
+                    type: string
+                    enum: [TEXT, IMAGE, FILE]
+                    example: "TEXT"
+                  attachment:
+                    type: string
+                    nullable: true
+                    example: "https://res.cloudinary.com/demo/image/upload/v12345/chat-attachments/file.png"
+                  sender:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "usr_67890"
+                      name:
+                        type: string
+                        example: "Precious Joseph"
+        "404":
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Chat not found
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized
+        "500":
+          description: Internal server error while sending message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to send message
+  /api/get-chats/{chatId}:
+    get:
+      summary: Get all messages for a specific chat
+      description: |
+        Retrieves all messages in a given chat.  
+        Requires user authentication.  
+        Messages are returned in ascending order by creation time.
+      tags:
+        - Chats
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          description: The unique ID of the chat to retrieve messages from.
+          schema:
+            type: string
+            example: "clq1xyz1234abcd5678"
+      responses:
+        "200":
+          description: Successfully retrieved messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "msg_12345"
+                    chatId:
+                      type: string
+                      example: "clq1xyz1234abcd5678"
+                    senderId:
+                      type: string
+                      example: "usr_67890"
+                    content:
+                      type: string
+                      example: "Hey, how are you?"
+                    type:
+                      type: string
+                      enum: [TEXT, IMAGE, FILE]
+                      example: "TEXT"
+                    attachment:
+                      type: string
+                      nullable: true
+                      example: "https://res.cloudinary.com/demo/image/upload/v12345/chat-attachments/photo.png"
+                    createdAt:
+                      type: string
+                      format: date-time
+                      example: "2025-10-30T12:00:00.000Z"
+                    sender:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "usr_67890"
+                        name:
+                          type: string
+                          example: "Precious Joseph"
+                        email:
+                          type: string
+                          example: "precious@example.com"
+        "400":
+          description: Missing or invalid chat ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Chat ID is required
+        "401":
+          description: Unauthorized request (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized
+        "404":
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Chat not found
+        "500":
+          description: Internal server error while fetching messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch messages
+  /api/upload-chat-proofs:
+    post:
+      summary: Upload payment proof image
+      description: |
+        Uploads an image or file (such as a payment proof) to **Cloudinary**.  
+        The request must include a file in **multipart/form-data** format under the field name `file`.
+      tags:
+        - Uploads
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload (image, PDF, or video)
+              required:
+                - file
+      responses:
+        "200":
+          description: Successfully uploaded file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Image uploaded successfully
+                  image_url:
+                    type: string
+                    example: "https://res.cloudinary.com/demo/image/upload/v173031231/payment-proofs/proof123.png"
+        "400":
+          description: No file was uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: No file uploaded
+        "500":
+          description: Server or upload error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Unable to upload image
+      security: []
