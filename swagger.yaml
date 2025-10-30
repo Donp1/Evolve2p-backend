@@ -2416,3 +2416,97 @@ paths:
                     type: string
                     example: Unable to upload image
       security: []
+
+  /api/reset-pin:
+    put:
+      summary: Update the user's security PIN
+      description: Allows an authenticated user to update their security PIN after verifying their password.
+      tags:
+        - Security
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+                - newPin
+              properties:
+                password:
+                  type: string
+                  example: "MyStrongPassword123"
+                  description: The user's account password for verification.
+                newPin:
+                  type: string
+                  pattern: "^[0-9]{4,6}$"
+                  example: "1234"
+                  description: The new security PIN (must be 4 or 6 digits).
+      responses:
+        "200":
+          description: PIN updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Security PIN updated successfully
+        "400":
+          description: Missing fields or invalid input format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: PIN must be 4 or 6 numeric digits only
+        "401":
+          description: Invalid password or unauthorized access
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Invalid password provided
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: User not found
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Internal server error
