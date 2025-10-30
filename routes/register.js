@@ -77,15 +77,15 @@ route.post("/", async (req, res) => {
       let address;
       if (symbol === "BTC") {
         address = btcAddress;
-        // subscribeToAddressWebhook(address, symbol);
+        subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "ETH") {
         address = ethAddress;
-        // subscribeToAddressWebhook(address, symbol);
+        subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "USDT") {
         address = tronAddress;
       } else if (symbol === "USDC") {
         address = bnbAddress;
-        // subscribeToAddressWebhook(address, symbol);
+        subscribeToAddressWebhook(address, symbol);
       }
 
       await db.wallet.create({
