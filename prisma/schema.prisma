@@ -254,6 +254,7 @@ model Settings {
   withdrawalLimit    Float   @default(0.0)
   depositLimit       Float   @default(0.0)
   sendCryptoFee      Float   @default(0.0)
+  swapFee            Float   @default(0.0)
   tradingFee         Float   @default(0.0)
   maintenanceMode    Boolean @default(false)
   supportEmail       String?

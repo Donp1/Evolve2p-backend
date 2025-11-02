@@ -107,7 +107,24 @@ router.post("/", async (req, res) => {
       walletId: wallet.id,
     };
 
-    await db.transaction.create({ data: txData });
+    const newTx = await db.transaction.create({ data: txData });
+
+    if (newTx) {
+      const notification = await db.notification.create({
+        data: {
+          userId: newUser.id,
+          message: `You have received ${txData.amount} ${wallet.currency} from ${txData.fromAddress}.`,
+          read: false,
+          title: "Transaction Update",
+          category: "SYSTEM",
+        },
+      });
+
+      const io = req.app.get("io");
+      if (io) {
+        io.to(wallet.userId).emit("receive_coin", notification);
+      }
+    }
 
     res.status(200).json({ success: true, message: "Processed", data: txData });
   } catch (err) {

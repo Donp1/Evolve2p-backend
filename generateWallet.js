@@ -1,7 +1,15 @@
-const crypto = require("crypto");
-const ethers = require("ethers");
-const { subscribeToAddressWebhook } = require("./utils/crypto");
 require("dotenv").config();
+const crypto = require("crypto");
+const { ethers } = require("ethers");
+const bitcoin = require("bitcoinjs-lib");
+const ECPairFactory = require("ecpair").ECPairFactory;
+const tinysecp = require("tiny-secp256k1");
+const axios = require("axios");
+
+const ECPair = ECPairFactory(tinysecp);
+
+// const { subscribeToAddressWebhook } = require("./utils/crypto");
+const { abi } = require("./constants");
 
 async function generateBTCWallet() {
   try {
@@ -561,7 +569,380 @@ async function getAddressFromXpub(index = 0) {
   return data.address;
 }
 
-getBNBMasterPrivateKey();
+// async function sendBEP20(fromPrivateKey, toAddress, amount, contractAddress) {
+//   try {
+//     const res = await fetch(
+//       "https://api.tatum.io/v3/blockchain/token/transaction",
+//       {
+//         method: "POST",
+//         headers: {
+//           "x-api-key": process.env.TATUM_API_KEY,
+//           "Content-Type": "application/json",
+//           accept: "application/json",
+//         },
+//         body: JSON.stringify({
+//           to: toAddress,
+//           amount: String(Number(amount).toFixed(18)),
+//           // currency: "BSC20",
+//           contractAddress, // ✅ BEP20 contract (e.g. USDT)
+//           fromPrivateKey,
+//         }),
+//       }
+//     );
+
+//     const data = await res.json();
+//     console.log("BEP20 send response:", data);
+//     return data;
+//   } catch (error) {
+//     console.log(error);
+//   }
+// }
+
+async function sendBEP20Native() {
+  const amount = "10";
+  const to = "0x7042b33e1b88b377e27df1cb903674cddb88b686";
+  const provider = new ethers.providers.JsonRpcProvider(
+    "https://data-seed-prebsc-1-s1.binance.org:8545/"
+  );
+
+  const wallet = new ethers.Wallet(
+    process.env.BNB_WALLET_PRIVATE_KEY,
+    provider
+  );
+
+  // console.log("Connected address:", wallet.address);
+  const contract = new ethers.Contract(
+    "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
+    abi,
+    wallet
+  );
+
+  const decimals = await contract.decimals();
+  const parsedAmount = ethers.utils.parseUnits(amount, decimals);
+
+  const tx = await contract.transfer(to, parsedAmount);
+
+  const receipt = await tx.wait();
+  console.log("receipt: ", receipt);
+  console.log("tx: ", tx);
+}
+
+async function sendBEP20(
+  fromPrivateKey,
+  toAddress,
+  amount,
+  contractAddress,
+  rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/" // default: BSC testnet
+) {
+  try {
+    // 1️⃣ Setup provider and wallet
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    const wallet = new ethers.Wallet(fromPrivateKey, provider);
+    console.log(`🔑 Sending from: ${wallet.address}`);
+
+    // 2️⃣ Setup contract
+    const contract = new ethers.Contract(contractAddress, abi, wallet);
+
+    // 3️⃣ Get token decimals and parse amount
+    const decimals = await contract.decimals();
+    const parsedAmount = ethers.utils.parseUnits(amount.toString(), decimals);
+
+    // 4️⃣ Estimate gas
+    const gasEstimate = await contract.estimateGas.transfer(
+      toAddress,
+      parsedAmount
+    );
+
+    // 5️⃣ Get gas price and add small buffer (10%)
+    const gasPrice = await provider.getGasPrice();
+    const adjustedGasPrice = gasPrice.mul(110).div(100); // +10%
+
+    // 6️⃣ Optional: check wallet balance for gas fee
+    const balance = await provider.getBalance(wallet.address);
+    const gasCost = gasEstimate.mul(adjustedGasPrice);
+    if (balance.lt(gasCost)) {
+      throw new Error("Insufficient BNB balance for gas fee");
+    }
+
+    // 7️⃣ Send transaction
+    console.log(`🚀 Sending ${amount} tokens to ${toAddress}...`);
+    const tx = await contract.transfer(toAddress, parsedAmount, {
+      gasLimit: gasEstimate,
+      gasPrice: adjustedGasPrice,
+    });
+
+    console.log(`⏳ Waiting for confirmation...`);
+    const receipt = await tx.wait(1);
+
+    // 8️⃣ Return result
+    console.log(`✅ Transaction confirmed: ${receipt.transactionHash}`);
+    return {
+      txId: receipt.transactionHash,
+    };
+  } catch (err) {
+    console.error("❌ BEP20 Send Error:", err);
+    return {
+      success: false,
+      error: err.message || "Transaction failed",
+    };
+  }
+}
+
+// async function sendETH() {
+//   const provider = new ethers.providers.JsonRpcProvider(
+//     "https://sepolia.gateway.tenderly.co"
+//   );
+
+//   const wallet = new ethers.Wallet(
+//     process.env.ETH_WALLET_PRIVATE_KEY,
+//     provider
+//   );
+
+//   const value = ethers.utils.parseEther(String(0.0001));
+//   const gasPrice = await wallet.getGasPrice();
+
+//   // const balance = await wallet.getBalance();
+//   // const address = wallet.address;
+//   // const network = await provider.getNetwork();
+//   // console.log("Chain: ", network);
+//   // console.log("address: ", address);
+//   // console.log("balance: ", ethers.utils.formatEther(balance._hex));
+
+//   const tx = await wallet.sendTransaction({
+//     to: "0xfe4f687252745af90c2f15873449520062c32fc9",
+//     gasPrice,
+//     value,
+//   });
+
+//   const receipt = await tx.wait(2);
+
+//   console.log(receipt);
+// }
+
+// sendETH().catch((error) => console.log(error));
+
+// sendBEP20Native().catch(console.error);
+
+// async function sendETH({
+//   fromPrivateKey,
+//   toAddress,
+//   amount,
+//   rpcUrl = "https://sepolia.gateway.tenderly.co", // Default to Sepolia
+//   confirmations = 1,
+// }) {
+//   try {
+//     // 1️⃣ Connect wallet and provider
+//     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+//     const wallet = new ethers.Wallet(fromPrivateKey, provider);
+//     const senderAddress = await wallet.getAddress();
+//     console.log(`🔑 Sending from: ${senderAddress}`);
+
+//     // 2️⃣ Parse ETH amount
+//     const value = ethers.utils.parseEther(amount.toString());
+
+//     // 3️⃣ Check sender balance
+//     const balance = await provider.getBalance(senderAddress);
+//     if (balance.lt(value)) {
+//       throw new Error("Insufficient ETH balance for transfer.");
+//     }
+
+//     // 4️⃣ Estimate gas limit
+//     const gasEstimate = await provider.estimateGas({
+//       to: toAddress,
+//       from: senderAddress,
+//       value,
+//     });
+
+//     // 5️⃣ Get current gas price and apply +10% buffer
+//     const gasPrice = await provider.getGasPrice();
+//     const adjustedGasPrice = gasPrice.mul(110).div(100);
+
+//     // 6️⃣ Ensure enough ETH for both amount + gas
+//     const gasCost = gasEstimate.mul(adjustedGasPrice);
+//     if (balance.lt(value.add(gasCost))) {
+//       throw new Error("Not enough ETH to cover both amount and gas fees.");
+//     }
+
+//     // 7️⃣ Create transaction object
+//     const tx = {
+//       to: toAddress,
+//       value,
+//       gasLimit: gasEstimate,
+//       gasPrice: adjustedGasPrice,
+//     };
+
+//     console.log(`🚀 Sending ${amount} ETH to ${toAddress}...`);
+
+//     // 8️⃣ Send transaction
+//     const sentTx = await wallet.sendTransaction(tx);
+//     console.log(`⏳ Transaction sent: ${sentTx.hash}`);
+
+//     // 9️⃣ Wait for confirmation
+//     const receipt = await sentTx.wait(confirmations);
+//     console.log(`✅ Confirmed in block ${receipt.blockNumber}`);
+
+//     // 🔟 Return structured result
+//     return {
+//       success: true,
+//       txId: receipt.transactionHash,
+//       blockNumber: receipt.blockNumber,
+//       gasUsed: receipt.gasUsed.toString(),
+//       gasPrice: ethers.utils.formatUnits(adjustedGasPrice, "gwei") + " gwei",
+//       from: senderAddress,
+//       to: toAddress,
+//       amountSent: amount,
+//     };
+//   } catch (err) {
+//     console.error("❌ sendETH Error:", err);
+//     return {
+//       success: false,
+//       error: err.message || "Transaction failed",
+//     };
+//   }
+// }
+
+async function sendETH(fromPrivateKey, toAddress, amount) {
+  const res = await fetch("https://api.tatum.io/v3/ethereum/transaction", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      to: toAddress,
+      currency: "ETH",
+      // amount: Number(Number(amount).toFixed(18)), // ETH uses up to 18 decimals
+      amount: String(Number(amount).toFixed(18)), // Tatum expects string for large numbers
+      fromPrivateKey: fromPrivateKey,
+    }),
+  });
+
+  const data = await res.json();
+  console.log(data);
+  return data;
+}
+
+async function sendBTC({
+  fromWIF,
+  toAddress,
+  amountBTC,
+  networkType = "testnet",
+}) {
+  try {
+    const network =
+      networkType === "mainnet"
+        ? bitcoin.networks.bitcoin
+        : bitcoin.networks.testnet;
+
+    // 🔑 Load sender keypair
+    const keyPair = ECPair.fromWIF(fromWIF, network);
+    const { address: fromAddress } = bitcoin.payments.p2wpkh({
+      pubkey: Buffer.from(keyPair.publicKey),
+      network,
+    });
+
+    console.log("🔑 From:", fromAddress);
+    console.log("📤 To:", toAddress);
+
+    // 🧱 Fetch UTXOs
+    const apiBase =
+      networkType === "mainnet"
+        ? "https://blockstream.info/api"
+        : "https://mempool.space/testnet/api/";
+
+    const { data: utxos } = await axios.get(
+      `${apiBase}/address/${fromAddress}/utxo`
+    );
+    if (!utxos.length) throw new Error("No UTXOs found — wallet has no BTC.");
+
+    // 🧮 Prepare transaction
+    const psbt = new bitcoin.Psbt({ network });
+    const sendValue = Math.floor(Number(amountBTC) * 1e8); // Convert BTC → sats
+
+    let totalInput = 0;
+    const feeRate = 10; // sats per byte (you can estimate dynamically)
+    const estimatedSize = 180 * utxos.length + 34 * 2 + 10;
+    const fee = feeRate * estimatedSize;
+
+    for (const utxo of utxos) {
+      totalInput += utxo.value;
+
+      const txHex = (await axios.get(`${apiBase}/tx/${utxo.txid}/hex`)).data;
+
+      psbt.addInput({
+        hash: utxo.txid,
+        index: utxo.vout,
+        witnessUtxo: {
+          script: bitcoin.address.toOutputScript(fromAddress, network),
+          value: utxo.value,
+        },
+      });
+
+      if (totalInput >= sendValue + fee) break;
+    }
+
+    if (totalInput < sendValue + fee)
+      throw new Error("Insufficient balance for amount + fee.");
+
+    // Outputs
+    psbt.addOutput({
+      address: toAddress,
+      value: sendValue,
+    });
+
+    const change = totalInput - sendValue - fee;
+    if (change > 0) {
+      psbt.addOutput({
+        address: fromAddress,
+        value: change,
+      });
+    }
+
+    // ✍️ Sign all inputs
+    psbt.signAllInputs(keyPair);
+    psbt.finalizeAllInputs();
+
+    const txHex = psbt.extractTransaction().toHex();
+
+    // 🚀 Broadcast transaction
+    const { data: txid } = await axios.post(`${apiBase}/tx`, txHex);
+
+    console.log("✅ Sent successfully!");
+    console.log("🔗 TXID:", txid);
+
+    return { success: true, txid, fee: fee / 1e8 + " BTC" };
+  } catch (err) {
+    console.error("❌ sendBTC Error:", err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+// (async () => {
+//   const result = await sendBTC({
+//     fromWIF: process.env.BTC_WALLET_PRIVATE_KEY, // BTC testnet private key
+//     toAddress: "tb1qajvt7e48ra8e0p9wxudh8g80yjlm9nvyrmfywd",
+//     amountBTC: "0.000001",
+//     networkType: "testnet",
+//   });
+
+//   console.log(result);
+//   console.log(process.env.BTC_WALLET_PRIVATE_KEY);
+// })();
+
+// sendETH(
+//   process.env.ETH_WALLET_PRIVATE_KEY,
+//   "0xfe4f687252745af90c2f15873449520062c32fc9",
+//   0.0001
+// ).catch(console.error);
+
+// sendBEP20(
+//   process.env.BNB_WALLET_PRIVATE_KEY,
+//   "0x7042b33e1b88b377e27df1cb903674cddb88b686",
+//   5,
+//   "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B"
+// ).catch(console.error);
+
+// getBNBMasterPrivateKey();
 
 // getAddressFromXpub();
 

@@ -6,6 +6,7 @@ const cron = require("node-cron");
 
 const crypto = require("crypto");
 const { db } = require("../db");
+const { ethers } = require("ethers");
 
 const ERC20_CONTRACTS = {
   USDT: process.env.CONTRACT_ADDRESS_USDT,
@@ -104,7 +105,170 @@ async function sendETH(fromPrivateKey, toAddress, amount) {
   console.log(data);
   return data;
 }
+
+// async function sendBEP20(fromPrivateKey, toAddress, amount, contractAddress) {
+//   const provider = new ethers.providers.JsonRpcProvider(
+//     "https://data-seed-prebsc-1-s1.binance.org:8545/"
+//   );
+
+//   const wallet = new ethers.Wallet(fromPrivateKey, provider);
+
+//   // console.log("Connected address:", wallet.address);
+//   const contract = new ethers.Contract(contractAddress, abi, wallet);
+
+//   const decimals = await contract.decimals();
+//   const parsedAmount = ethers.utils.parseUnits(amount, decimals);
+
+//   const tx = await contract.transfer(toAddress, parsedAmount);
+
+//   const receipt = await tx.wait();
+
+//   if (receipt?.transactionHash)
+//     return {
+//       txId: receipt?.transactionHash,
+//     };
+// }
+
 // assetType: 'BTC' | 'ETH'
+
+// export async function sendETH({
+//   fromPrivateKey,
+//   toAddress,
+//   amount,
+//   rpcUrl = "https://sepolia.gateway.tenderly.co", // Default to Sepolia
+//   confirmations = 1,
+// }) {
+//   try {
+//     // 1️⃣ Connect wallet and provider
+//     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+//     const wallet = new ethers.Wallet(fromPrivateKey, provider);
+//     const senderAddress = await wallet.getAddress();
+//     console.log(`🔑 Sending from: ${senderAddress}`);
+
+//     // 2️⃣ Parse ETH amount
+//     const value = ethers.utils.parseEther(amount.toString());
+
+//     // 3️⃣ Check sender balance
+//     const balance = await provider.getBalance(senderAddress);
+//     if (balance.lt(value)) {
+//       throw new Error("Insufficient ETH balance for transfer.");
+//     }
+
+//     // 4️⃣ Estimate gas limit
+//     const gasEstimate = await provider.estimateGas({
+//       to: toAddress,
+//       from: senderAddress,
+//       value,
+//     });
+
+//     // 5️⃣ Get current gas price and apply +10% buffer
+//     const gasPrice = await provider.getGasPrice();
+//     const adjustedGasPrice = gasPrice.mul(110).div(100);
+
+//     // 6️⃣ Ensure enough ETH for both amount + gas
+//     const gasCost = gasEstimate.mul(adjustedGasPrice);
+//     if (balance.lt(value.add(gasCost))) {
+//       return {
+//         error: true,
+//         error: "Not enough ETH to cover both amount and gas fees.",
+//       };
+//     }
+
+//     // 7️⃣ Create transaction object
+//     const tx = {
+//       to: toAddress,
+//       value,
+//       gasLimit: gasEstimate,
+//       gasPrice: adjustedGasPrice,
+//     };
+
+//     console.log(`🚀 Sending ${amount} ETH to ${toAddress}...`);
+
+//     // 8️⃣ Send transaction
+//     const sentTx = await wallet.sendTransaction(tx);
+//     console.log(`⏳ Transaction sent: ${sentTx.hash}`);
+
+//     // 9️⃣ Wait for confirmation
+//     const receipt = await sentTx.wait(confirmations);
+//     console.log(`✅ Confirmed in block ${receipt.blockNumber}`);
+
+//     // 🔟 Return structured result
+//     return {
+//       txId: receipt.transactionHash,
+//     };
+//   } catch (err) {
+//     console.error("❌ sendETH Error:", err);
+//     return {
+//       success: false,
+//       error: err.message || "Transaction failed",
+//     };
+//   }
+// }
+
+export async function sendBEP20(
+  fromPrivateKey,
+  toAddress,
+  amount,
+  contractAddress,
+  rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/" // default: BSC testnet
+) {
+  try {
+    // 1️⃣ Setup provider and wallet
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    const wallet = new ethers.Wallet(fromPrivateKey, provider);
+    console.log(`🔑 Sending from: ${wallet.address}`);
+
+    // 2️⃣ Setup contract
+    const contract = new ethers.Contract(contractAddress, abi, wallet);
+
+    // 3️⃣ Get token decimals and parse amount
+    const decimals = await contract.decimals();
+    const parsedAmount = ethers.utils.parseUnits(amount.toString(), decimals);
+
+    // 4️⃣ Estimate gas
+    const gasEstimate = await contract.estimateGas.transfer(
+      toAddress,
+      parsedAmount
+    );
+
+    // 5️⃣ Get gas price and add small buffer (10%)
+    const gasPrice = await provider.getGasPrice();
+    const adjustedGasPrice = gasPrice.mul(110).div(100); // +10%
+
+    // 6️⃣ Optional: check wallet balance for gas fee
+    const balance = await provider.getBalance(wallet.address);
+    const gasCost = gasEstimate.mul(adjustedGasPrice);
+    if (balance.lt(gasCost)) {
+      throw new Error("Insufficient BNB balance for gas fee");
+    }
+
+    // 7️⃣ Send transaction
+    console.log(`🚀 Sending ${amount} tokens to ${toAddress}...`);
+    const tx = await contract.transfer(toAddress, parsedAmount, {
+      gasLimit: gasEstimate,
+      gasPrice: adjustedGasPrice,
+    });
+
+    console.log(`⏳ Waiting for confirmation...`);
+    const receipt = await tx.wait();
+
+    // 8️⃣ Return result
+    console.log(`✅ Transaction confirmed: ${receipt.transactionHash}`);
+    return {
+      success: true,
+      txId: receipt.transactionHash,
+      gasUsed: receipt.gasUsed.toString(),
+      blockNumber: receipt.blockNumber,
+    };
+  } catch (err) {
+    console.error("❌ BEP20 Send Error:", err);
+    return {
+      success: false,
+      error: err.message || "Transaction failed",
+    };
+  }
+}
+
 async function subscribeToAddressWebhook(userAddress, assetType) {
   const TATUM_API_URL = "https://api.tatum.io/v4/subscription";
   let subscriptionType, attr;
@@ -507,4 +671,5 @@ module.exports = {
   convertCurrency,
   convertCryptoToFiat,
   getMarketPrice,
+  sendBEP20,
 };
