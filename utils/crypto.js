@@ -7,6 +7,7 @@ const cron = require("node-cron");
 const crypto = require("crypto");
 const { db } = require("../db");
 const { ethers } = require("ethers");
+const { abi } = require("../constants");
 
 const ERC20_CONTRACTS = {
   USDT: process.env.CONTRACT_ADDRESS_USDT,
