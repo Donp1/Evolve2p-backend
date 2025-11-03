@@ -210,7 +210,7 @@ async function sendBEP20(
   fromPrivateKey,
   toAddress,
   amount,
-  contractAddress,
+  contractAddress = "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
   rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/" // default: BSC testnet
 ) {
   try {
@@ -439,8 +439,6 @@ const sendTRC20 = async (
       feeLimit: 600,
     };
 
-    // console.log(payload);
-    // return;
     const sendTRC20 = await fetch(
       "https://api.tatum.io/v3/tron/trc20/transaction",
       {
