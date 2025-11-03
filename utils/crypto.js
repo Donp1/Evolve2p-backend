@@ -205,7 +205,7 @@ async function sendETH(fromPrivateKey, toAddress, amount) {
 //   }
 // }
 
-export async function sendBEP20(
+async function sendBEP20(
   fromPrivateKey,
   toAddress,
   amount,
