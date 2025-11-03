@@ -135,7 +135,6 @@ router.post("/", isAuthenticated, async (req, res) => {
             walletId: fromWallet.id,
             type: "INTERNAL_TRANSFER",
             amount: Number(amountNum.toFixed(8)),
-            fee: Number(feeAmount.toFixed(8)),
             toAddress: toWallet.address,
             fromAddress: fromWallet.address,
             txHash: `internal_${Date.now()}_${Math.random()
@@ -216,7 +215,6 @@ router.post("/", isAuthenticated, async (req, res) => {
           walletId: fromWallet.id,
           type: "TRANSFER",
           amount: Number(amountNum.toFixed(8)),
-          fee: Number(feeAmount.toFixed(8)),
           toAddress,
           fromAddress: fromWallet.address,
           txHash: tx.txId,
