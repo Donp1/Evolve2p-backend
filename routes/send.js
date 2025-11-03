@@ -204,24 +204,12 @@ router.post("/", isAuthenticated, async (req, res) => {
         .status(500)
         .json({ error: true, message: "Transaction failed" });
 
-    // --- 💾 Update balances ---
-    const adminFeeWallet = await db.wallet.findFirst({
-      where: { isAdmin: true, currency: coin },
-    });
-
     await db.$transaction([
       db.wallet.update({
         where: { id: fromWallet.id },
         data: { balance: { decrement: totalDeduction } },
       }),
-      ...(adminFeeWallet
-        ? [
-            db.wallet.update({
-              where: { id: adminFeeWallet.id },
-              data: { balance: { increment: feeAmount } },
-            }),
-          ]
-        : []),
+
       db.transaction.create({
         data: {
           userId,
