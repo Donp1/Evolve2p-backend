@@ -76,11 +76,12 @@ async function generateETHWallet() {
     console.log("Mnemonic:", data.mnemonic);
     console.log("Xpub:", data.xpub);
     console.log("privateKey", privateKey);
+    console.log("Address: ", address);
 
     return {
       Mnemonic: data.mnemonic,
       Xpub: data.xpub,
-      PrivateKey: privateKey,
+      privateKey,
       address: address,
     };
   } catch (error) {
@@ -104,7 +105,7 @@ async function getETHMasterPrivateKey(mnemonic) {
   const data = await res.json();
 
   if (!res.ok) {
-    console.error("❌ Error:", data);
+    console.error("❌ Error generating private key:", data);
     return;
   }
 
