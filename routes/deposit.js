@@ -1,5 +1,11 @@
 const express = require("express");
 const { db } = require("../db");
+const {
+  sweepTrc20,
+  sweepBep20,
+  sweepETH,
+  sendBTC,
+} = require("../utils/crypto");
 
 const router = express.Router();
 
@@ -29,7 +35,10 @@ router.post("/", async (req, res) => {
       normalized.amount = body.amount;
       normalized.toAddress = body.address;
       normalized.fromAddress = body.counterAddress;
-    } else if (body.subscriptionType === "INCOMING_FUNGIBLE_TX") {
+    } else if (
+      body.asset === "USDC" ||
+      body.subscriptionType === "INCOMING_FUNGIBLE_TX"
+    ) {
       normalized.asset = "USDC";
       normalized.amount = body.amount;
       normalized.toAddress = body.address;
@@ -50,6 +59,7 @@ router.post("/", async (req, res) => {
     const existing = await db.transaction.findFirst({
       where: { txHash: normalized.txHash },
     });
+
     if (existing)
       return res
         .status(400)
@@ -126,7 +136,50 @@ router.post("/", async (req, res) => {
       }
     }
 
-    res.status(200).json({ success: true, message: "Processed", data: txData });
+    // add sweeping logic here in future
+
+    try {
+      if (normalized?.asset === "USDT") {
+        const tx = await sweepTrc20(
+          process.env.TRON_WALLET_PRIVATE_KEY,
+          process.env.TRON_WALLET_ADDRESS,
+          process.env.CONTRACT_ADDRESS_USDT
+        );
+
+        console.log("sweeping data: ", tx);
+      } else if (normalized?.asset === "USDC") {
+        const tx = await sweepBep20(
+          process.env.BNB_WALLET_PRIVATE_KEY,
+          "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
+          process.env.BNB_WALLET_ADDRESS
+        );
+
+        console.log("sweeping data: ", tx);
+      } else if (normalized?.asset === "ETH") {
+        const tx = await sweepETH(
+          process.env.ETH_WALLET_PRIVATE_KEY,
+          process.env.ETH_WALLET_ADDRESS
+        );
+
+        console.log("sweeping data: ", tx);
+      } else if (normalized?.asset === "BTC") {
+        const tx = await sendBTC({
+          wif: process.env.BTC_WALLET_PRIVATE_KEY,
+          to: process.env.BTC_WALLET_ADDRESS,
+          amountSats: null, // null = sweep all
+          feeRate: 8,
+          network: "testnet",
+        });
+
+        console.log("sweeping data: ", tx);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Processed", data: txData });
   } catch (err) {
     console.error("❌ Webhook error:", err.message);
     res.status(500).json({ error: true, message: "Server error" });

@@ -253,6 +253,9 @@ app.use("/api/admin/send-mail", adminSendMail);
 app.use("/api/admin/settings", settings);
 // End of Admin
 
+// master
+app.use("/api/generate-master-wallet", require("./routes/generateMaster.js"));
+
 // worker to check expired trades
 cron.schedule("* * * * *", async () => {
   // every 1 min
