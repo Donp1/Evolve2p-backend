@@ -1,16 +1,29 @@
 const express = require("express");
-const { generateETHWallet } = require("../generateWallet");
+const {
+  generateETHWallet,
+  generateBTCWallet,
+  generateBSCWallet,
+  generateTRONWallet,
+} = require("../generateWallet");
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    const masterInfo = await generateETHWallet();
+    const ethInfo = await generateETHWallet();
+    const btcInfo = await generateBTCWallet();
+    const bscInfo = await generateBSCWallet();
+    const tronInfo = await generateTRONWallet();
 
     return res.status(200).json({
       error: false,
       message: "Master wallet generated successfully",
-      data: masterInfo,
+      data: {
+        ETH: ethInfo,
+        BTC: btcInfo,
+        BSC: bscInfo,
+        TRON: tronInfo,
+      },
     });
   } catch (error) {
     return res.status(500).json({

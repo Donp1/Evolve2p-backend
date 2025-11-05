@@ -89,6 +89,129 @@ async function generateETHWallet() {
   }
 }
 
+async function generateBTCWallet() {
+  try {
+    const response = await fetch("https://api.tatum.io/v3/bitcoin/wallet", {
+      method: "GET",
+      headers: {
+        "x-api-key": process.env.TATUM_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Failed to fetch BTC wallet:",
+        response.status,
+        await response.text()
+      );
+      return;
+    }
+
+    const data = await response.json();
+
+    const privateKey = await getBTCMasterPrivateKey(data.mnemonic);
+    const address = await generateAddress("BTC", data.xpub, 0);
+
+    console.log("✅ ETHEREUM Wallet generated:");
+    console.log("Mnemonic:", data.mnemonic);
+    console.log("Xpub:", data.xpub);
+    console.log("privateKey", privateKey);
+    console.log("Address: ", address);
+
+    return {
+      Mnemonic: data.mnemonic,
+      Xpub: data.xpub,
+      privateKey,
+      address: address,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function generateBSCWallet() {
+  try {
+    const response = await fetch("https://api.tatum.io/v3/bsc/wallet", {
+      method: "GET",
+      headers: {
+        "x-api-key": process.env.TATUM_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Failed to fetch BTC wallet:",
+        response.status,
+        await response.text()
+      );
+      return;
+    }
+
+    const data = await response.json();
+
+    const privateKey = await getBSCMasterPrivateKey(data.mnemonic);
+    const address = await generateAddress("USDC", data.xpub, 0);
+
+    console.log("✅ ETHEREUM Wallet generated:");
+    console.log("Mnemonic:", data.mnemonic);
+    console.log("Xpub:", data.xpub);
+    console.log("privateKey", privateKey);
+    console.log("Address: ", address);
+
+    return {
+      Mnemonic: data.mnemonic,
+      Xpub: data.xpub,
+      privateKey,
+      address: address,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function generateTRONWallet() {
+  try {
+    const response = await fetch("https://api.tatum.io/v3/tron/wallet", {
+      method: "GET",
+      headers: {
+        "x-api-key": process.env.TATUM_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Failed to fetch BTC wallet:",
+        response.status,
+        await response.text()
+      );
+      return;
+    }
+
+    const data = await response.json();
+
+    const privateKey = await getTRONMasterPrivateKey(data.mnemonic);
+    const address = await generateAddress("USDT", data.xpub, 0);
+
+    console.log("✅ ETHEREUM Wallet generated:");
+    console.log("Mnemonic:", data.mnemonic);
+    console.log("Xpub:", data.xpub);
+    console.log("privateKey", privateKey);
+    console.log("Address: ", address);
+
+    return {
+      Mnemonic: data.mnemonic,
+      Xpub: data.xpub,
+      privateKey,
+      address: address,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 async function getETHMasterPrivateKey(mnemonic) {
   const res = await fetch("https://api.tatum.io/v3/ethereum/wallet/priv", {
     method: "POST",
@@ -112,7 +235,30 @@ async function getETHMasterPrivateKey(mnemonic) {
   return data.key;
 }
 
-async function getTRONMasterPrivateKey() {
+async function getBTCMasterPrivateKey(mnemonic) {
+  const res = await fetch("https://api.tatum.io/v3/bitcoin/wallet/priv", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mnemonic,
+      index: 0, // master key (first child at index 0)
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("❌ Error generating private key:", data);
+    return;
+  }
+
+  return data.key;
+}
+
+async function getTRONMasterPrivateKey(mnemonic) {
   const res = await fetch("https://api.tatum.io/v3/tron/wallet/priv", {
     method: "POST",
     headers: {
@@ -120,7 +266,7 @@ async function getTRONMasterPrivateKey() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      mnemonic: process.env.TRON_WALLET_MNEMONIC,
+      mnemonic,
       index: 0, // master key (first child at index 0)
     }),
   });
@@ -137,7 +283,7 @@ async function getTRONMasterPrivateKey() {
   return data.key;
 }
 
-async function getBNBMasterPrivateKey() {
+async function getBSCMasterPrivateKey(mnemonic) {
   const res = await fetch("https://api.tatum.io/v3/bsc/wallet/priv", {
     method: "POST",
     headers: {
@@ -145,7 +291,7 @@ async function getBNBMasterPrivateKey() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      mnemonic: process.env.BNB_WALLET_MNEMONIC,
+      mnemonic,
       index: 0, // master key (first child at index 0)
     }),
   });
@@ -1457,4 +1603,7 @@ function generateIndexFromUserId(userId) {
 
 module.exports = {
   generateETHWallet,
+  generateBTCWallet,
+  generateBSCWallet,
+  generateTRONWallet,
 };
