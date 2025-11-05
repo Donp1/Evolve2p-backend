@@ -1300,31 +1300,6 @@ async function sweepETH2(
   }
 }
 
-async function getETHMasterPrivateKey(mnemonic, index) {
-  const res = await fetch("https://api.tatum.io/v3/ethereum/wallet/priv", {
-    method: "POST",
-    headers: {
-      "x-api-key": process.env.TATUM_API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      mnemonic,
-      index, // master key (first child at index 0)
-    }),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    console.error("❌ Error:", data);
-    return;
-  }
-
-  console.log(data);
-
-  return data.key;
-}
-
 function generateIndexFromUserId(userId) {
   const hash = crypto.createHash("sha256").update(userId).digest("hex");
   const intValue = parseInt(hash.substring(0, 8), 16); // 32-bit integer
@@ -1332,7 +1307,7 @@ function generateIndexFromUserId(userId) {
   return intValue % maxSafeIndex;
 }
 
-generateETHWallet().catch(console.error);
+// generateETHWallet().catch(console.error);
 
 // generateAddress(
 //   "ETH",
