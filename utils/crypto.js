@@ -871,6 +871,32 @@ async function getEthSepoliaBalance(address) {
   }
 }
 
+async function gasPrice(chain) {
+  try {
+    const url = `https://api.tatum.io/v4/blockchainOperations/gas`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "x-api-key": process.env.TATUM_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ chain }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Tatum API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("gasPrice: ", data);
+    return data.gasPrice;
+  } catch (error) {
+    console.error("❌ Error fetching balance:", error.message);
+    return { error: true, message: error.message };
+  }
+}
+
 async function sweepETH(userIndex, address) {
   try {
     const childPrivateKey = await getUserPrivateKeyPro("ETH", userIndex);
@@ -899,9 +925,7 @@ async function sweepETH(userIndex, address) {
     }
 
     // Step 2: Subtract gas reserve (keep 0.0003 ETH)
-    const gasPrice = 15e-9; // 15 Gwei
-    const gasLimit = 21000;
-    const gasFee = gasPrice * gasLimit; // ETH cost of gas
+    const gasFee = await gasPrice("ETH");
     const amountToSend = childBalance - gasFee;
 
     if (amountToSend <= 0) {
