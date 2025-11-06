@@ -974,12 +974,12 @@ async function sweepTrc20(
 
 async function getEthSepoliaBalance(address) {
   try {
-    const url = `https://api.tatum.io/v4/blockchain/balance/ethereum-sepolia/${address}`;
+    const url = `https://api.tatum.io/v3/ethereum/account/balance/${address}`;
 
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        "x-api-key": TATUM_API_KEY,
+        "x-api-key": process.env.TATUM_API_KEY,
         "Content-Type": "application/json",
       },
     });
