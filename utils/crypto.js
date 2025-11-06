@@ -886,22 +886,36 @@ async function sweepETH(userIndex, address) {
 
     // Step 1: Top up child wallet with gas (if needed)
     console.log("⛽ Sending gas to child wallet...");
-    await sendETH(process.env.ETH_WALLET_PRIVATE_KEY, address, 0.001, true);
+    const sendGas = await sendETH(
+      process.env.ETH_WALLET_PRIVATE_KEY,
+      address,
+      0.001,
+      true
+    );
+    if (!sendGas || sendGas.errorCode || !sendGas.txId) {
+      throw new Error(
+        `Gas top-up failed: ${sendGas.message || "unknown error"}`
+      );
+    }
 
     // Step 2: Subtract gas reserve (keep 0.0003 ETH)
-    const sweepAmount = balanceNum - 0.0003;
-    if (sweepAmount <= 0) {
-      console.log("⚠️ Balance too low to sweep after gas deduction");
+    const gasPrice = 15e-9; // 15 Gwei
+    const gasLimit = 21000;
+    const gasFee = gasPrice * gasLimit; // ETH cost of gas
+    const amountToSend = childBalance - gasFee;
+
+    if (amountToSend <= 0) {
+      console.log("Not enough ETH for gas fee.");
       return;
     }
 
     console.log(
-      `🚀 Sweeping ${sweepAmount} ETH from ${address} to master wallet...`
+      `🚀 Sweeping ${amountToSend} ETH from ${address} to master wallet...`
     );
     const sweepResult = await sendETH(
       childPrivateKey,
       process.env.ETH_WALLET_ADDRESS,
-      sweepAmount
+      amountToSend
     );
 
     if (!sweepResult || sweepResult.errorCode) {

@@ -60,14 +60,9 @@ router.post("/", async (req, res) => {
       normalized.fromAddress == process.env.ETH_WALLET_ADDRESS ||
       normalized.fromAddress == process.env.BNB_WALLET_ADDRESS ||
       normalized.fromAddress == process.env.TRON_WALLET_ADDRESS ||
-      normalized.fromAddress == process.env.BTC_WALLET_ADDRESS ||
-      body?.isFee === true
+      normalized.fromAddress == process.env.BTC_WALLET_ADDRESS
     ) {
-      console.log(
-        "Ignoring because is fee",
-        normalized.fromAddress,
-        body?.isFee
-      );
+      console.log("Ignoring because is fee", normalized.fromAddress);
       return;
     }
 
