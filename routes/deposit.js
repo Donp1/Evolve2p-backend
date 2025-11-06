@@ -56,6 +56,15 @@ router.post("/", async (req, res) => {
         .json({ error: true, message: "Unsupported chain" });
     }
 
+    if (
+      normalized.fromAddress == process.env.ETH_WALLET_ADDRESS ||
+      normalized.fromAddress == process.env.BNB_WALLET_ADDRESS ||
+      normalized.fromAddress == process.env.TRON_WALLET_ADDRESS ||
+      normalized.fromAddress == process.env.BTC_WALLET_ADDRESS
+    ) {
+      return;
+    }
+
     // --- 🚫 Prevent double processing ---
     const existing = await db.transaction.findFirst({
       where: { txHash: normalized.txHash },
