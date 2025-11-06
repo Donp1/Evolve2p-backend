@@ -890,7 +890,7 @@ async function gasPrice(chain, from, to, amount) {
 
     const data = await response.json();
     console.log("gasPrice: ", data);
-    return data.gasPrice;
+    return data;
   } catch (error) {
     console.error("❌ Error fetching balance:", error.message);
     return { error: true, message: error.message };
@@ -910,20 +910,6 @@ async function sweepETH(userIndex, address) {
       return;
     }
 
-    // Step 1: Top up child wallet with gas (if needed)
-    console.log("⛽ Sending gas to child wallet...");
-    const sendGas = await sendETH(
-      process.env.ETH_WALLET_PRIVATE_KEY,
-      address,
-      0.001,
-      true
-    );
-    if (!sendGas || sendGas.errorCode || !sendGas.txId) {
-      throw new Error(
-        `Gas top-up failed: ${sendGas.message || "unknown error"}`
-      );
-    }
-
     // Step 2: Subtract gas reserve (keep 0.0003 ETH)
     const gasFee = await gasPrice(
       "ETH",
@@ -931,7 +917,32 @@ async function sweepETH(userIndex, address) {
       process.env.ETH_WALLET_ADDRESS,
       String(childBalance)
     );
-    const amountToSend = childBalance - gasFee;
+
+    const gasPrice = ethers.utils.parseUnits(gasFee?.gasPrice, "gwei"); // 20 gwei
+    const gasLimit = gasFee?.gasLimit; // typical ETH transfer gas
+
+    // Calculate total gas cost (in wei)
+    const gasFeeWei = gasPrice.mul(gasLimit);
+
+    // Convert to ETH
+    const gasFeeEth = ethers.utils.formatEther(gasFeeWei);
+
+    // Step 1: Top up child wallet with gas (if needed)
+    console.log("⛽ Sending gas to child wallet...");
+    const sendGas = await sendETH(
+      process.env.ETH_WALLET_PRIVATE_KEY,
+      address,
+      gasFeeEth,
+      true
+    );
+    console.log("Gas Data: ", sendGas);
+    if (!sendGas || sendGas.errorCode || !sendGas.txId) {
+      throw new Error(
+        `Gas top-up failed: ${sendGas.message || "unknown error"}`
+      );
+    }
+
+    const amountToSend = balanceNum - Number(gasFeeEth);
 
     if (amountToSend <= 0) {
       console.log("Not enough ETH for gas fee.");
