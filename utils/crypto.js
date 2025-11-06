@@ -918,11 +918,11 @@ async function sweepETH(userIndex, address) {
       String(childBalance)
     );
 
-    const gasPrice = ethers.utils.parseUnits(gasFee?.gasPrice, "gwei"); // 20 gwei
+    const gasPriceGwei = ethers.utils.parseUnits(gasFee?.gasPrice, "gwei"); // 20 gwei
     const gasLimit = gasFee?.gasLimit; // typical ETH transfer gas
 
     // Calculate total gas cost (in wei)
-    const gasFeeWei = gasPrice.mul(gasLimit);
+    const gasFeeWei = gasPriceGwei.mul(gasLimit);
 
     // Convert to ETH
     const gasFeeEth = ethers.utils.formatEther(gasFeeWei);
