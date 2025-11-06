@@ -918,13 +918,9 @@ async function sweepETH(userIndex, address) {
       String(childBalance)
     );
 
-    const gasPriceGwei = ethers.utils.parseUnits(gasFee?.gasPrice, "gwei"); // 20 gwei
-    const gasLimit = gasFee?.gasLimit; // typical ETH transfer gas
-
-    // Calculate total gas cost (in wei)
-    const gasFeeWei = gasPriceGwei.mul(Number(gasLimit));
-
-    // Convert to ETH
+    const gasPriceWei = ethers.BigNumber.from(gasFee.gasPrice);
+    const gasLimit = ethers.BigNumber.from(gasFee.gasLimit);
+    const gasFeeWei = gasPriceWei.mul(gasLimit);
     const gasFeeEth = ethers.utils.formatEther(gasFeeWei);
 
     // Step 1: Top up child wallet with gas (if needed)
