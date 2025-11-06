@@ -403,82 +403,105 @@ const getUserPrivateKey = async (asset, index) => {
 //   }
 // };
 
-async function sendETH({
-  fromPrivateKey,
-  toAddress,
-  amount,
-  rpcUrl = "https://sepolia.gateway.tenderly.co", // Default to Sepolia
-  confirmations = 1,
-}) {
-  try {
-    // 1️⃣ Connect wallet and provider
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    const wallet = new ethers.Wallet(fromPrivateKey, provider);
-    const senderAddress = await wallet.getAddress();
-    console.log(`🔑 Sending from: ${senderAddress}`);
+// async function sendETH({
+//   fromPrivateKey,
+//   toAddress,
+//   amount,
+//   rpcUrl = "https://sepolia.gateway.tenderly.co", // Default to Sepolia
+//   confirmations = 1,
+// }) {
+//   try {
+//     // 1️⃣ Connect wallet and provider
+//     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+//     const wallet = new ethers.Wallet(fromPrivateKey, provider);
+//     const senderAddress = await wallet.getAddress();
+//     console.log(`🔑 Sending from: ${senderAddress}`);
 
-    // 2️⃣ Parse ETH amount
-    const value = ethers.utils.parseEther(amount.toString());
+//     // 2️⃣ Parse ETH amount
+//     const value = ethers.utils.parseEther(amount.toString());
 
-    // 3️⃣ Check sender balance
-    const balance = await provider.getBalance(senderAddress);
-    if (balance.lt(value)) {
-      throw new Error("Insufficient ETH balance for transfer.");
+//     // 3️⃣ Check sender balance
+//     const balance = await provider.getBalance(senderAddress);
+//     if (balance.lt(value)) {
+//       throw new Error("Insufficient ETH balance for transfer.");
+//     }
+
+//     // 4️⃣ Estimate gas limit
+//     const gasEstimate = await provider.estimateGas({
+//       to: toAddress,
+//       from: senderAddress,
+//       value,
+//     });
+
+//     // 5️⃣ Get current gas price and apply +10% buffer
+//     const gasPrice = await provider.getGasPrice();
+//     const adjustedGasPrice = gasPrice.mul(110).div(100);
+
+//     // 6️⃣ Ensure enough ETH for both amount + gas
+//     const gasCost = gasEstimate.mul(adjustedGasPrice);
+//     if (balance.lt(value.add(gasCost))) {
+//       throw new Error("Not enough ETH to cover both amount and gas fees.");
+//     }
+
+//     // 7️⃣ Create transaction object
+//     const tx = {
+//       to: toAddress,
+//       value,
+//       gasLimit: gasEstimate,
+//       gasPrice: adjustedGasPrice,
+//     };
+
+//     console.log(`🚀 Sending ${amount} ETH to ${toAddress}...`);
+
+//     // 8️⃣ Send transaction
+//     const sentTx = await wallet.sendTransaction(tx);
+//     console.log(`⏳ Transaction sent: ${sentTx.hash}`);
+
+//     // 9️⃣ Wait for confirmation
+//     const receipt = await sentTx.wait(confirmations);
+//     console.log(`✅ Confirmed in block ${receipt.blockNumber}`);
+
+//     // 🔟 Return structured result
+//     return {
+//       success: true,
+//       txId: receipt.transactionHash,
+//       blockNumber: receipt.blockNumber,
+//       gasUsed: receipt.gasUsed.toString(),
+//       gasPrice: ethers.utils.formatUnits(adjustedGasPrice, "gwei") + " gwei",
+//       from: senderAddress,
+//       to: toAddress,
+//       amountSent: amount,
+//     };
+//   } catch (err) {
+//     console.error("❌ sendETH Error:", err);
+//     return {
+//       success: false,
+//       error: err.message || "Transaction failed",
+//     };
+//   }
+// }
+
+async function sendETH(fromPrivateKey, toAddress, amount, isFee = false) {
+  const res = await fetch(
+    "https://api.tatum.io/v3/ethereum-sepolia/transaction",
+    {
+      method: "POST",
+      headers: {
+        "x-api-key": process.env.TATUM_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: toAddress,
+        currency: "ETH",
+        amount: String(Number(amount).toFixed(18)),
+        fromPrivateKey: fromPrivateKey,
+      }),
     }
+  );
 
-    // 4️⃣ Estimate gas limit
-    const gasEstimate = await provider.estimateGas({
-      to: toAddress,
-      from: senderAddress,
-      value,
-    });
-
-    // 5️⃣ Get current gas price and apply +10% buffer
-    const gasPrice = await provider.getGasPrice();
-    const adjustedGasPrice = gasPrice.mul(110).div(100);
-
-    // 6️⃣ Ensure enough ETH for both amount + gas
-    const gasCost = gasEstimate.mul(adjustedGasPrice);
-    if (balance.lt(value.add(gasCost))) {
-      throw new Error("Not enough ETH to cover both amount and gas fees.");
-    }
-
-    // 7️⃣ Create transaction object
-    const tx = {
-      to: toAddress,
-      value,
-      gasLimit: gasEstimate,
-      gasPrice: adjustedGasPrice,
-    };
-
-    console.log(`🚀 Sending ${amount} ETH to ${toAddress}...`);
-
-    // 8️⃣ Send transaction
-    const sentTx = await wallet.sendTransaction(tx);
-    console.log(`⏳ Transaction sent: ${sentTx.hash}`);
-
-    // 9️⃣ Wait for confirmation
-    const receipt = await sentTx.wait(confirmations);
-    console.log(`✅ Confirmed in block ${receipt.blockNumber}`);
-
-    // 🔟 Return structured result
-    return {
-      success: true,
-      txId: receipt.transactionHash,
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString(),
-      gasPrice: ethers.utils.formatUnits(adjustedGasPrice, "gwei") + " gwei",
-      from: senderAddress,
-      to: toAddress,
-      amountSent: amount,
-    };
-  } catch (err) {
-    console.error("❌ sendETH Error:", err);
-    return {
-      success: false,
-      error: err.message || "Transaction failed",
-    };
-  }
+  const data = await res.json();
+  console.log(data);
+  return { ...data, success: true, isFee };
 }
 
 async function sendBTC({
@@ -825,153 +848,6 @@ async function sweepTrc20(
   }
 }
 
-// async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
-//   const rpcUrl = "https://sepolia.drpc.org";
-//   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-
-//   // Configurable values
-//   const GAS_LIMIT = ethers.BigNumber.from(21000); // normal ETH transfer
-//   const TOPUP_MULTIPLIER = 2; // send 2x estimated gas as buffer
-//   const MIN_DUST_WEI = ethers.BigNumber.from("1000"); // safety
-
-//   try {
-//     // 1) instantiate master wallet (the funder)
-//     const masterWallet = new ethers.Wallet(MASTER_PRIVATE_KEY, provider);
-
-//     // 2) get child private key from your storage
-//     const childPrivateKey = await getUserPrivateKeyPro("ETH", userIndex);
-
-//     console.log(childPrivateKey);
-
-//     if (!childPrivateKey) {
-//       throw new Error("Could not retrieve child private key");
-//     }
-//     const childWallet = new ethers.Wallet(childPrivateKey, provider);
-
-//     console.log(`🔑 Sweeping from: ${childWallet.address}`);
-//     console.log(`🏦 Master (funder) address: ${masterWallet.address}`);
-
-//     // Helper to fetch fee data (EIP-1559 preferred)
-//     async function fetchFeeData() {
-//       const feeData = await provider.getFeeData(); // returns maxFeePerGas, maxPriorityFeePerGas, gasPrice
-//       // Prefer EIP-1559 fields if available; otherwise fallback to gasPrice
-//       const maxFeePerGas = feeData.maxFeePerGas || null;
-//       const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || null;
-//       const gasPrice = feeData.gasPrice || null;
-//       return { maxFeePerGas, maxPriorityFeePerGas, gasPrice };
-//     }
-
-//     // 3) compute estimated gas cost (use maxFeePerGas if available)
-//     let { maxFeePerGas, maxPriorityFeePerGas, gasPrice } = await fetchFeeData();
-
-//     // Use whichever is available; prefer maxFeePerGas * gasLimit
-//     let gasCost;
-//     if (maxFeePerGas) {
-//       gasCost = maxFeePerGas.mul(GAS_LIMIT);
-//     } else if (gasPrice) {
-//       gasCost = gasPrice.mul(GAS_LIMIT);
-//     } else {
-//       throw new Error(
-//         "Unable to determine gas price; provider returned no fee data"
-//       );
-//     }
-
-//     // 4) check child balance
-//     let childBalance = await provider.getBalance(childWallet.address);
-//     console.log(
-//       "🔎 Child balance:",
-//       ethers.utils.formatEther(childBalance),
-//       "ETH"
-//     );
-//     // If balance is insufficient for gas, top up from master
-//     if (childBalance.lt(gasCost.add(MIN_DUST_WEI))) {
-//       // compute top-up amount (gasCost * multiplier)
-//       const topUpAmount = gasCost.mul(ethers.BigNumber.from(TOPUP_MULTIPLIER));
-//       console.log(
-//         `⚠️ Child has insufficient gas. Topping up ${ethers.utils.formatEther(
-//           topUpAmount
-//         )} ETH from master -> child`
-//       );
-
-//       // Make sure master has funds
-//       const masterBalance = await provider.getBalance(masterWallet.address);
-//       if (masterBalance.lt(topUpAmount)) {
-//         throw new Error(
-//           "Master wallet has insufficient balance to top up child for gas"
-//         );
-//       }
-
-//       // send top up
-//       const fundTx = await masterWallet.sendTransaction({
-//         to: childWallet.address,
-//         value: topUpAmount,
-//         // use EIP-1559 fields if available
-//         ...(maxFeePerGas
-//           ? { maxFeePerGas, maxPriorityFeePerGas, gasLimit: 21000 }
-//           : { gasPrice, gasLimit: 21000 }),
-//       });
-
-//       console.log("⏳ Waiting for top-up tx:", fundTx.hash);
-//       await fundTx.wait();
-//       console.log("✅ Top-up confirmed");
-
-//       // re-fetch child balance & fee data (gas conditions could have changed)
-//       ({ maxFeePerGas, maxPriorityFeePerGas, gasPrice } = await fetchFeeData());
-//       if (maxFeePerGas) {
-//         gasCost = maxFeePerGas.mul(GAS_LIMIT);
-//       } else {
-//         gasCost = gasPrice.mul(GAS_LIMIT);
-//       }
-//       childBalance = await provider.getBalance(childWallet.address);
-//       console.log(
-//         "🔎 Child balance after funding:",
-//         ethers.utils.formatEther(childBalance),
-//         "ETH"
-//       );
-//     }
-
-//     // 5) compute amount to sweep (childBalance - gasCost)
-//     // ensure amountToSend > 0
-//     const amountToSend = childBalance.sub(gasCost);
-//     if (amountToSend.lte(0)) {
-//       return {
-//         error: true,
-//         message: "Not enough balance in child wallet after reserving gas.",
-//       };
-//     }
-
-//     // Build transaction: empty child to master
-//     const txRequest = {
-//       to: MASTER_ADDRESS,
-//       value: amountToSend,
-//       gasLimit: GAS_LIMIT,
-//       // prefer EIP-1559 if available
-//       ...(maxFeePerGas ? { maxFeePerGas, maxPriorityFeePerGas } : { gasPrice }),
-//     };
-
-//     console.log(
-//       `🚀 Sweeping ${ethers.utils.formatEther(amountToSend)} ETH from ${
-//         childWallet.address
-//       } -> ${MASTER_ADDRESS}`
-//     );
-
-//     // Send sweep tx
-//     const sweepTx = await childWallet.sendTransaction(txRequest);
-//     console.log("⏳ Waiting for sweep tx:", sweepTx.hash);
-//     const sweepReceipt = await sweepTx.wait();
-//     console.log("✅ Sweep confirmed", sweepReceipt.transactionHash);
-
-//     return {
-//       success: true,
-//       topUpTxHash: sweepReceipt ? sweepReceipt.transactionHash : null,
-//       sweepTxHash: sweepReceipt.transactionHash,
-//     };
-//   } catch (err) {
-//     console.error("❌ Sweep failed:", err);
-//     return { error: true, message: err.message || String(err) };
-//   }
-// }
-
 async function getEthSepoliaBalance(address) {
   try {
     const url = `https://api.tatum.io/v3/ethereum/account/balance/${address}`;
@@ -1002,42 +878,32 @@ async function sweepETH(userIndex, address) {
     if (!childPrivateKey) throw new Error("Child private key not found");
 
     const childBalance = await getEthSepoliaBalance(address);
-    console.log(childBalance);
 
-    const sendGas = await sendETH({
-      fromPrivateKey: process.env.ETH_WALLET_PRIVATE_KEY,
-      toAddress: address,
-      amount: 0.001,
-      rpcUrl: "https://sepolia.drpc.org",
-      confirmations: 1,
-    });
+    const sendGas = await sendETH(
+      process.env.ETH_WALLET_PRIVATE_KEY,
+      address,
+      0.001,
+      true
+    );
 
     if (!sendGas.success) {
       throw new Error("Could not send gas for the transaction");
     }
 
-    const sweepResult = await sendETH({
-      fromPrivateKey: childPrivateKey,
-      toAddress: process.env.ETH_WALLET_ADDRESS,
-      amount: childBalance,
-      rpcUrl: "https://sepolia.drpc.org",
-      confirmations: 1,
-    });
+    const sweepResult = await sendETH(
+      childPrivateKey,
+      process.env.ETH_WALLET_ADDRESS,
+      childBalance
+    );
 
     console.log(sweepResult);
 
     if (!sweepResult.success) {
-      throw new Error(`Sweep failed: ${sweepResult.error}`);
+      throw new Error(`Sweep failed`);
     }
 
-    console.log(`✅ Sweep successful! TXID: ${sweepResult.txId}`);
-    return {
-      success: true,
-      txId: sweepResult.txId,
-      from: address,
-      to: process.env.MASTER_ETH_ADDRESS,
-      amount: childBalance,
-    };
+    console.log(`✅ Sweep successful! TXID: ${sweepResult}`);
+    return sweepResult;
   } catch (error) {
     console.log(error);
   }
