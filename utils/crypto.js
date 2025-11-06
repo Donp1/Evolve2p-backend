@@ -1037,135 +1037,51 @@ async function sweepBep20(
   }
 }
 
-async function sweepBTC({
-  masterPrivateKey,
-  userIndex,
-  feeRate = 10, // sats/vbyte
-  network = "testnet",
-  to,
-}) {
+async function sweepETH(userIndex, address) {
   try {
-    // 🔹 Setup network and API endpoint
-    const NETWORK =
-      network === "mainnet"
-        ? bitcoin.networks.bitcoin
-        : bitcoin.networks.testnet;
-    const BLOCKSTREAM_API =
-      network === "mainnet"
-        ? "https://blockstream.info/api"
-        : "https://blockstream.info/testnet/api";
+    const childPrivateKey = await getUserPrivateKeyPro("ETH", userIndex);
+    if (!childPrivateKey) throw new Error("Child private key not found");
 
-    // 🔹 Prepare key pairs
-    const masterKey = ECPair.fromWIF(masterPrivateKey, NETWORK);
-    const masterPubkey = Buffer.from(masterKey.publicKey);
-    const masterAddress = to;
+    const childBalance = await getEthSepoliaBalance(address);
+    const balanceNum = Number(childBalance);
 
-    const childPrivateKeyData = await getUserPrivateKeyPro("BTC", userIndex);
-
-    const childPrivateKey = childPrivateKeyData?.data?.privatekey;
-    if (!childPrivateKey) {
-      throw new Error("Could not retrieve child private key");
-    }
-
-    const childKey = ECPair.fromWIF(childPrivateKey, NETWORK);
-    const { address: childAddress } = bitcoin.payments.p2wpkh({
-      pubkey: Buffer.from(childKey.publicKey),
-      network: NETWORK,
-    });
-
-    console.log(`👑 Master Wallet: ${masterAddress}`);
-    console.log(`👶 Child Wallet: ${childAddress}`);
-
-    // --- 1️⃣ Check if child has any UTXOs ---
-    const utxosRes = await axios.get(
-      `${BLOCKSTREAM_API}/address/${childAddress}/utxo`
-    );
-    const utxos = utxosRes.data;
-
-    if (!Array.isArray(utxos) || utxos.length === 0) {
-      console.log("❌ No BTC to sweep in child wallet.");
+    if (balanceNum <= 0) {
+      console.log("❌ No balance to sweep");
       return;
     }
 
-    // --- 2️⃣ Check child BTC balance ---
-    const totalBalance = utxos.reduce((sum, u) => sum + BigInt(u.value), 0n);
-    console.log(`💰 Child balance: ${Number(totalBalance) / 1e8} BTC`);
+    // Step 1: Top up child wallet with gas (if needed)
+    console.log("⛽ Sending gas to child wallet...");
+    await sendETH(process.env.ETH_WALLET_PRIVATE_KEY, address, 0.001, true);
 
-    // --- 3️⃣ Check if child has enough balance for fees ---
-    const estVSize = 10 + utxos.length * 68 + 1 * 31; // 1 output (sweep)
-    const estFee = BigInt(feeRate * estVSize);
-
-    if (totalBalance <= estFee) {
-      console.log("⚠️ Child wallet has no usable funds after fee.");
+    // Step 2: Subtract gas reserve (keep 0.0003 ETH)
+    const sweepAmount = balanceNum - 0.0003;
+    if (sweepAmount <= 0) {
+      console.log("⚠️ Balance too low to sweep after gas deduction");
       return;
     }
 
-    // --- 4️⃣ If child has no BTC for gas (for future transactions), top up from master ---
-    const childUtxosRes = await axios.get(
-      `${BLOCKSTREAM_API}/address/${childAddress}/utxo`
+    console.log(
+      `🚀 Sweeping ${sweepAmount} ETH from ${address} to master wallet...`
     );
-    const hasGas = childUtxosRes.data.length > 0;
+    const sweepResult = await sendETH(
+      childPrivateKey,
+      process.env.ETH_WALLET_ADDRESS,
+      sweepAmount
+    );
 
-    if (!hasGas) {
-      console.log("⚡ Sending small gas top-up to child wallet...");
-      const gasTx = await sendBTC({
-        wif: masterPrivateKey,
-        to: childAddress,
-        amountSats: 10_000, // 0.0001 BTC
-        feeRate,
-        network,
-      });
-      console.log("⛽ Gas sent TXID:", gasTx.txId);
-      // Wait a bit for confirmation before sweeping
-      await new Promise((r) => setTimeout(r, 10000));
+    if (!sweepResult || sweepResult.errorCode) {
+      throw new Error(
+        `Sweep failed: ${sweepResult.message || "unknown error"}`
+      );
     }
 
-    // --- 5️⃣ Build sweep transaction ---
-    const psbt = new bitcoin.Psbt({ network: NETWORK });
-
-    for (const u of utxos) {
-      const rawTxRes = await axios.get(`${BLOCKSTREAM_API}/tx/${u.txid}/hex`);
-      psbt.addInput({
-        hash: u.txid,
-        index: u.vout,
-        nonWitnessUtxo: Buffer.from(rawTxRes.data, "hex"),
-      });
-    }
-
-    const valueToSend = totalBalance - estFee;
-    psbt.addOutput({ address: masterAddress, value: Number(valueToSend) });
-
-    // --- 6️⃣ Sign inputs ---
-    utxos.forEach((_, i) => {
-      psbt.signInput(i, {
-        publicKey: Buffer.from(childKey.publicKey),
-        sign: (hash) => Buffer.from(ecc.sign(hash, childKey.privateKey)),
-      });
-    });
-
-    psbt.finalizeAllInputs();
-    const txHex = psbt.extractTransaction().toHex();
-
-    // --- 7️⃣ Broadcast ---
-    const broadcast = await axios.post(`${BLOCKSTREAM_API}/tx`, txHex, {
-      headers: { "Content-Type": "text/plain" },
-    });
-
-    console.log(`✅ Sweep complete! TXID: ${broadcast.data}`);
-
-    return {
-      success: true,
-      txId: broadcast.data,
-      from: childAddress,
-      to: masterAddress,
-      amount: Number(valueToSend),
-    };
-  } catch (err) {
-    console.error("❌ BTC Sweep Error:", err);
-    return {
-      success: false,
-      error: err.message || "Transaction failed",
-    };
+    console.log(
+      `✅ Sweep successful! TXID: ${sweepResult.txId || sweepResult.hash}`
+    );
+    return sweepResult;
+  } catch (error) {
+    console.error("❌ sweepETH error:", error.message);
   }
 }
 
