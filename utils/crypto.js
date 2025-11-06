@@ -1004,6 +1004,18 @@ async function sweepETH(userIndex, address) {
     const childBalance = await getEthSepoliaBalance(address);
     console.log(childBalance);
 
+    const sendGas = await sendETH({
+      fromPrivateKey: process.env.ETH_WALLET_PRIVATE_KEY,
+      toAddress: address,
+      amount: 0.001,
+      rpcUrl: "https://sepolia.drpc.org",
+      confirmations: 1,
+    });
+
+    if (!sendGas.success) {
+      throw new Error("Could not send gas for the transaction");
+    }
+
     const sweepResult = await sendETH({
       fromPrivateKey: childPrivateKey,
       toAddress: process.env.ETH_WALLET_ADDRESS,
