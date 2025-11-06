@@ -123,7 +123,7 @@ router.post("/", async (req, res) => {
     if (newTx) {
       const notification = await db.notification.create({
         data: {
-          userId: newUser.id,
+          userId: wallet.userId,
           message: `You have received ${txData.amount} ${wallet.currency} from ${txData.fromAddress}.`,
           read: false,
           title: "Transaction Update",
