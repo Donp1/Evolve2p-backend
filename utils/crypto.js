@@ -843,7 +843,7 @@ async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
 
     console.log(childKeyRes);
 
-    if (!childKeyRes || !childKeyRes.data || !childKeyRes.data.privatekey) {
+    if (!childKeyRes) {
       throw new Error("Could not retrieve child private key");
     }
     const childPrivateKey = childKeyRes.data.privatekey;
