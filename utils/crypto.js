@@ -939,7 +939,7 @@ async function sweepETH(userIndex, address) {
       );
     }
 
-    const amountToSend = balanceNum - Number(gasFeeEth);
+    const amountToSend = balanceNum - (Number(gasFeeEth) + 0.0003);
 
     if (amountToSend <= 0) {
       console.log("Not enough ETH for gas fee.");
