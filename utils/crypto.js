@@ -932,7 +932,7 @@ async function sweepETH(userIndex, address) {
     const sendGas = await sendETH(
       process.env.ETH_WALLET_PRIVATE_KEY,
       address,
-      gasFeeEth,
+      gasFeeEth + 0.0003, // keep 0.0003 ETH as reserve
       true
     );
     console.log("Gas Data: ", sendGas);
