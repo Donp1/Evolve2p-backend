@@ -922,13 +922,14 @@ async function sweepETH(userIndex, address) {
     const gasLimit = gasFee?.gasLimit; // typical ETH transfer gas
 
     // Calculate total gas cost (in wei)
-    const gasFeeWei = gasPriceGwei.mul(gasLimit);
+    const gasFeeWei = gasPriceGwei.mul(Number(gasLimit));
 
     // Convert to ETH
     const gasFeeEth = ethers.utils.formatEther(gasFeeWei);
 
     // Step 1: Top up child wallet with gas (if needed)
     console.log("⛽ Sending gas to child wallet...");
+    console.log("Amount to send as fee: ", Number(gasFeeEth) + 0.0003);
     const sendGas = await sendETH(
       process.env.ETH_WALLET_PRIVATE_KEY,
       address,
