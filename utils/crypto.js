@@ -830,9 +830,9 @@ async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
   // Configurable values
-  const GAS_LIMIT = ethers.BigNumber.from(opts.gasLimit || 21000); // normal ETH transfer
-  const TOPUP_MULTIPLIER = opts.topUpMultiplier || 2; // send 2x estimated gas as buffer
-  const MIN_DUST_WEI = ethers.BigNumber.from(opts.minDustWei || "1000"); // safety
+  const GAS_LIMIT = ethers.BigNumber.from(21000); // normal ETH transfer
+  const TOPUP_MULTIPLIER = 2; // send 2x estimated gas as buffer
+  const MIN_DUST_WEI = ethers.BigNumber.from("1000"); // safety
 
   try {
     // 1) instantiate master wallet (the funder)
