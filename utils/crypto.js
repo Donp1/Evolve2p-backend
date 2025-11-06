@@ -843,7 +843,7 @@ async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
 
     console.log(childPrivateKey);
 
-    if (!childKeyRes) {
+    if (!childPrivateKey) {
       throw new Error("Could not retrieve child private key");
     }
     const childWallet = new ethers.Wallet(childPrivateKey, provider);
