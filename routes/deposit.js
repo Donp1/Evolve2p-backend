@@ -159,11 +159,7 @@ router.post("/", async (req, res) => {
 
         console.log("sweeping data: ", tx);
       } else if (normalized?.asset === "ETH") {
-        const tx = await sweepETH(
-          process.env.ETH_WALLET_PRIVATE_KEY,
-          process.env.ETH_WALLET_ADDRESS,
-          wallet.addressIndex
-        );
+        const tx = await sweepETH(wallet.addressIndex, wallet.address);
 
         console.log("sweeping data: ", tx);
       } else if (normalized?.asset === "BTC") {
