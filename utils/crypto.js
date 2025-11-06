@@ -840,6 +840,9 @@ async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
 
     // 2) get child private key from your storage
     const childKeyRes = await getUserPrivateKeyPro("ETH", userIndex);
+
+    console.log(childKeyRes);
+
     if (!childKeyRes || !childKeyRes.data || !childKeyRes.data.privatekey) {
       throw new Error("Could not retrieve child private key");
     }
@@ -980,8 +983,8 @@ async function sweepBep20(
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
   // Configuration
-  const GAS_LIMIT = ethers.BigNumber.from(opts.gasLimit || 120000); // token transfer uses more gas
-  const TOPUP_MULTIPLIER = opts.topUpMultiplier || 2;
+  const GAS_LIMIT = ethers.BigNumber.from(120000); // token transfer uses more gas
+  const TOPUP_MULTIPLIER = 2;
   const MIN_DUST_WEI = ethers.BigNumber.from("1000"); // minimal threshold
 
   try {
