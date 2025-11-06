@@ -482,22 +482,20 @@ const getUserPrivateKey = async (asset, index) => {
 // }
 
 async function sendETH(fromPrivateKey, toAddress, amount, isFee = false) {
-  const res = await fetch(
-    "https://api.tatum.io/v3/ethereum-sepolia/transaction",
-    {
-      method: "POST",
-      headers: {
-        "x-api-key": process.env.TATUM_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        to: toAddress,
-        currency: "ETH",
-        amount: String(Number(amount).toFixed(18)),
-        fromPrivateKey: fromPrivateKey,
-      }),
-    }
-  );
+  const res = await fetch("https://api.tatum.io/v3/ethereum/transaction", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+      "x-testnet-type": "ethereum-sepolia",
+    },
+    body: JSON.stringify({
+      to: toAddress,
+      currency: "ETH",
+      amount: String(Number(amount).toFixed(18)),
+      fromPrivateKey: fromPrivateKey,
+    }),
+  });
 
   const data = await res.json();
   console.log(data);
