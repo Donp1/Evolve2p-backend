@@ -839,14 +839,13 @@ async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
     const masterWallet = new ethers.Wallet(MASTER_PRIVATE_KEY, provider);
 
     // 2) get child private key from your storage
-    const childKeyRes = await getUserPrivateKeyPro("ETH", userIndex);
+    const childPrivateKey = await getUserPrivateKeyPro("ETH", userIndex);
 
-    console.log(childKeyRes);
+    console.log(childPrivateKey);
 
     if (!childKeyRes) {
       throw new Error("Could not retrieve child private key");
     }
-    const childPrivateKey = childKeyRes.data.privatekey;
     const childWallet = new ethers.Wallet(childPrivateKey, provider);
 
     console.log(`🔑 Sweeping from: ${childWallet.address}`);
