@@ -929,7 +929,7 @@ async function sweepETH(userIndex, address) {
     const sendGas = await sendETH(
       process.env.ETH_WALLET_PRIVATE_KEY,
       address,
-      String(Number(gasFeeEth) + 0.0003), // keep 0.0003 ETH as reserve
+      String(Number(gasFeeEth) + 0.002), // keep 0.0003 ETH as reserve
       true
     );
     console.log("Gas Data: ", sendGas);
@@ -939,7 +939,7 @@ async function sweepETH(userIndex, address) {
       );
     }
 
-    const amountToSend = balanceNum - (Number(gasFeeEth) + 0.0003);
+    const amountToSend = balanceNum - Number(gasFeeEth);
 
     if (amountToSend <= 0) {
       console.log("Not enough ETH for gas fee.");

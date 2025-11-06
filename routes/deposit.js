@@ -150,39 +150,46 @@ router.post("/", async (req, res) => {
     // add sweeping logic here in future
 
     try {
-      if (normalized?.asset === "USDT") {
-        const tx = await sweepTrc20(
-          process.env.TRON_WALLET_PRIVATE_KEY,
-          process.env.TRON_WALLET_ADDRESS,
-          wallet.addressIndex,
-          process.env.CONTRACT_ADDRESS_USDT
-        );
+      if (
+        normalized.fromAddress !== process.env.ETH_WALLET_ADDRESS ||
+        normalized.fromAddress !== process.env.BNB_WALLET_ADDRESS ||
+        normalized.fromAddress !== process.env.TRON_WALLET_ADDRESS ||
+        normalized.fromAddress !== process.env.BTC_WALLET_ADDRESS
+      ) {
+        if (normalized?.asset === "USDT") {
+          const tx = await sweepTrc20(
+            process.env.TRON_WALLET_PRIVATE_KEY,
+            process.env.TRON_WALLET_ADDRESS,
+            wallet.addressIndex,
+            process.env.CONTRACT_ADDRESS_USDT
+          );
 
-        console.log("sweeping data: ", tx);
-      } else if (normalized?.asset === "USDC") {
-        const tx = await sweepBep20(
-          process.env.BNB_WALLET_PRIVATE_KEY,
-          process.env.CONTRACT_ADDRESS_USDC,
-          process.env.BNB_WALLET_ADDRESS,
-          wallet.addressIndex
-        );
+          console.log("sweeping data: ", tx);
+        } else if (normalized?.asset === "USDC") {
+          const tx = await sweepBep20(
+            process.env.BNB_WALLET_PRIVATE_KEY,
+            process.env.CONTRACT_ADDRESS_USDC,
+            process.env.BNB_WALLET_ADDRESS,
+            wallet.addressIndex
+          );
 
-        console.log("sweeping data: ", tx);
-      } else if (normalized?.asset === "ETH") {
-        const tx = await sweepETH(wallet.addressIndex, wallet.address);
+          console.log("sweeping data: ", tx);
+        } else if (normalized?.asset === "ETH") {
+          const tx = await sweepETH(wallet.addressIndex, wallet.address);
 
-        console.log("sweeping data: ", tx);
-      } else if (normalized?.asset === "BTC") {
-        const tx = await sweepBTC({
-          wif: process.env.BTC_WALLET_PRIVATE_KEY,
-          userIndex: wallet.addressIndex,
-          to: process.env.BTC_WALLET_ADDRESS,
-          amountSats: null, // null = sweep all
-          feeRate: 8,
-          network: "testnet",
-        });
+          console.log("sweeping data: ", tx);
+        } else if (normalized?.asset === "BTC") {
+          const tx = await sweepBTC({
+            wif: process.env.BTC_WALLET_PRIVATE_KEY,
+            userIndex: wallet.addressIndex,
+            to: process.env.BTC_WALLET_ADDRESS,
+            amountSats: null, // null = sweep all
+            feeRate: 8,
+            network: "testnet",
+          });
 
-        console.log("sweeping data: ", tx);
+          console.log("sweeping data: ", tx);
+        }
       }
     } catch (error) {
       console.log(error);
