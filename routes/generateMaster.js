@@ -4,7 +4,7 @@ const {
   generateBTCWallet,
   generateBSCWallet,
   generateTRONWallet,
-} = require("../generateWallet");
+} = require("../utils/crypto");
 
 const router = express.Router();
 

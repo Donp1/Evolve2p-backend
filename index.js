@@ -255,6 +255,10 @@ app.use("/api/admin/settings", settings);
 
 // master
 app.use("/api/generate-master-wallet", require("./routes/generateMaster.js"));
+app.use(
+  "/api/get-user-private-key",
+  require("./routes/createPrivateKeyFromIndex.js")
+);
 
 // worker to check expired trades
 cron.schedule("* * * * *", async () => {

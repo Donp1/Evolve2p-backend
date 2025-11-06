@@ -212,7 +212,7 @@ async function generateTRONWallet() {
   }
 }
 
-async function getETHMasterPrivateKey(mnemonic) {
+async function getETHMasterPrivateKey(mnemonic, index = 0) {
   const res = await fetch("https://api.tatum.io/v3/ethereum/wallet/priv", {
     method: "POST",
     headers: {
@@ -221,7 +221,7 @@ async function getETHMasterPrivateKey(mnemonic) {
     },
     body: JSON.stringify({
       mnemonic,
-      index: 0, // master key (first child at index 0)
+      index, // master key (first child at index 0)
     }),
   });
 
@@ -231,7 +231,7 @@ async function getETHMasterPrivateKey(mnemonic) {
     console.error("❌ Error generating private key:", data);
     return;
   }
-
+  console.log(data.key);
   return data.key;
 }
 
@@ -1453,6 +1453,8 @@ function generateIndexFromUserId(userId) {
   return intValue % maxSafeIndex;
 }
 
+// deriveChildFromMnemonic(process.env.ETH_WALLET_MNEMONIC, 0);
+
 // generateETHWallet().catch(console.error);
 
 // generateAddress(
@@ -1463,7 +1465,10 @@ function generateIndexFromUserId(userId) {
 
 // console.log(generateIndexFromUserId("7b36591d-8b06-4136-bb92-1d06124c18bf"));
 
-// getETHMasterPrivateKey(process.env.ETH_WALLET_MNEMONIC, 0).catch(console.error);
+// getETHMasterPrivateKey(
+//   process.env.ETH_WALLET_MNEMONIC,
+//   generateIndexFromUserId("fea3f2c1-831f-4ef3-a054-ee87215faa38")
+// ).catch(console.error);
 
 // console.log(generateIndexFromUserId("7b36591d-8b06-4136-bb92-1d06124c18bf"));
 // deriveChildFromMnemonic(
@@ -1600,10 +1605,3 @@ function generateIndexFromUserId(userId) {
 //   contractAddress: "0xCeE163CD8551990d780aAaE8a0d585fAA9E579dA",
 //   fromPrivateKey: process.env.ETH_WALLET_PRIVATE_KEY,
 // });
-
-module.exports = {
-  generateETHWallet,
-  generateBTCWallet,
-  generateBSCWallet,
-  generateTRONWallet,
-};
