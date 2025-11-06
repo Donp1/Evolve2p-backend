@@ -5,6 +5,7 @@ const {
   sweepBep20,
   sweepETH,
   sendBTC,
+  sweepBTC,
 } = require("../utils/crypto");
 
 const router = express.Router();
@@ -143,6 +144,7 @@ router.post("/", async (req, res) => {
         const tx = await sweepTrc20(
           process.env.TRON_WALLET_PRIVATE_KEY,
           process.env.TRON_WALLET_ADDRESS,
+          wallet.addressIndex,
           process.env.CONTRACT_ADDRESS_USDT
         );
 
@@ -150,21 +152,24 @@ router.post("/", async (req, res) => {
       } else if (normalized?.asset === "USDC") {
         const tx = await sweepBep20(
           process.env.BNB_WALLET_PRIVATE_KEY,
-          "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
-          process.env.BNB_WALLET_ADDRESS
+          process.env.CONTRACT_ADDRESS_USDC,
+          process.env.BNB_WALLET_ADDRESS,
+          wallet.addressIndex
         );
 
         console.log("sweeping data: ", tx);
       } else if (normalized?.asset === "ETH") {
         const tx = await sweepETH(
           process.env.ETH_WALLET_PRIVATE_KEY,
-          process.env.ETH_WALLET_ADDRESS
+          process.env.ETH_WALLET_ADDRESS,
+          wallet.addressIndex
         );
 
         console.log("sweeping data: ", tx);
       } else if (normalized?.asset === "BTC") {
-        const tx = await sendBTC({
+        const tx = await sweepBTC({
           wif: process.env.BTC_WALLET_PRIVATE_KEY,
+          userIndex: wallet.addressIndex,
           to: process.env.BTC_WALLET_ADDRESS,
           amountSats: null, // null = sweep all
           feeRate: 8,
