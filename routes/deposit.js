@@ -63,6 +63,11 @@ router.post("/", async (req, res) => {
       normalized.fromAddress == process.env.BTC_WALLET_ADDRESS ||
       body?.isFee === true
     ) {
+      console.log(
+        "Ignoring because is fee",
+        normalized.fromAddress,
+        body?.isFee
+      );
       return;
     }
 
