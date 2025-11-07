@@ -68,7 +68,12 @@ router.post("/", async (req, res) => {
 
     // --- 🚫 Prevent double processing ---
     const existing = await db.transaction.findFirst({
-      where: { txHash: normalized.txHash },
+      where: {
+        txHash: {
+          equals: normalized.txHash,
+          mode: "insensitive",
+        },
+      },
     });
 
     if (existing)
@@ -78,7 +83,7 @@ router.post("/", async (req, res) => {
 
     // --- 🔍 Find the wallet based on toAddress ---
     const wallet = await db.wallet.findFirst({
-      where: { address: normalized.toAddress },
+      where: { address: { equals: normalized.toAddress, mode: "insensitive" } },
       include: { user: true },
     });
 
