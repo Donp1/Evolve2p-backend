@@ -56,13 +56,20 @@ router.post("/", async (req, res) => {
         .json({ error: true, message: "Unsupported chain" });
     }
 
+    if (!normalized.fromAddress || normalized.fromAddress === null) {
+      return;
+    }
+
     if (
-      normalized.fromAddress == process.env.ETH_WALLET_ADDRESS ||
-      normalized.fromAddress == process.env.BNB_WALLET_ADDRESS ||
-      normalized.fromAddress == process.env.TRON_WALLET_ADDRESS ||
-      normalized.fromAddress == process.env.BTC_WALLET_ADDRESS
+      String(normalized.fromAddress).toLowerCase() ===
+        String(process.env.ETH_WALLET_ADDRESS).toLowerCase() ||
+      String(normalized.fromAddress).toLowerCase() ===
+        String(process.env.BNB_WALLET_ADDRESS).toLowerCase() ||
+      String(normalized.fromAddress).toLowerCase() ===
+        String(process.env.TRON_WALLET_ADDRESS).toLowerCase() ||
+      String(normalized.fromAddress).toLowerCase() ===
+        String(process.env.BTC_WALLET_ADDRESS).toLowerCase()
     ) {
-      console.log("Ignoring because is fee", normalized.fromAddress);
       return;
     }
 
@@ -156,10 +163,14 @@ router.post("/", async (req, res) => {
 
     try {
       if (
-        normalized.fromAddress !== process.env.ETH_WALLET_ADDRESS ||
-        normalized.fromAddress !== process.env.BNB_WALLET_ADDRESS ||
-        normalized.fromAddress !== process.env.TRON_WALLET_ADDRESS ||
-        normalized.fromAddress !== process.env.BTC_WALLET_ADDRESS
+        String(normalized.fromAddress).toLowerCase() !==
+          String(process.env.ETH_WALLET_ADDRESS).toLowerCase() ||
+        String(normalized.fromAddress).toLowerCase() !==
+          String(process.env.BNB_WALLET_ADDRESS).toLowerCase() ||
+        String(normalized.fromAddress).toLowerCase() !==
+          String(process.env.TRON_WALLET_ADDRESS).toLowerCase() ||
+        String(normalized.fromAddress).toLowerCase() !==
+          String(process.env.BTC_WALLET_ADDRESS).toLowerCase()
       ) {
         if (normalized?.asset === "USDT") {
           const tx = await sweepTrc20(
