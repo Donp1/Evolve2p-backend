@@ -55,6 +55,11 @@ route.post("/", async (req, res) => {
     const tronAddress = await generateAddress("USDT", userIndex);
     const bnbAddress = await generateAddress("USDC", userIndex);
 
+    console.log("BTC", btcAddress);
+    console.log("ETH", ethAddress);
+    console.log("TRON", tronAddress);
+    console.log("BNB", bnbAddress);
+
     const CURRENCIES = ["BTC", "ETH", "USDT", "USDC"];
     // create wallet
     for (const symbol of CURRENCIES) {
@@ -77,7 +82,7 @@ route.post("/", async (req, res) => {
         subscribeToAddressWebhook(address, symbol);
       }
 
-      await db.wallet.create({
+      const wallet = await db.wallet.create({
         data: {
           address,
           currency: symbol,

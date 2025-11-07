@@ -11,11 +11,15 @@ const { ethers } = require("ethers");
 const { abi } = require("../constants");
 
 const bitcoin = require("bitcoinjs-lib");
+const hdkey = require("hdkey");
 const ecc = require("tiny-secp256k1");
 const { ECPairFactory } = require("ecpair");
+const { BIP32Factory } = require("bip32");
+const bip39 = require("bip39");
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
+const bip32 = BIP32Factory(ecc);
 
 const ERC20_CONTRACTS = {
   USDT: process.env.CONTRACT_ADDRESS_USDT,
@@ -1654,107 +1658,121 @@ const getUserPrivateKeyPro = async (asset, index) => {
 };
 
 function deriveEvmFromMnemonic(mnemonic, index, pathBase = "m/44'/60'/0'/0") {
-  if (!mnemonic || mnemonic.split(" ").length < 12) {
-    throw new Error("Invalid mnemonic");
-  }
-  const path = `${pathBase}/${index}`;
-  const wallet = ethers.Wallet.fromMnemonic(mnemonic, path);
+  try {
+    if (!mnemonic || mnemonic.split(" ").length < 12) {
+      throw new Error("Invalid mnemonic");
+    }
+    const path = `${pathBase}/${index}`;
+    const wallet = ethers.Wallet.fromMnemonic(mnemonic, path);
 
-  console.log("address: ", wallet.address);
-  console.log("privateKey: ", wallet.privateKey);
-  return {
-    address: wallet.address,
-    privateKey: wallet.privateKey,
-  };
+    console.log("address: ", wallet.address);
+    console.log("privateKey: ", wallet.privateKey);
+    return {
+      address: wallet.address,
+      privateKey: wallet.privateKey,
+    };
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 function deriveTronFromMnemonic(mnemonic, index = 0) {
-  // Convert mnemonic to seed
-  const seed = bip39.mnemonicToSeedSync(mnemonic);
+  try {
+    // Convert mnemonic to seed
+    const seed = bip39.mnemonicToSeedSync(mnemonic);
 
-  // Derive TRON path
-  const root = hdkey.fromMasterSeed(seed);
-  const path = `m/44'/195'/0'/0/${index}`;
-  const child = root.derive(path);
+    // Derive TRON path
+    const root = hdkey.fromMasterSeed(seed);
+    const path = `m/44'/195'/0'/0/${index}`;
+    const child = root.derive(path);
 
-  // Private key in hex
-  const privateKey = child.privateKey.toString("hex");
+    // Private key in hex
+    const privateKey = child.privateKey.toString("hex");
 
-  // Initialize TronWeb with private key
-  const tronWeb = new TronWeb({
-    fullHost: "https://api.trongrid.io", // or Shasta testnet endpoint
-    privateKey,
-  });
+    // Initialize TronWeb with private key
+    const tronWeb = new TronWeb({
+      fullHost: "https://api.trongrid.io", // or Shasta testnet endpoint
+      privateKey,
+    });
 
-  // Derive the TRON address
-  const address = tronWeb.address.fromPrivateKey(privateKey);
-  console.log({ privateKey, address });
-  return { privateKey, address };
+    // Derive the TRON address
+    const address = tronWeb.address.fromPrivateKey(privateKey);
+    console.log({ privateKey, address });
+    return { privateKey, address };
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function deriveBtcFromMnemonic(mnemonic, index = 0, options = {}) {
-  if (!bip39.validateMnemonic(mnemonic)) {
-    throw new Error("Invalid mnemonic");
+  try {
+    if (!bip39.validateMnemonic(mnemonic)) {
+      throw new Error("Invalid mnemonic");
+    }
+
+    const { network = "testnet", scriptType = "p2wpkh", account = 0 } = options;
+
+    const NETWORK =
+      network === "testnet"
+        ? bitcoin.networks.testnet
+        : bitcoin.networks.bitcoin;
+
+    // Coin type (per SLIP-44): 0 = mainnet, 1 = testnet
+    const coinType = network === "testnet" ? 1 : 0;
+
+    // Select purpose per BIP standard
+    let purpose;
+    switch (scriptType) {
+      case "p2pkh":
+        purpose = 44; // Legacy (BIP44)
+        break;
+      case "p2sh-p2wpkh":
+        purpose = 49; // SegWit (wrapped, BIP49)
+        break;
+      case "p2wpkh":
+      default:
+        purpose = 84; // Native SegWit (BIP84)
+        break;
+    }
+
+    // Derivation path: m / purpose' / coin_type' / account' / change / address_index
+    const path = `m/${purpose}'/${coinType}'/${account}'/0/${index}`;
+
+    // Derive seed → root → child
+    const seed = await bip39.mnemonicToSeed(mnemonic);
+    const root = bip32.fromSeed(seed, NETWORK);
+    const child = root.derivePath(path);
+
+    if (!child.privateKey) {
+      throw new Error("Could not derive private key (invalid node)");
+    }
+
+    const privateKeyHex = child.privateKey.toString("hex");
+    const wif = child.toWIF();
+    const pubkey = Buffer.from(child.publicKey); // ✅ Fixed: ensure Buffer type
+
+    // Derive address depending on script type
+    let address;
+    if (scriptType === "p2pkh") {
+      address = bitcoin.payments.p2pkh({ pubkey, network: NETWORK }).address;
+    } else if (scriptType === "p2sh-p2wpkh") {
+      const p2wpkh = bitcoin.payments.p2wpkh({ pubkey, network: NETWORK });
+      address = bitcoin.payments.p2sh({
+        redeem: p2wpkh,
+        network: NETWORK,
+      }).address;
+    } else {
+      // Native SegWit (bech32)
+      address = bitcoin.payments.p2wpkh({ pubkey, network: NETWORK }).address;
+    }
+
+    return {
+      address,
+      privateKey: wif,
+    };
+  } catch (error) {
+    console.log(error);
   }
-
-  const { network = "testnet", scriptType = "p2wpkh", account = 0 } = options;
-
-  const NETWORK =
-    network === "testnet" ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
-
-  // Coin type (per SLIP-44): 0 = mainnet, 1 = testnet
-  const coinType = network === "testnet" ? 1 : 0;
-
-  // Select purpose per BIP standard
-  let purpose;
-  switch (scriptType) {
-    case "p2pkh":
-      purpose = 44; // Legacy (BIP44)
-      break;
-    case "p2sh-p2wpkh":
-      purpose = 49; // SegWit (wrapped, BIP49)
-      break;
-    case "p2wpkh":
-    default:
-      purpose = 84; // Native SegWit (BIP84)
-      break;
-  }
-
-  // Derivation path: m / purpose' / coin_type' / account' / change / address_index
-  const path = `m/${purpose}'/${coinType}'/${account}'/0/${index}`;
-
-  // Derive seed → root → child
-  const seed = await bip39.mnemonicToSeed(mnemonic);
-  const root = bip32.fromSeed(seed, NETWORK);
-  const child = root.derivePath(path);
-
-  if (!child.privateKey) {
-    throw new Error("Could not derive private key (invalid node)");
-  }
-
-  const privateKeyHex = child.privateKey.toString("hex");
-  const wif = child.toWIF();
-  const pubkey = Buffer.from(child.publicKey); // ✅ Fixed: ensure Buffer type
-
-  // Derive address depending on script type
-  let address;
-  if (scriptType === "p2pkh") {
-    address = bitcoin.payments.p2pkh({ pubkey, network: NETWORK }).address;
-  } else if (scriptType === "p2sh-p2wpkh") {
-    const p2wpkh = bitcoin.payments.p2wpkh({ pubkey, network: NETWORK });
-    address = bitcoin.payments.p2sh({
-      redeem: p2wpkh,
-      network: NETWORK,
-    }).address;
-  } else {
-    // Native SegWit (bech32)
-    address = bitcoin.payments.p2wpkh({ pubkey, network: NETWORK }).address;
-  }
-
-  return {
-    address,
-    privateKey: wif,
-  };
 }
 
 module.exports = {

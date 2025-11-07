@@ -261,19 +261,19 @@ app.use(
 );
 
 // worker to check expired trades
-cron.schedule("* * * * *", async () => {
-  // every 1 min
-  await db.trade.updateMany({
-    where: {
-      status: "PENDING",
-      expiresAt: { lt: new Date() },
-    },
-    data: {
-      status: "CANCELLED",
-      canceledAt: new Date(),
-    },
-  });
-});
+// cron.schedule("* * * * *", async () => {
+//   // every 1 min
+//   await db.trade.updateMany({
+//     where: {
+//       status: "PENDING",
+//       expiresAt: { lt: new Date() },
+//     },
+//     data: {
+//       status: "CANCELLED",
+//       canceledAt: new Date(),
+//     },
+//   });
+// });
 
 server.listen(PORT, (error) => {
   if (error) {
@@ -283,4 +283,4 @@ server.listen(PORT, (error) => {
   }
 });
 
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
+// Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
