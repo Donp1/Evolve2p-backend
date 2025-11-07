@@ -70,6 +70,7 @@ model Wallet {
   userId       String
   currency     String
   address      String
+  privateKey   String
   addressIndex Int // used with XPUB derivation
   balance      Decimal       @default(0)
   createdAt    DateTime      @default(now())

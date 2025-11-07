@@ -50,41 +50,30 @@ route.post("/", async (req, res) => {
     const userIndex = generateIndexFromUserId(userId);
 
     // generate crypto wallet address
-    const btcAddress = await generateAddress(
-      "BTC",
-      process.env.BTC_WALLET_XPUB,
-      userIndex
-    );
-    const ethAddress = await generateAddress(
-      "ETH",
-      process.env.ETH_WALLET_XPUB,
-      userIndex
-    );
-    const tronAddress = await generateAddress(
-      "USDT",
-      process.env.TRON_WALLET_XPUB,
-      userIndex
-    );
-    const bnbAddress = await generateAddress(
-      "USDC",
-      process.env.BNB_WALLET_XPUB,
-      userIndex
-    );
+    const btcAddress = await generateAddress("BTC", userIndex);
+    const ethAddress = await generateAddress("ETH", userIndex);
+    const tronAddress = await generateAddress("USDT", userIndex);
+    const bnbAddress = await generateAddress("USDC", userIndex);
 
     const CURRENCIES = ["BTC", "ETH", "USDT", "USDC"];
     // create wallet
     for (const symbol of CURRENCIES) {
       let address;
+      let privateKey;
       if (symbol === "BTC") {
-        address = btcAddress;
+        address = btcAddress.address;
+        privateKey = btcAddress.privateKey;
         subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "ETH") {
-        address = ethAddress;
+        address = ethAddress.address;
+        privateKey = ethAddress.privateKey;
         subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "USDT") {
-        address = tronAddress;
+        address = tronAddress.address;
+        privateKey = tronAddress.privateKey;
       } else if (symbol === "USDC") {
-        address = bnbAddress;
+        address = bnbAddress.address;
+        privateKey = bnbAddress.privateKey;
         subscribeToAddressWebhook(address, symbol);
       }
 
@@ -95,6 +84,7 @@ route.post("/", async (req, res) => {
           userId: newUser.id,
           balance: 0.0,
           addressIndex: userIndex,
+          privateKey,
         },
       });
     }

@@ -2,12 +2,16 @@ require("dotenv").config();
 const crypto = require("crypto");
 const { ethers } = require("ethers");
 const { TronWeb } = require("tronweb");
+const bip39 = require("bip39");
+const { BIP32Factory } = require("bip32");
+const hdkey = require("hdkey");
 const axios = require("axios");
 const https = require("https");
 
 const bitcoin = require("bitcoinjs-lib");
 const ecc = require("tiny-secp256k1");
 const { ECPairFactory } = require("ecpair");
+const bip32 = BIP32Factory(ecc);
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
@@ -1189,7 +1193,7 @@ async function sendTrc20({
   }
 }
 
-function deriveChildFromMnemonic(mnemonic, index, pathBase = "m/44'/60'/0'/0") {
+function deriveEvmFromMnemonic(mnemonic, index, pathBase = "m/44'/60'/0'/0") {
   if (!mnemonic || mnemonic.split(" ").length < 12) {
     throw new Error("Invalid mnemonic");
   }
@@ -1202,6 +1206,95 @@ function deriveChildFromMnemonic(mnemonic, index, pathBase = "m/44'/60'/0'/0") {
     address: wallet.address,
     privateKey: wallet.privateKey,
     wallet, // ethers.Wallet instance you can connect to a provider
+  };
+}
+
+function deriveTronFromMnemonic(mnemonic, index = 0) {
+  // Convert mnemonic to seed
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
+
+  // Derive TRON path
+  const root = hdkey.fromMasterSeed(seed);
+  const path = `m/44'/195'/0'/0/${index}`;
+  const child = root.derive(path);
+
+  // Private key in hex
+  const privateKey = child.privateKey.toString("hex");
+
+  // Initialize TronWeb with private key
+  const tronWeb = new TronWeb({
+    fullHost: "https://api.trongrid.io", // or Shasta testnet endpoint
+    privateKey,
+  });
+
+  // Derive the TRON address
+  const address = tronWeb.address.fromPrivateKey(privateKey);
+  console.log({ privateKey, address });
+  return { privateKey, address };
+}
+
+async function deriveBtcFromMnemonic(mnemonic, index = 0, options = {}) {
+  if (!bip39.validateMnemonic(mnemonic)) {
+    throw new Error("Invalid mnemonic");
+  }
+
+  const { network = "testnet", scriptType = "p2wpkh", account = 0 } = options;
+
+  const NETWORK =
+    network === "testnet" ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
+
+  // Coin type (per SLIP-44): 0 = mainnet, 1 = testnet
+  const coinType = network === "testnet" ? 1 : 0;
+
+  // Select purpose per BIP standard
+  let purpose;
+  switch (scriptType) {
+    case "p2pkh":
+      purpose = 44; // Legacy (BIP44)
+      break;
+    case "p2sh-p2wpkh":
+      purpose = 49; // SegWit (wrapped, BIP49)
+      break;
+    case "p2wpkh":
+    default:
+      purpose = 84; // Native SegWit (BIP84)
+      break;
+  }
+
+  // Derivation path: m / purpose' / coin_type' / account' / change / address_index
+  const path = `m/${purpose}'/${coinType}'/${account}'/0/${index}`;
+
+  // Derive seed → root → child
+  const seed = await bip39.mnemonicToSeed(mnemonic);
+  const root = bip32.fromSeed(seed, NETWORK);
+  const child = root.derivePath(path);
+
+  if (!child.privateKey) {
+    throw new Error("Could not derive private key (invalid node)");
+  }
+
+  const privateKeyHex = child.privateKey.toString("hex");
+  const wif = child.toWIF();
+  const pubkey = Buffer.from(child.publicKey); // ✅ Fixed: ensure Buffer type
+
+  // Derive address depending on script type
+  let address;
+  if (scriptType === "p2pkh") {
+    address = bitcoin.payments.p2pkh({ pubkey, network: NETWORK }).address;
+  } else if (scriptType === "p2sh-p2wpkh") {
+    const p2wpkh = bitcoin.payments.p2wpkh({ pubkey, network: NETWORK });
+    address = bitcoin.payments.p2sh({
+      redeem: p2wpkh,
+      network: NETWORK,
+    }).address;
+  } else {
+    // Native SegWit (bech32)
+    address = bitcoin.payments.p2wpkh({ pubkey, network: NETWORK }).address;
+  }
+
+  return {
+    address,
+    privateKey: wif,
   };
 }
 
@@ -1451,6 +1544,20 @@ async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
     return { error: true, message: err.message || String(err) };
   }
 }
+
+// deriveChildFromMnemonic(process.env.ETH_WALLET_MNEMONIC, 247098190);
+// deriveTronFromMnemonic(process.env.TRON_WALLET_MNEMONIC, 247098190);
+deriveBtcFromMnemonic(process.env.BTC_WALLET_MNEMONIC, 247098190, {
+  network: "testnet",
+  scriptType: "p2wpkh",
+})
+  .then((data) => console.log(data))
+  .catch(console.error);
+
+// const wallet = new ethers.Wallet(
+//   "0x075387954fd4c396f2e6a3028dd82357597f6af093d99cacb4c8b5a6cab69052"
+// );
+// console.log("Derived address:", wallet.address);
 
 // generateETHWallet().catch(console.error);
 
