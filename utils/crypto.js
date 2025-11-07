@@ -904,11 +904,8 @@ async function gasPrice(chain, from, to, amount) {
   }
 }
 
-async function sweepETH(userIndex, address) {
+async function sweepETH(address, privateKey) {
   try {
-    const childPrivateKey = await getUserPrivateKeyPro("ETH", userIndex);
-    if (!childPrivateKey) throw new Error("Child private key not found");
-
     const childBalance = await getEthSepoliaBalance(address);
     const balanceNum = Number(childBalance);
 
@@ -922,7 +919,7 @@ async function sweepETH(userIndex, address) {
       "ETH",
       address,
       process.env.ETH_WALLET_ADDRESS,
-      String(childBalance)
+      String(balanceNum + 0.0003)
     );
 
     const gasPriceWei = ethers.BigNumber.from(gasFee.gasPrice);
@@ -936,7 +933,7 @@ async function sweepETH(userIndex, address) {
     const sendGas = await sendETH(
       process.env.ETH_WALLET_PRIVATE_KEY,
       address,
-      String(Number(gasFeeEth) + 0.002), // keep 0.0003 ETH as reserve
+      String(Number(gasFeeEth) + 0.0003), // keep 0.0003 ETH as reserve
       true
     );
     console.log("Gas Data: ", sendGas);
@@ -957,7 +954,7 @@ async function sweepETH(userIndex, address) {
       `🚀 Sweeping ${amountToSend} ETH from ${address} to master wallet...`
     );
     const sweepResult = await sendETH(
-      childPrivateKey,
+      privateKey,
       process.env.ETH_WALLET_ADDRESS,
       amountToSend
     );
