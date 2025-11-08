@@ -1545,14 +1545,69 @@ async function sweepETH(MASTER_PRIVATE_KEY, MASTER_ADDRESS, userIndex) {
   }
 }
 
+async function getTrxBalance(address) {
+  try {
+    const tronWeb = new TronWeb({
+      fullHost: "https://api.shasta.trongrid.io", // or https://api.shasta.trongrid.io for testnet
+    });
+    // Get the balance in SUN (1 TRX = 1,000,000 SUN)
+    const balanceInSun = await tronWeb.trx.getBalance(address);
+    const balanceInTrx = tronWeb.fromSun(balanceInSun);
+    console.log(`💰 Address: ${address}`);
+    console.log(`Balance: ${balanceInTrx} TRX`);
+    return balanceInTrx;
+  } catch (err) {
+    console.error("❌ Error fetching balance:", err);
+    return null;
+  }
+}
+
+async function estimateTronFee(from, to, amountTrx) {
+  try {
+    const tronWeb = new TronWeb({
+      fullHost: "https://api.shasta.trongrid.io", // or https://api.shasta.trongrid.io for testnet
+    });
+    const amountSun = tronWeb.toSun(amountTrx);
+
+    // Build an unsigned transaction
+    const unsignedTx = await tronWeb.transactionBuilder.sendTrx(
+      to,
+      amountSun,
+      from
+    );
+
+    // Estimate energy and bandwidth consumption
+    const estimate = await tronWeb.trx.estimateEnergy(unsignedTx);
+
+    // Fee = (Energy used * 420 sun) + Bandwidth (usually 0.1 TRX)
+    // But TronWeb provides a total fee in SUN:
+    const feeInSun = estimate.energy_fee + (estimate.bandwidth_fee || 0);
+    const feeInTrx = tronWeb.fromSun(feeInSun);
+
+    console.log(`🔹 Estimated fee: ${feeInTrx} TRX`);
+    return feeInTrx;
+  } catch (err) {
+    console.error("❌ Failed to estimate fee:", err);
+    return null;
+  }
+}
+
+(async () => {
+  const from = "TKGDMANAHfwADnjJyMQy1zwMSQDQrb7Yt3";
+  const to = "TQTXcbLQze3Qd19xhMxjGeKwLjA6BmbkbM";
+  const fee = await estimateTronFee(from, to, 10); // 10 TRX transfer
+})();
+
+// getTrxBalance("TKGDMANAHfwADnjJyMQy1zwMSQDQrb7Yt3").catch(console.error);
+
 // deriveChildFromMnemonic(process.env.ETH_WALLET_MNEMONIC, 247098190);
 // deriveTronFromMnemonic(process.env.TRON_WALLET_MNEMONIC, 247098190);
-deriveBtcFromMnemonic(process.env.BTC_WALLET_MNEMONIC, 247098190, {
-  network: "testnet",
-  scriptType: "p2wpkh",
-})
-  .then((data) => console.log(data))
-  .catch(console.error);
+// deriveBtcFromMnemonic(process.env.BTC_WALLET_MNEMONIC, 247098190, {
+//   network: "testnet",
+//   scriptType: "p2wpkh",
+// })
+//   .then((data) => console.log(data))
+//   .catch(console.error);
 
 // const wallet = new ethers.Wallet(
 //   "0x075387954fd4c396f2e6a3028dd82357597f6af093d99cacb4c8b5a6cab69052"

@@ -174,10 +174,9 @@ router.post("/", async (req, res) => {
       ) {
         if (normalized?.asset === "USDT") {
           const tx = await sweepTrc20(
-            process.env.TRON_WALLET_PRIVATE_KEY,
-            process.env.TRON_WALLET_ADDRESS,
-            wallet.addressIndex,
-            process.env.CONTRACT_ADDRESS_USDT
+            wallet.address,
+            wallet.privateKey,
+            normalized.amount
           );
 
           console.log("sweeping data: ", tx);

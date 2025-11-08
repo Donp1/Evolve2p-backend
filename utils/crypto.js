@@ -509,6 +509,25 @@ async function sendETH(fromPrivateKey, toAddress, amount, isFee = false) {
   return { ...data, success: true, isFee };
 }
 
+async function sendTRX(fromPrivateKey, toAddress, amount, isFee = false) {
+  const res = await fetch("https://api.tatum.io/v3/tron/transaction", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      to: toAddress,
+      amount: String(Number(amount).toFixed(18)),
+      fromPrivateKey: fromPrivateKey,
+    }),
+  });
+
+  const data = await res.json();
+  console.log(data);
+  return { ...data, success: true, isFee };
+}
+
 async function sendBSC(fromPrivateKey, toAddress, amount, isFee = false) {
   const res = await fetch("https://api.tatum.io/v3/bsc/transaction", {
     method: "POST",
@@ -785,92 +804,68 @@ async function sendTRC20({
   }
 }
 
-async function sweepTrc20(
-  masterPrivateKey,
-  masterAddress,
-  userIndex,
-  tokenAddress,
-  tronRpcUrl = "https://api.shasta.trongrid.io"
-) {
+async function sweepTrc20(address, privateKey, amount) {
   try {
-    // ✅ Setup Master Wallet
-    const masterWeb = new TronWeb({
-      fullHost: tronRpcUrl,
-      privateKey: masterPrivateKey,
-    });
-    console.log(`👑 Master Wallet: ${masterAddress}`);
+    const childBalance = await getTronBalance(address);
+    const balanceNum = Number(childBalance);
 
-    // ✅ Get Child Wallet Private Key (from your system)
-    const childPrivateKey = await getUserPrivateKeyPro("USDT", userIndex);
-    const childWeb = new TronWeb({
-      fullHost: tronRpcUrl,
-      privateKey: childPrivateKey?.data?.privatekey,
-    });
-    const childAddress = childWeb.address.fromPrivateKey(
-      childPrivateKey?.data?.privatekey
-    );
-    console.log(`👶 Child Wallet: ${childAddress}`);
-
-    // ✅ Load Contract
-    const childContract = await childWeb.contract().at(tokenAddress);
-    const balance = await childContract.balanceOf(childAddress).call();
-    const tokenBalance = BigInt(balance.toString());
-    if (tokenBalance === 0n) {
-      console.log("❌ No tokens to sweep.");
-      return;
-    }
-    console.log(`💰 Token balance: ${tokenBalance.toString()} (raw units)`);
-
-    // ✅ Ensure Child Has Enough TRX for Fees
-    const trxBalance = await childWeb.trx.getBalance(childAddress);
-    const minTrxNeeded = 2_000_000; // ~2 TRX in SUN
-
-    if (trxBalance < minTrxNeeded) {
-      console.log("⚠️ Child wallet low on TRX. Sending gas from master...");
-
-      const sendTx = await masterWeb.trx.sendTransaction(
-        childAddress,
-        minTrxNeeded * 2 // Send double for safety margin
+    if (balanceNum < 2) {
+      const sendGas = await sendTRX(
+        process.env.TRON_WALLET_PRIVATE_KEY,
+        address,
+        "2", // send 2 TRX for fees
+        true
       );
-
-      console.log(`⛽ Gas sent from master to child: ${sendTx.txid}`);
-      // Wait a few seconds for network propagation
-      await new Promise((r) => setTimeout(r, 5000));
+      console.log("Gas Data: ", sendGas);
+      if (!sendGas || sendGas.errorCode || !sendGas.txId) {
+        throw new Error(
+          `Gas top-up failed: ${sendGas.message || "unknown error"}`
+        );
+      }
     }
 
-    // ✅ Perform Sweep (child → master)
-    console.log(
-      `🚀 Sweeping ${tokenBalance.toString()} tokens from ${childAddress} → ${masterAddress}`
-    );
-    const sweepTx = await childContract
-      .transfer(masterAddress, tokenBalance)
-      .send({
-        feeLimit: 100_000_000, // 100 TRX fee limit
-      });
+    console.log(`🚀 Sweeping  USDT from ${address} to master wallet...`);
+    const sweepResult = await sendTRC20({
+      privateKey,
+      to: process.env.TRON_WALLET_ADDRESS,
+      contractAddress: ERC20_CONTRACTS.USDT,
+      amount, // keep 1 TRX as reserve
+      mainnet: false,
+    });
+
+    if (!sweepResult || sweepResult.errorCode) {
+      throw new Error(
+        `Sweep failed: ${sweepResult.message || "unknown error"}`
+      );
+    }
 
     console.log(
-      `✅ Sweep TX ID: ${{
-        success: true,
-        txId: sweepTx,
-        from: childAddress,
-        to: masterAddress,
-        amount: tokenBalance.toString(),
-      }}`
+      `✅ Sweep successful! TXID: ${sweepResult.txId || sweepResult.hash}`
     );
-
-    return {
-      success: true,
-      txId: sweepTx,
-      from: childAddress,
-      to: masterAddress,
-      amount: tokenBalance.toString(),
-    };
+    return sweepResult;
   } catch (err) {
     console.error("❌ TRC20 Sweep Error:", err);
     return {
       success: false,
       error: err.message || "Transaction failed",
     };
+  }
+}
+
+async function getTronBalance(address) {
+  try {
+    const tronWeb = new TronWeb({
+      fullHost: "https://api.shasta.trongrid.io", // or https://api.shasta.trongrid.io for testnet
+    });
+    // Get the balance in SUN (1 TRX = 1,000,000 SUN)
+    const balanceInSun = await tronWeb.trx.getBalance(address);
+    const balanceInTrx = tronWeb.fromSun(balanceInSun);
+    console.log(`💰 Address: ${address}`);
+    console.log(`Balance: ${balanceInTrx} TRX`);
+    return balanceInTrx;
+  } catch (err) {
+    console.error("❌ Error fetching balance:", err);
+    return null;
   }
 }
 
@@ -1038,17 +1033,22 @@ async function sweepBep20(address, privateKey, bep20Amount) {
     console.log("⛽ Sending gas to child wallet...");
     console.log("Amount to send as fee: ", Number(gasFeeEth) + 0.0003);
 
-    const sendGas = await sendBSC(
-      process.env.BNB_WALLET_PRIVATE_KEY,
-      address,
-      String(Number(gasFeeEth) + 0.0003), // keep 0.0003 BSC as reserve
-      true
-    );
-    console.log("Gas Data: ", sendGas);
-    if (!sendGas || sendGas.errorCode || !sendGas.txId) {
-      throw new Error(
-        `Gas top-up failed: ${sendGas.message || "unknown error"}`
+    const childBalance = await getBSCBalance(address);
+    const balanceNum = Number(childBalance);
+
+    if (balanceNum < Number(gasFeeEth) + 0.0003) {
+      const sendGas = await sendBSC(
+        process.env.BNB_WALLET_PRIVATE_KEY,
+        address,
+        String(Number(gasFeeEth) + 0.0003), // keep 0.0003 BSC as reserve
+        true
       );
+      console.log("Gas Data: ", sendGas);
+      if (!sendGas || sendGas.errorCode || !sendGas.txId) {
+        throw new Error(
+          `Gas top-up failed: ${sendGas.message || "unknown error"}`
+        );
+      }
     }
 
     console.log(`🚀 Sweeping  USDC from ${address} to master wallet...`);
