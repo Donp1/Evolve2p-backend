@@ -77,7 +77,7 @@ router.post("/", async (req, res) => {
     const existing = await db.transaction.findFirst({
       where: {
         txHash: {
-          equals: normalized.txHash,
+          equals: normalized?.txHash,
           mode: "insensitive",
         },
       },
@@ -129,33 +129,36 @@ router.post("/", async (req, res) => {
     }
 
     // --- 🧾 Create transaction record ---
-    const txData = {
-      amount: normalized.amount,
-      toAddress: normalized.toAddress,
-      fromAddress: normalized.fromAddress,
-      txHash: normalized.txHash,
-      type: "DEPOSIT",
-      status: "COMPLETED",
-      userId: wallet.userId,
-      walletId: wallet.id,
-    };
 
-    const newTx = await db.transaction.create({ data: txData });
+    if (!existing) {
+      const txData = {
+        amount: normalized.amount,
+        toAddress: normalized.toAddress,
+        fromAddress: normalized.fromAddress,
+        txHash: normalized.txHash,
+        type: "DEPOSIT",
+        status: "COMPLETED",
+        userId: wallet.userId,
+        walletId: wallet.id,
+      };
 
-    if (newTx) {
-      const notification = await db.notification.create({
-        data: {
-          userId: wallet.userId,
-          message: `You have received ${txData.amount} ${wallet.currency} from ${txData.fromAddress}.`,
-          read: false,
-          title: "Transaction Update",
-          category: "SYSTEM",
-        },
-      });
+      const newTx = await db.transaction.create({ data: txData });
 
-      const io = req.app.get("io");
-      if (io) {
-        io.to(wallet.userId).emit("receive_coin", notification);
+      if (newTx) {
+        const notification = await db.notification.create({
+          data: {
+            userId: wallet.userId,
+            message: `You have received ${txData.amount} ${wallet.currency} from ${txData.fromAddress}.`,
+            read: false,
+            title: "Transaction Update",
+            category: "SYSTEM",
+          },
+        });
+
+        const io = req.app.get("io");
+        if (io) {
+          io.to(wallet.userId).emit("receive_coin", notification);
+        }
       }
     }
 
