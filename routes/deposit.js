@@ -74,7 +74,7 @@ router.post("/", async (req, res) => {
     }
 
     // --- 🚫 Prevent double processing ---
-    const existing = await db.transaction.findFirst({
+    const existing = await db.transaction.findUnique({
       where: {
         txHash: {
           equals: normalized?.txHash,
@@ -130,19 +130,24 @@ router.post("/", async (req, res) => {
 
     // --- 🧾 Create transaction record ---
 
-    if (!existing) {
-      const txData = {
-        amount: normalized.amount,
-        toAddress: normalized.toAddress,
-        fromAddress: normalized.fromAddress,
-        txHash: normalized.txHash,
-        type: "DEPOSIT",
-        status: "COMPLETED",
-        userId: wallet.userId,
-        walletId: wallet.id,
-      };
+    const txData = {
+      amount: normalized.amount,
+      toAddress: normalized.toAddress,
+      fromAddress: normalized.fromAddress,
+      txHash: normalized.txHash,
+      type: "DEPOSIT",
+      status: "COMPLETED",
+      userId: wallet.userId,
+      walletId: wallet.id,
+    };
 
-      const newTx = await db.transaction.create({ data: txData });
+    if (!existing) {
+      // const newTx = await db.transaction.create({ data: txData });
+      const newTx = await db.transaction.upsert({
+        where: { txHash: normalized.txHash },
+        update: {},
+        create: txData,
+      });
 
       if (newTx) {
         const notification = await db.notification.create({
