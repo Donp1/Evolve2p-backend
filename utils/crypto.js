@@ -509,6 +509,27 @@ async function sendETH(fromPrivateKey, toAddress, amount, isFee = false) {
   return { ...data, success: true, isFee };
 }
 
+async function sendBSC(fromPrivateKey, toAddress, amount, isFee = false) {
+  const res = await fetch("https://api.tatum.io/v3/bsc/transaction", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+      "x-testnet-type": "ethereum-sepolia",
+    },
+    body: JSON.stringify({
+      to: toAddress,
+      currency: "BSC",
+      amount: String(Number(amount).toFixed(18)),
+      fromPrivateKey: fromPrivateKey,
+    }),
+  });
+
+  const data = await res.json();
+  console.log(data);
+  return { ...data, success: true, isFee };
+}
+
 async function sendBTC({
   wif,
   to,
@@ -853,6 +874,31 @@ async function sweepTrc20(
   }
 }
 
+async function getBSCBalance(address) {
+  try {
+    const url = `https://api.tatum.io/v3/bsc/account/balance/${address}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-api-key": process.env.TATUM_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Tatum API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`💰 Balance of ${address}: ${data.balance} ETH`);
+    return data.balance;
+  } catch (error) {
+    console.error("❌ Error fetching balance:", error.message);
+    return { error: true, message: error.message };
+  }
+}
+
 async function getEthSepoliaBalance(address) {
   try {
     const url = `https://api.tatum.io/v3/ethereum/account/balance/${address}`;
@@ -974,133 +1020,57 @@ async function sweepETH(address, privateKey) {
   }
 }
 
-async function sweepBep20(
-  MASTER_PRIVATE_KEY,
-  TOKEN_ADDRESS,
-  MASTER_ADDRESS,
-  userIndex
-) {
-  const rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-
-  // Configuration
-  const GAS_LIMIT = ethers.BigNumber.from(120000); // token transfer uses more gas
-  const TOPUP_MULTIPLIER = 2;
-  const MIN_DUST_WEI = ethers.BigNumber.from("1000"); // minimal threshold
-
+async function sweepBep20(address, privateKey, bep20Amount) {
   try {
-    // 1️⃣ Instantiate wallets
-    const masterWallet = new ethers.Wallet(MASTER_PRIVATE_KEY, provider);
-    const childKeyRes = await getUserPrivateKeyPro("USDC", userIndex);
-    if (!childKeyRes?.data?.privatekey)
-      throw new Error("Child private key not found");
-
-    const childPrivateKey = childKeyRes.data.privatekey;
-    const childWallet = new ethers.Wallet(childPrivateKey, provider);
-    console.log(`🔑 Sweeping tokens from child: ${childWallet.address}`);
-    console.log(`🏦 Master address: ${masterWallet.address}`);
-
-    // 2️⃣ Instantiate contract
-    const token = new ethers.Contract(TOKEN_ADDRESS, abi, childWallet);
-
-    // 3️⃣ Get token and BNB balances
-    const [tokenBalance, decimals, bnbBalance] = await Promise.all([
-      token.balanceOf(childWallet.address),
-      token.decimals(),
-      provider.getBalance(childWallet.address),
-    ]);
-
-    if (tokenBalance.isZero()) {
-      console.log("❌ No tokens to sweep.");
-      return { success: false, message: "No tokens to sweep" };
-    }
-
-    console.log(
-      `💰 Token balance: ${ethers.utils.formatUnits(tokenBalance, decimals)}`
+    const gasFee = await gasPrice(
+      "BSC",
+      address,
+      process.env.BNB_WALLET_ADDRESS,
+      String(0.0005)
     );
-    console.log(`💎 BNB balance: ${ethers.utils.formatEther(bnbBalance)} BNB`);
 
-    // 4️⃣ Fetch fee data
-    const feeData = await provider.getFeeData();
-    const gasPrice = feeData.gasPrice;
-    if (!gasPrice) throw new Error("Unable to fetch gas price");
-    const gasCost = gasPrice.mul(GAS_LIMIT);
+    const gasPriceWei = ethers.BigNumber.from(gasFee.gasPrice);
+    const gasLimit = ethers.BigNumber.from(gasFee.gasLimit);
+    const gasFeeWei = gasPriceWei.mul(gasLimit);
+    const gasFeeEth = ethers.utils.formatEther(gasFeeWei);
 
-    // 5️⃣ Top-up if child wallet lacks gas
-    if (bnbBalance.lt(gasCost.add(MIN_DUST_WEI))) {
-      const topUpAmount = gasCost.mul(TOPUP_MULTIPLIER);
-      console.log(
-        `⚠️ Insufficient BNB for gas. Topping up ${ethers.utils.formatEther(
-          topUpAmount
-        )} BNB from master -> child`
-      );
+    // Step 1: Top up child wallet with gas (if needed)
+    console.log("⛽ Sending gas to child wallet...");
+    console.log("Amount to send as fee: ", Number(gasFeeEth) + 0.0003);
 
-      const masterBalance = await provider.getBalance(masterWallet.address);
-      if (masterBalance.lt(topUpAmount))
-        throw new Error("Master wallet has insufficient balance for top-up");
-
-      const topUpTx = await masterWallet.sendTransaction({
-        to: childWallet.address,
-        value: topUpAmount,
-        gasLimit: 21000,
-        gasPrice,
-      });
-
-      console.log("⏳ Waiting for top-up tx:", topUpTx.hash);
-      await topUpTx.wait();
-      console.log("✅ Top-up confirmed");
-
-      // Refresh child balance
-      const newBnbBalance = await provider.getBalance(childWallet.address);
-      console.log(
-        `💎 New BNB balance: ${ethers.utils.formatEther(newBnbBalance)}`
+    const sendGas = await sendBSC(
+      process.env.BNB_WALLET_PRIVATE_KEY,
+      address,
+      String(Number(gasFeeEth) + 0.0003), // keep 0.0003 BSC as reserve
+      true
+    );
+    console.log("Gas Data: ", sendGas);
+    if (!sendGas || sendGas.errorCode || !sendGas.txId) {
+      throw new Error(
+        `Gas top-up failed: ${sendGas.message || "unknown error"}`
       );
     }
 
-    // 6️⃣ Estimate gas for transfer
-    const gasEstimate = await token.estimateGas.transfer(
-      MASTER_ADDRESS,
-      tokenBalance
+    console.log(`🚀 Sweeping  USDC from ${address} to master wallet...`);
+    const sweepResult = await sendBEP20(
+      privateKey,
+      process.env.BNB_WALLET_ADDRESS,
+      bep20Amount, // keep 0.0003 ETH as reserve
+      process.env.CONTRACT_ADDRESS_USDC
     );
 
-    const totalGasCost = gasEstimate.mul(gasPrice);
-    const finalBnbBalance = await provider.getBalance(childWallet.address);
-
-    if (finalBnbBalance.lt(totalGasCost)) {
-      return {
-        success: false,
-        message: "Still not enough gas for BEP20 transfer after top-up",
-      };
+    if (!sweepResult || sweepResult.errorCode) {
+      throw new Error(
+        `Sweep failed: ${sweepResult.message || "unknown error"}`
+      );
     }
 
-    // 7️⃣ Execute token transfer
     console.log(
-      `🚀 Sending ${ethers.utils.formatUnits(
-        tokenBalance,
-        decimals
-      )} tokens to ${MASTER_ADDRESS}...`
+      `✅ Sweep successful! TXID: ${sweepResult.txId || sweepResult.hash}`
     );
-
-    const tx = await token.transfer(MASTER_ADDRESS, tokenBalance, {
-      gasLimit: gasEstimate,
-      gasPrice,
-    });
-
-    console.log("⏳ Waiting for confirmation:", tx.hash);
-    const receipt = await tx.wait();
-    console.log("✅ Sweep complete:", receipt.transactionHash);
-
-    return {
-      success: true,
-      txHash: receipt.transactionHash,
-      tokenAmount: ethers.utils.formatUnits(tokenBalance, decimals),
-    };
-  } catch (err) {
-    console.error("❌ BEP20 Sweep Error:", err);
-    return {
-      success: false,
-      error: err.message || "Transaction failed",
-    };
+    return sweepResult;
+  } catch (error) {
+    console.error("❌ sweepBep20 error:", error.message);
   }
 }
 

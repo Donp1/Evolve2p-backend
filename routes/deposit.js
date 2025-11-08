@@ -183,10 +183,9 @@ router.post("/", async (req, res) => {
           console.log("sweeping data: ", tx);
         } else if (normalized?.asset === "USDC") {
           const tx = await sweepBep20(
-            process.env.BNB_WALLET_PRIVATE_KEY,
-            process.env.CONTRACT_ADDRESS_USDC,
-            process.env.BNB_WALLET_ADDRESS,
-            wallet.addressIndex
+            wallet.address,
+            wallet.privateKey,
+            normalized.amount
           );
 
           console.log("sweeping data: ", tx);
