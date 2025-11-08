@@ -275,6 +275,8 @@ cron.schedule("* * * * *", async () => {
   });
 });
 
+startPolling(ERC20_CONTRACTS.USDT);
+
 server.listen(PORT, (error) => {
   if (error) {
     console.log(error.message);
@@ -282,5 +284,3 @@ server.listen(PORT, (error) => {
     console.log(`Server running on PORT ${PORT}`);
   }
 });
-
-Object.keys(ERC20_CONTRACTS).forEach((asset) => startPolling(asset));
