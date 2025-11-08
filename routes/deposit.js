@@ -74,7 +74,7 @@ router.post("/", async (req, res) => {
     }
 
     // --- 🚫 Prevent double processing ---
-    const existing = await db.transaction.findUnique({
+    const existing = await db.transaction.findFirst({
       where: {
         txHash: {
           equals: normalized?.txHash,
