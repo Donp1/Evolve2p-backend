@@ -1241,8 +1241,8 @@ async function sweepBTC({
   }
 }
 
-const DECIMALS = 18n; // For USDT
 const POLL_INTERVAL_MS = 8000;
+const DECIMALS = 18n; // For USDT
 
 async function pollTRC20Deposits(contractAddress) {
   try {
@@ -1253,9 +1253,11 @@ async function pollTRC20Deposits(contractAddress) {
     });
 
     if (!contractAddress)
-      throw new Error(`Unsupported TRC20 asset: ${assetType}`);
+      throw new Error(`Unsupported TRC20 asset: ${contractAddress}`);
     const url = `https://api.shasta.trongrid.io/v1/contracts/${contractAddress}/events?event_name=Transfer&only_confirmed=true`;
     const res = await fetch(url);
+
+    clg("Polling TRC20 deposits from:", url);
     const { data: events } = await res.json();
 
     if (!Array.isArray(events) || events.length === 0) return;
