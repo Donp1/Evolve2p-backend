@@ -1229,7 +1229,7 @@ async function sweepBTC({
 const DECIMALS = 18n; // For USDT
 const POLL_INTERVAL_MS = 8000;
 
-async function pollTRC20Deposits(assetType = "USDT") {
+async function pollTRC20Deposits(contractAddress) {
   try {
     const walletMap = new Map();
     const wallets = await db.wallet.findMany();
@@ -1237,11 +1237,9 @@ async function pollTRC20Deposits(assetType = "USDT") {
       walletMap.set(wallet.address, wallet);
     });
 
-    const CONTRACT_ADDRESS = ERC20_CONTRACTS[assetType.toUpperCase()];
-
-    if (!CONTRACT_ADDRESS)
+    if (!contractAddress)
       throw new Error(`Unsupported TRC20 asset: ${assetType}`);
-    const url = `https://api.shasta.trongrid.io/v1/contracts/${CONTRACT_ADDRESS}/events?event_name=Transfer&only_confirmed=true`;
+    const url = `https://api.shasta.trongrid.io/v1/contracts/${contractAddress}/events?event_name=Transfer&only_confirmed=true`;
     const res = await fetch(url);
     const { data: events } = await res.json();
 
@@ -1352,9 +1350,11 @@ const convertCurrency = async (amount, fromSymbol, toSymbol) => {
   return Number((Number(amount) * rate).toFixed(8)); // rounding to 8 decimal places
 };
 
-function startPolling(assetType = "USDT") {
-  console.log(`📡 Starting TRC20 monitoring for ${assetType}`);
-  cron.schedule("*/8 * * * * *", () => pollTRC20Deposits(assetType));
+function startPolling(contractAddress) {
+  console.log(
+    `📡 Starting TRC20 monitoring for ${contractAddress} Contract Address`
+  );
+  cron.schedule("*/8 * * * * *", () => pollTRC20Deposits(contractAddress));
 }
 
 async function convertCryptoToFiat(symbol, amount, fiat) {
