@@ -549,142 +549,162 @@ async function sendBSC(fromPrivateKey, toAddress, amount, isFee = false) {
   return { ...data, success: true, isFee };
 }
 
-async function sendBTC({
-  wif,
-  to,
-  amountSats = null,
-  feeRate = 10,
-  network = "testnet",
-}) {
-  const NETWORK =
-    network === "mainnet" ? bitcoin.networks.bitcoin : bitcoin.networks.testnet;
+// async function sendBTC({
+//   wif,
+//   to,
+//   amountSats = null,
+//   feeRate = 10,
+//   network = "testnet",
+// }) {
+//   const NETWORK =
+//     network === "mainnet" ? bitcoin.networks.bitcoin : bitcoin.networks.testnet;
 
-  const BLOCKSTREAM_API =
-    network === "mainnet"
-      ? "https://blockstream.info/api"
-      : "https://blockstream.info/testnet/api";
+//   const BLOCKSTREAM_API =
+//     network === "mainnet"
+//       ? "https://blockstream.info/api"
+//       : "https://blockstream.info/testnet/api";
 
-  const VBYTE_INPUT = 68; // P2WPKH input size
-  const VBYTE_OUTPUT = 31; // P2WPKH output size
-  const TX_OVERHEAD = 10; // Overhead bytes
-  const DUST_LIMIT = 294; // Avoid dust outputs
+//   const VBYTE_INPUT = 68; // P2WPKH input size
+//   const VBYTE_OUTPUT = 31; // P2WPKH output size
+//   const TX_OVERHEAD = 10; // Overhead bytes
+//   const DUST_LIMIT = 294; // Avoid dust outputs
 
-  const keyPair = ECPair.fromWIF(wif, NETWORK);
+//   const keyPair = ECPair.fromWIF(wif, NETWORK);
 
-  // ✅ Ensure Buffer pubkey for compatibility
-  const pubkeyBuffer = Buffer.from(keyPair.publicKey);
-  const { address: fromAddress } = bitcoin.payments.p2wpkh({
-    pubkey: pubkeyBuffer,
-    network: NETWORK,
+//   // ✅ Ensure Buffer pubkey for compatibility
+//   const pubkeyBuffer = Buffer.from(keyPair.publicKey);
+//   const { address: fromAddress } = bitcoin.payments.p2wpkh({
+//     pubkey: pubkeyBuffer,
+//     network: NETWORK,
+//   });
+
+//   if (!fromAddress) throw new Error("Failed to derive address from WIF.");
+
+//   console.log("🔑 From:", fromAddress);
+
+//   // --- 1️⃣ Fetch UTXOs ---
+//   const utxosRes = await axios.get(
+//     `${BLOCKSTREAM_API}/address/${fromAddress}/utxo`
+//   );
+//   const utxos = utxosRes.data;
+
+//   if (!Array.isArray(utxos) || utxos.length === 0) {
+//     throw new Error("No UTXOs available for this address.");
+//   }
+
+//   // Sort by largest first
+//   utxos.sort((a, b) => b.value - a.value);
+
+//   // --- 2️⃣ Select inputs ---
+//   let selected = [];
+//   let inputSum = 0n;
+//   const amountTarget = amountSats !== null ? BigInt(amountSats) : null;
+
+//   if (amountTarget === null) {
+//     // Sweep all
+//     for (const u of utxos) {
+//       selected.push(u);
+//       inputSum += BigInt(u.value);
+//     }
+//   } else {
+//     for (const u of utxos) {
+//       selected.push(u);
+//       inputSum += BigInt(u.value);
+//       const estVSize =
+//         TX_OVERHEAD + selected.length * VBYTE_INPUT + 2 * VBYTE_OUTPUT;
+//       const estFee = BigInt(Math.ceil(feeRate * estVSize));
+//       if (inputSum >= amountTarget + estFee) break;
+//     }
+//   }
+
+//   if (selected.length === 0)
+//     throw new Error("Insufficient UTXOs for this transaction.");
+
+//   // --- 3️⃣ Compute fee and outputs ---
+//   const outputs = amountTarget === null ? 1 : 2;
+//   const estVSize =
+//     TX_OVERHEAD + selected.length * VBYTE_INPUT + outputs * VBYTE_OUTPUT;
+//   const fee = BigInt(Math.ceil(feeRate * estVSize));
+
+//   let valueToSend;
+//   let change = 0n;
+
+//   if (amountTarget === null) {
+//     // Sweep all
+//     if (inputSum <= fee) throw new Error("Not enough balance to cover fee.");
+//     valueToSend = inputSum - fee;
+//     if (valueToSend <= BigInt(DUST_LIMIT))
+//       throw new Error("Resulting output is dust.");
+//   } else {
+//     if (inputSum < amountTarget + fee)
+//       throw new Error("Insufficient funds (including fee).");
+//     valueToSend = amountTarget;
+//     change = inputSum - amountTarget - fee;
+//     if (change > 0n && change < BigInt(DUST_LIMIT)) change = 0n;
+//   }
+
+//   // --- 4️⃣ Build PSBT ---
+//   const psbt = new bitcoin.Psbt({ network: NETWORK });
+
+//   for (const u of selected) {
+//     const rawTxRes = await axios.get(`${BLOCKSTREAM_API}/tx/${u.txid}/hex`);
+//     const rawTxHex = rawTxRes.data;
+//     psbt.addInput({
+//       hash: u.txid,
+//       index: u.vout,
+//       nonWitnessUtxo: Buffer.from(rawTxHex, "hex"),
+//     });
+//   }
+
+//   psbt.addOutput({ address: to, value: Number(valueToSend) });
+//   if (change > 0n)
+//     psbt.addOutput({ address: fromAddress, value: Number(change) });
+
+//   // --- 5️⃣ Sign and finalize ---
+//   selected.forEach((u, i) => {
+//     psbt.signInput(i, {
+//       publicKey: Buffer.from(keyPair.publicKey),
+//       sign: (hash) => Buffer.from(ecc.sign(hash, keyPair.privateKey)),
+//     });
+//   });
+
+//   try {
+//     psbt.validateSignaturesOfAllInputs((pubkey, msgHash, signature) => {
+//       return ecc.verify(msgHash, pubkey, signature);
+//     });
+//   } catch (err) {
+//     console.warn("⚠️ Signature validation warning:", err.message);
+//   }
+//   psbt.finalizeAllInputs();
+
+//   // --- 6️⃣ Broadcast ---
+//   const txHex = psbt.extractTransaction().toHex();
+//   const broadcast = await axios.post(`${BLOCKSTREAM_API}/tx`, txHex, {
+//     headers: { "Content-Type": "text/plain" },
+//   });
+
+//   console.log("✅ Transaction sent! TXID:", broadcast.data);
+//   return { txId: broadcast.data };
+// }
+
+async function sendBTC(fromPrivateKey, toAddress, amount, isFee = false) {
+  const res = await fetch("https://api.tatum.io/v3/bitcoin/transaction", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      to: toAddress,
+      currency: "BTC",
+      amount: String(Number(amount).toFixed(18)),
+      fromPrivateKey: fromPrivateKey,
+    }),
   });
 
-  if (!fromAddress) throw new Error("Failed to derive address from WIF.");
-
-  console.log("🔑 From:", fromAddress);
-
-  // --- 1️⃣ Fetch UTXOs ---
-  const utxosRes = await axios.get(
-    `${BLOCKSTREAM_API}/address/${fromAddress}/utxo`
-  );
-  const utxos = utxosRes.data;
-
-  if (!Array.isArray(utxos) || utxos.length === 0) {
-    throw new Error("No UTXOs available for this address.");
-  }
-
-  // Sort by largest first
-  utxos.sort((a, b) => b.value - a.value);
-
-  // --- 2️⃣ Select inputs ---
-  let selected = [];
-  let inputSum = 0n;
-  const amountTarget = amountSats !== null ? BigInt(amountSats) : null;
-
-  if (amountTarget === null) {
-    // Sweep all
-    for (const u of utxos) {
-      selected.push(u);
-      inputSum += BigInt(u.value);
-    }
-  } else {
-    for (const u of utxos) {
-      selected.push(u);
-      inputSum += BigInt(u.value);
-      const estVSize =
-        TX_OVERHEAD + selected.length * VBYTE_INPUT + 2 * VBYTE_OUTPUT;
-      const estFee = BigInt(Math.ceil(feeRate * estVSize));
-      if (inputSum >= amountTarget + estFee) break;
-    }
-  }
-
-  if (selected.length === 0)
-    throw new Error("Insufficient UTXOs for this transaction.");
-
-  // --- 3️⃣ Compute fee and outputs ---
-  const outputs = amountTarget === null ? 1 : 2;
-  const estVSize =
-    TX_OVERHEAD + selected.length * VBYTE_INPUT + outputs * VBYTE_OUTPUT;
-  const fee = BigInt(Math.ceil(feeRate * estVSize));
-
-  let valueToSend;
-  let change = 0n;
-
-  if (amountTarget === null) {
-    // Sweep all
-    if (inputSum <= fee) throw new Error("Not enough balance to cover fee.");
-    valueToSend = inputSum - fee;
-    if (valueToSend <= BigInt(DUST_LIMIT))
-      throw new Error("Resulting output is dust.");
-  } else {
-    if (inputSum < amountTarget + fee)
-      throw new Error("Insufficient funds (including fee).");
-    valueToSend = amountTarget;
-    change = inputSum - amountTarget - fee;
-    if (change > 0n && change < BigInt(DUST_LIMIT)) change = 0n;
-  }
-
-  // --- 4️⃣ Build PSBT ---
-  const psbt = new bitcoin.Psbt({ network: NETWORK });
-
-  for (const u of selected) {
-    const rawTxRes = await axios.get(`${BLOCKSTREAM_API}/tx/${u.txid}/hex`);
-    const rawTxHex = rawTxRes.data;
-    psbt.addInput({
-      hash: u.txid,
-      index: u.vout,
-      nonWitnessUtxo: Buffer.from(rawTxHex, "hex"),
-    });
-  }
-
-  psbt.addOutput({ address: to, value: Number(valueToSend) });
-  if (change > 0n)
-    psbt.addOutput({ address: fromAddress, value: Number(change) });
-
-  // --- 5️⃣ Sign and finalize ---
-  selected.forEach((u, i) => {
-    psbt.signInput(i, {
-      publicKey: Buffer.from(keyPair.publicKey),
-      sign: (hash) => Buffer.from(ecc.sign(hash, keyPair.privateKey)),
-    });
-  });
-
-  try {
-    psbt.validateSignaturesOfAllInputs((pubkey, msgHash, signature) => {
-      return ecc.verify(msgHash, pubkey, signature);
-    });
-  } catch (err) {
-    console.warn("⚠️ Signature validation warning:", err.message);
-  }
-  psbt.finalizeAllInputs();
-
-  // --- 6️⃣ Broadcast ---
-  const txHex = psbt.extractTransaction().toHex();
-  const broadcast = await axios.post(`${BLOCKSTREAM_API}/tx`, txHex, {
-    headers: { "Content-Type": "text/plain" },
-  });
-
-  console.log("✅ Transaction sent! TXID:", broadcast.data);
-  return { txId: broadcast.data };
+  const data = await res.json();
+  console.log(data);
+  return { ...data, success: true, isFee };
 }
 
 async function sendBEP20(

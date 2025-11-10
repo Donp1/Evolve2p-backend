@@ -60,18 +60,18 @@ router.post("/", async (req, res) => {
       return;
     }
 
-    if (
-      String(normalized.fromAddress).toLowerCase() ===
-        String(process.env.ETH_WALLET_ADDRESS).toLowerCase() ||
-      String(normalized.fromAddress).toLowerCase() ===
-        String(process.env.BNB_WALLET_ADDRESS).toLowerCase() ||
-      String(normalized.fromAddress).toLowerCase() ===
-        String(process.env.TRON_WALLET_ADDRESS).toLowerCase() ||
-      String(normalized.fromAddress).toLowerCase() ===
-        String(process.env.BTC_WALLET_ADDRESS).toLowerCase()
-    ) {
-      return;
-    }
+    // if (
+    //   String(normalized.fromAddress).toLowerCase() ===
+    //     String(process.env.ETH_WALLET_ADDRESS).toLowerCase() ||
+    //   String(normalized.fromAddress).toLowerCase() ===
+    //     String(process.env.BNB_WALLET_ADDRESS).toLowerCase() ||
+    //   String(normalized.fromAddress).toLowerCase() ===
+    //     String(process.env.TRON_WALLET_ADDRESS).toLowerCase() ||
+    //   String(normalized.fromAddress).toLowerCase() ===
+    //     String(process.env.BTC_WALLET_ADDRESS).toLowerCase()
+    // ) {
+    //   return;
+    // }
 
     // --- 🚫 Prevent double processing ---
     const existing = await db.transaction.findFirst({
@@ -169,53 +169,53 @@ router.post("/", async (req, res) => {
 
     // add sweeping logic here in future
 
-    try {
-      if (
-        String(normalized.fromAddress).toLowerCase() !==
-          String(process.env.ETH_WALLET_ADDRESS).toLowerCase() ||
-        String(normalized.fromAddress).toLowerCase() !==
-          String(process.env.BNB_WALLET_ADDRESS).toLowerCase() ||
-        String(normalized.fromAddress).toLowerCase() !==
-          String(process.env.TRON_WALLET_ADDRESS).toLowerCase() ||
-        String(normalized.fromAddress).toLowerCase() !==
-          String(process.env.BTC_WALLET_ADDRESS).toLowerCase()
-      ) {
-        if (normalized?.asset === "USDT") {
-          const tx = await sweepTrc20(
-            wallet.address,
-            wallet.privateKey,
-            normalized.amount
-          );
+    // try {
+    //   if (
+    //     String(normalized.fromAddress).toLowerCase() !==
+    //       String(process.env.ETH_WALLET_ADDRESS).toLowerCase() ||
+    //     String(normalized.fromAddress).toLowerCase() !==
+    //       String(process.env.BNB_WALLET_ADDRESS).toLowerCase() ||
+    //     String(normalized.fromAddress).toLowerCase() !==
+    //       String(process.env.TRON_WALLET_ADDRESS).toLowerCase() ||
+    //     String(normalized.fromAddress).toLowerCase() !==
+    //       String(process.env.BTC_WALLET_ADDRESS).toLowerCase()
+    //   ) {
+    //     if (normalized?.asset === "USDT") {
+    //       const tx = await sweepTrc20(
+    //         wallet.address,
+    //         wallet.privateKey,
+    //         normalized.amount
+    //       );
 
-          console.log("sweeping data: ", tx);
-        } else if (normalized?.asset === "USDC") {
-          const tx = await sweepBep20(
-            wallet.address,
-            wallet.privateKey,
-            normalized.amount
-          );
+    //       console.log("sweeping data: ", tx);
+    //     } else if (normalized?.asset === "USDC") {
+    //       const tx = await sweepBep20(
+    //         wallet.address,
+    //         wallet.privateKey,
+    //         normalized.amount
+    //       );
 
-          console.log("sweeping data: ", tx);
-        } else if (normalized?.asset === "ETH") {
-          const tx = await sweepETH(wallet.address, wallet.privateKey);
+    //       console.log("sweeping data: ", tx);
+    //     } else if (normalized?.asset === "ETH") {
+    //       const tx = await sweepETH(wallet.address, wallet.privateKey);
 
-          console.log("sweeping data: ", tx);
-        } else if (normalized?.asset === "BTC") {
-          const tx = await sweepBTC({
-            wif: process.env.BTC_WALLET_PRIVATE_KEY,
-            userIndex: wallet.addressIndex,
-            to: process.env.BTC_WALLET_ADDRESS,
-            amountSats: null, // null = sweep all
-            feeRate: 8,
-            network: "testnet",
-          });
+    //       console.log("sweeping data: ", tx);
+    //     } else if (normalized?.asset === "BTC") {
+    //       const tx = await sweepBTC({
+    //         wif: process.env.BTC_WALLET_PRIVATE_KEY,
+    //         userIndex: wallet.addressIndex,
+    //         to: process.env.BTC_WALLET_ADDRESS,
+    //         amountSats: null, // null = sweep all
+    //         feeRate: 8,
+    //         network: "testnet",
+    //       });
 
-          console.log("sweeping data: ", tx);
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    //       console.log("sweeping data: ", tx);
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    // }
 
     return res
       .status(200)

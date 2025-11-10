@@ -178,20 +178,18 @@ router.post("/", isAuthenticated, async (req, res) => {
 
     // --- 🚀 Send transaction ---
     let tx;
-    if (coin === "BTC")
-      tx = await sendBTC({
-        wif: privateKey,
-        to: toAddress,
-        amountSats: Math.round(amountNum * 1e8),
-        feeRate: 10, // sats per byte
-        network: "testnet",
-      });
-    else if (coin === "ETH")
-      tx = await sendETH({
-        amount: amountNum,
-        fromPrivateKey: privateKey,
-        toAddress,
-      });
+    if (coin === "BTC") {
+      // tx = await sendBTC({
+      //   wif: privateKey,
+      //   to: toAddress,
+      //   amountSats: Math.round(amountNum * 1e8),
+      //   feeRate: 10, // sats per byte
+      //   network: "testnet",
+      // });
+
+      tx = await sendBTC(privateKey, toAddress, amountNum);
+    } else if (coin === "ETH")
+      tx = await sendETH(privateKey, toAddress, amountNum);
     else if (coin === "USDT") {
       const contractAddress = ERC20_CONTRACTS[coin];
       tx = await sendTRC20({
