@@ -18,23 +18,23 @@ const router = express.Router();
 const isPossibleUsername = (input) =>
   /^[a-zA-Z0-9_]{3,20}$/.test(input) && !input.startsWith("0x");
 
-const isPossibleAddress = (input) => {
+const isPossibleAddress = (input, chain) => {
   // 🪙 BTC address formats
   const btcRegex = /^[13mn][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
   const btcBech32 = /^(bc1|tb1)[a-zA-HJ-NP-Z0-9]{25,39}$/;
 
   // 💠 ETH & BSC share the same address format (0x + 40 hex chars)
-  const evmRegex = /^0x[a-fA-F0-9]{40}$/;
+  const ethRegex = /^0x[a-fA-F0-9]{40}$/;
+  const bscRegex = /^0x[a-fA-F0-9]{40}$/;
 
   // 🌀 TRON address format
   const tronRegex = /^T[a-zA-Z0-9]{33}$/;
 
-  return (
-    btcRegex.test(input) ||
-    btcBech32.test(input) ||
-    evmRegex.test(input) ||
-    tronRegex.test(input)
-  );
+  if (chain === "BTC") return btcRegex.test(input) || btcBech32.test(input);
+  if (chain === "ETH") return ethRegex.test(input);
+  if (chain === "USDC") return bscRegex.test(input);
+  if (chain === "USDT") return tronRegex.test(input);
+  return "Not a supported address format";
 };
 
 router.post("/", isAuthenticated, async (req, res) => {
@@ -75,7 +75,7 @@ router.post("/", isAuthenticated, async (req, res) => {
     let toWallet = null;
     let recipient = null;
 
-    if (isPossibleUsername(toAddress) && !isPossibleAddress(toAddress)) {
+    if (isPossibleUsername(toAddress)) {
       // Username-based internal transfer
       recipient = await db.user.findFirst({
         where: { username: { equals: toAddress, mode: "insensitive" } },
@@ -94,10 +94,16 @@ router.post("/", isAuthenticated, async (req, res) => {
           error: true,
           message: `Recipient does not have a ${coin} wallet.`,
         });
-    } else if (isPossibleAddress(toAddress)) {
+    } else if (isPossibleAddress(toAddress, coin)) {
       // Wallet address (could be BTC, ETH, BSC, TRON)
       toWallet = await db.wallet.findFirst({
-        where: { address: toAddress, currency: coin },
+        where: {
+          address: {
+            equals: toAddress,
+            mode: "insensitive",
+          },
+          currency: coin,
+        },
       });
     } else {
       return res.status(400).json({
@@ -107,7 +113,7 @@ router.post("/", isAuthenticated, async (req, res) => {
     }
 
     // ✅ INTERNAL TRANSFER
-    if (toWallet && toWallet.userId !== sender.id) {
+    if (toWallet?.id) {
       if (fromWallet.balance < totalDeduction) {
         return res.status(400).json({
           error: true,
@@ -154,93 +160,94 @@ router.post("/", isAuthenticated, async (req, res) => {
           totalDeducted: totalDeduction,
         },
       });
-    }
-
-    // ✅ ON-CHAIN TRANSFER
-    if (fromWallet.balance < totalDeduction) {
-      return res.status(400).json({
-        error: true,
-        message: `Insufficient balance. You need ${totalDeduction} ${coin} (includes ${feeAmount} ${coin} fee).`,
-      });
-    }
-
-    // --- 🔑 Select private key ---
-    let privateKey;
-    if (coin === "BTC") privateKey = process.env.BTC_WALLET_PRIVATE_KEY;
-    else if (coin === "ETH") privateKey = process.env.ETH_WALLET_PRIVATE_KEY;
-    else if (coin === "USDT") privateKey = process.env.TRON_WALLET_PRIVATE_KEY;
-    else if (coin === "USDC") privateKey = process.env.BNB_WALLET_PRIVATE_KEY;
-
-    if (!privateKey)
-      return res
-        .status(400)
-        .json({ error: true, message: "Private key not configured" });
-
-    // --- 🚀 Send transaction ---
-    let tx;
-    if (coin === "BTC") {
-      // tx = await sendBTC({
-      //   wif: privateKey,
-      //   to: toAddress,
-      //   amountSats: Math.round(amountNum * 1e8),
-      //   feeRate: 10, // sats per byte
-      //   network: "testnet",
-      // });
-
-      tx = await sendBTC(
-        privateKey,
-        process.env.BTC_WALLET_ADDRESS,
-        toAddress,
-        amountNum
-      );
-    } else if (coin === "ETH")
-      tx = await sendETH(privateKey, toAddress, amountNum);
-    else if (coin === "USDT") {
-      const contractAddress = ERC20_CONTRACTS[coin];
-      tx = await sendTRC20({
-        amount: amountNum,
-        to: toAddress,
-        privateKey,
-        contractAddress,
-        mainnet: false,
-      });
-    } else if (coin === "USDC") {
-      tx = await sendBEP20(privateKey, toAddress, amountNum);
     } else {
-      return res
-        .status(400)
-        .json({ error: true, message: "Unsupported currency" });
-    }
+      // ✅ ON-CHAIN TRANSFER
+      if (fromWallet.balance < totalDeduction) {
+        return res.status(400).json({
+          error: true,
+          message: `Insufficient balance. You need ${totalDeduction} ${coin} (includes ${feeAmount} ${coin} fee).`,
+        });
+      }
 
-    if (!tx || !tx.txId)
-      return res
-        .status(500)
-        .json({ error: true, message: "Transaction failed" });
+      // --- 🔑 Select private key ---
+      let privateKey;
+      if (coin === "BTC") privateKey = process.env.BTC_WALLET_PRIVATE_KEY;
+      else if (coin === "ETH") privateKey = process.env.ETH_WALLET_PRIVATE_KEY;
+      else if (coin === "USDT")
+        privateKey = process.env.TRON_WALLET_PRIVATE_KEY;
+      else if (coin === "USDC") privateKey = process.env.BNB_WALLET_PRIVATE_KEY;
 
-    await db.$transaction([
-      db.wallet.update({
-        where: { id: fromWallet.id },
-        data: { balance: { decrement: totalDeduction } },
-      }),
+      if (!privateKey)
+        return res
+          .status(400)
+          .json({ error: true, message: "Private key not configured" });
 
-      db.transaction.create({
-        data: {
-          userId,
-          walletId: fromWallet.id,
-          type: "TRANSFER",
-          amount: Number(amountNum.toFixed(8)),
+      // --- 🚀 Send transaction ---
+      let tx;
+      if (coin === "BTC") {
+        // tx = await sendBTC({
+        //   wif: privateKey,
+        //   to: toAddress,
+        //   amountSats: Math.round(amountNum * 1e8),
+        //   feeRate: 10, // sats per byte
+        //   network: "testnet",
+        // });
+
+        tx = await sendBTC(
+          privateKey,
+          process.env.BTC_WALLET_ADDRESS,
           toAddress,
-          fromAddress: fromWallet.address,
-          txHash: tx.txId,
-          status: "COMPLETED",
-        },
-      }),
-    ]);
+          amountNum
+        );
+      } else if (coin === "ETH")
+        tx = await sendETH(privateKey, toAddress, amountNum);
+      else if (coin === "USDT") {
+        const contractAddress = ERC20_CONTRACTS[coin];
+        tx = await sendTRC20({
+          amount: amountNum,
+          to: toAddress,
+          privateKey,
+          contractAddress,
+          mainnet: false,
+        });
+      } else if (coin === "USDC") {
+        tx = await sendBEP20(privateKey, toAddress, amountNum);
+      } else {
+        return res
+          .status(400)
+          .json({ error: true, message: "Unsupported currency" });
+      }
 
-    return res.json({
-      success: true,
-      message: "On-chain transfer successful",
-    });
+      if (!tx || !tx.txId)
+        return res
+          .status(500)
+          .json({ error: true, message: "Transaction failed" });
+
+      await db.$transaction([
+        db.wallet.update({
+          where: { id: fromWallet.id },
+          data: { balance: { decrement: totalDeduction } },
+        }),
+
+        db.transaction.create({
+          data: {
+            userId,
+            walletId: fromWallet.id,
+            type: "TRANSFER",
+            amount: Number(amountNum.toFixed(8)),
+            toAddress,
+            fromAddress: fromWallet.address,
+            txHash: tx.txId,
+            status: "COMPLETED",
+          },
+        }),
+      ]);
+
+      return res.json({
+        success: true,
+        message: "On-chain transfer successful",
+      });
+    }
   } catch (err) {
     console.error("Send error:", err);
     res.status(500).json({
