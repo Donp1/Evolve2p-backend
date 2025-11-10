@@ -1244,7 +1244,7 @@ async function sweepBTC({
 const POLL_INTERVAL_MS = 8000;
 const DECIMALS = 18n; // For USDT
 
-async function pollTRC20Deposits(contractAddress) {
+async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
   try {
     const walletMap = new Map();
     const wallets = await db.wallet.findMany();
@@ -1257,7 +1257,7 @@ async function pollTRC20Deposits(contractAddress) {
     const url = `https://api.shasta.trongrid.io/v1/contracts/${contractAddress}/events?event_name=Transfer&only_confirmed=true`;
     const res = await fetch(url);
 
-    console.log("Polling TRC20 deposits from:", res);
+    // console.log("Polling TRC20 deposits from:", res);
     const { data: events } = await res.json();
 
     if (!Array.isArray(events) || events.length === 0) return;
