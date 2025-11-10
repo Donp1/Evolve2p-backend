@@ -687,7 +687,13 @@ async function sendBSC(fromPrivateKey, toAddress, amount, isFee = false) {
 //   return { txId: broadcast.data };
 // }
 
-async function sendBTC(fromPrivateKey, toAddress, amount, isFee = false) {
+async function sendBTC(
+  fromPrivateKey,
+  fromAddress,
+  toAddress,
+  amount,
+  isFee = false
+) {
   const res = await fetch("https://api.tatum.io/v3/bitcoin/transaction", {
     method: "POST",
     headers: {
@@ -695,10 +701,19 @@ async function sendBTC(fromPrivateKey, toAddress, amount, isFee = false) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      to: toAddress,
-      currency: "BTC",
-      amount: String(Number(amount).toFixed(18)),
-      fromPrivateKey: fromPrivateKey,
+      fromAddress: [
+        {
+          address: fromAddress,
+          privateKey: fromPrivateKey,
+        },
+      ],
+
+      to: [
+        {
+          address: toAddress,
+          value: Number(Number(amount).toFixed(8)), // BTC uses up to 8 decimals
+        },
+      ],
     }),
   });
 

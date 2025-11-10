@@ -187,7 +187,12 @@ router.post("/", isAuthenticated, async (req, res) => {
       //   network: "testnet",
       // });
 
-      tx = await sendBTC(privateKey, toAddress, amountNum);
+      tx = await sendBTC(
+        privateKey,
+        process.env.BTC_WALLET_ADDRESS,
+        toAddress,
+        amountNum
+      );
     } else if (coin === "ETH")
       tx = await sendETH(privateKey, toAddress, amountNum);
     else if (coin === "USDT") {
