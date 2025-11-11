@@ -10,18 +10,14 @@ const {
 
 const router = express.Router();
 
-const processedTxs = new Set();
-
 router.post("/", async (req, res) => {
   const body = req.body;
+  const processedTxs = new Set();
 
   if (processedTxs.has(body.txId)) {
     console.log("⚠️ Duplicate webhook ignored:", body.txId);
     return res.status(200).end();
   }
-
-  processedTxs.add(body.txId);
-  setTimeout(() => processedTxs.delete(body.txId), 5 * 60 * 1000);
 
   console.log("📦 Incoming data:", body);
 
@@ -130,15 +126,17 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: true, message: "Wallet not found" });
     }
 
-    // --- 🧮 Update balance ---
-    await db.wallet.update({
-      where: { id: wallet.id },
-      data: {
-        balance: {
-          increment: Number(normalized.amount),
+    if (!existing) {
+      // --- 🧮 Update balance ---
+      await db.wallet.update({
+        where: { id: wallet.id },
+        data: {
+          balance: {
+            increment: Number(normalized.amount),
+          },
         },
-      },
-    });
+      });
+    }
 
     // --- 🔗 Handle BTC specific “fromAddress” lookup ---
 
@@ -230,6 +228,9 @@ router.post("/", async (req, res) => {
     // } catch (error) {
     //   console.log(error);
     // }
+
+    processedTxs.add(body.txId);
+    setTimeout(() => processedTxs.delete(body.txId), 5 * 60 * 1000);
 
     return res
       .status(200)
