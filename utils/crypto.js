@@ -1306,25 +1306,27 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
         transactionType: "PAYMENT",
       };
 
-      try {
-        const webhookRes = await fetch(
-          "https://evolve2p-backend.onrender.com/api/deposit",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }
-        );
+      if (procexssedTxs.has(txId) === false && !existing) {
+        try {
+          const webhookRes = await fetch(
+            "https://evolve2p-backend.onrender.com/api/deposit",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            }
+          );
 
-        if (webhookRes.ok) {
-          console.log("✅ Webhook sent:", txId);
-          processedTxs.add(txId);
-          setTimeout(() => processedTxs.delete(txId), 5 * 60 * 1000); // forget after 5 mins
-        } else {
-          console.warn("⚠️ Webhook failed:", await webhookRes.text());
+          if (webhookRes.ok) {
+            console.log("✅ Webhook sent:", txId);
+            processedTxs.add(txId);
+            setTimeout(() => processedTxs.delete(txId), 5 * 60 * 1000); // forget after 5 mins
+          } else {
+            console.warn("⚠️ Webhook failed:", await webhookRes.text());
+          }
+        } catch (err) {
+          console.error("❌ Webhook error:", err.message);
         }
-      } catch (err) {
-        console.error("❌ Webhook error:", err.message);
       }
     }
   } catch (err) {
