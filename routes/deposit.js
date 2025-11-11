@@ -104,13 +104,13 @@ router.post("/", async (req, res) => {
     const existing = await db.transaction.findFirst({
       where: {
         txHash: {
-          equals: normalized?.txHash,
+          equals: normalized.txHash,
           mode: "insensitive",
         },
       },
     });
 
-    if (existing.id)
+    if (existing && existing.status === "COMPLETED")
       return res
         .status(400)
         .json({ error: true, message: "Already processed" });
@@ -124,18 +124,6 @@ router.post("/", async (req, res) => {
     if (!wallet) {
       console.error("❌ Wallet not found for address:", normalized.toAddress);
       return res.status(404).json({ error: true, message: "Wallet not found" });
-    }
-
-    if (!existing.id) {
-      // --- 🧮 Update balance ---
-      await db.wallet.update({
-        where: { id: wallet.id },
-        data: {
-          balance: {
-            increment: Number(normalized.amount),
-          },
-        },
-      });
     }
 
     // --- 🔗 Handle BTC specific “fromAddress” lookup ---
@@ -153,7 +141,16 @@ router.post("/", async (req, res) => {
       walletId: wallet.id,
     };
 
-    if (!existing.id) {
+    if (!existing) {
+      // --- 🧮 Update balance ---
+      await db.wallet.update({
+        where: { id: wallet.id },
+        data: {
+          balance: {
+            increment: Number(normalized.amount),
+          },
+        },
+      });
       // const newTx = await db.transaction.create({ data: txData });
       const newTx = await db.transaction.upsert({
         where: { txHash: normalized.txHash },

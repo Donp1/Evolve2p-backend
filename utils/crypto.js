@@ -1271,16 +1271,16 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
       const wallet = walletMap.get(toAddress);
       if (!wallet) continue;
 
-      // const existing = await db.transaction.findFirst({
-      //   where: {
-      //     txHash: {
-      //       equals: txId,
-      //       mode: "insensitive",
-      //     },
-      //   },
-      // });
+      const existing = await db.transaction.findFirst({
+        where: {
+          txHash: {
+            equals: txId,
+            mode: "insensitive",
+          },
+        },
+      });
 
-      // if (existing.id) continue;
+      if (existing) continue;
 
       const now = Date.now();
       const timestamp = event.block_timestamp;
