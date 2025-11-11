@@ -1390,7 +1390,7 @@ function startPolling(contractAddress) {
   console.log(
     `📡 Starting TRC20 monitoring for ${contractAddress} Contract Address`
   );
-  cron.schedule("*/8 * * * * *", () => safePoll(contractAddress));
+  cron.schedule("*/30 * * * * *", () => safePoll(contractAddress));
 }
 
 async function convertCryptoToFiat(symbol, amount, fiat) {
