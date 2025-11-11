@@ -12,6 +12,15 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   const body = req.body;
+
+  if (processedTxs.has(body.txId)) {
+    console.log("⚠️ Duplicate webhook ignored:", body.txId);
+    return res.status(200).end();
+  }
+
+  processedTxs.add(body.txId);
+  setTimeout(() => processedTxs.delete(body.txId), 5 * 60 * 1000);
+
   console.log("📦 Incoming data:", body);
 
   try {
@@ -75,7 +84,9 @@ router.post("/", async (req, res) => {
     }
 
     if (!normalized.fromAddress || normalized.fromAddress === null) {
-      return;
+      return res
+        .status(400)
+        .json({ error: true, message: "Missing fromAddress" });
     }
 
     // if (
