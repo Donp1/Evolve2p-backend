@@ -1306,7 +1306,7 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
         transactionType: "PAYMENT",
       };
 
-      if (procexssedTxs.has(txId) === false && !existing) {
+      if (processedTxs.has(txId) === false && !existing) {
         try {
           const webhookRes = await fetch(
             "https://evolve2p-backend.onrender.com/api/deposit",
