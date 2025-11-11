@@ -1243,10 +1243,10 @@ async function sweepBTC({
 
 const POLL_INTERVAL_MS = 8000;
 const DECIMALS = 18n; // For USDT
+const processedTxs = new Set();
 
 async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
   try {
-    const processedTxs = new Set();
     const walletMap = new Map();
     const wallets = await db.wallet.findMany();
     wallets.forEach((wallet) => walletMap.set(wallet.address, wallet));
@@ -1274,7 +1274,8 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
       const existing = await db.transaction.findFirst({
         where: { txHash: txId },
       });
-      if (existing) continue;
+
+      if (existing.id) continue;
 
       const now = Date.now();
       const timestamp = event.block_timestamp;
@@ -1372,7 +1373,7 @@ function startPolling(contractAddress) {
   console.log(
     `📡 Starting TRC20 monitoring for ${contractAddress} Contract Address`
   );
-  cron.schedule("*/30 * * * * *", () => pollTRC20Deposits(contractAddress));
+  cron.schedule("*/8 * * * * *", () => pollTRC20Deposits(contractAddress));
 }
 
 async function convertCryptoToFiat(symbol, amount, fiat) {

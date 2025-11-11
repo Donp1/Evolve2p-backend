@@ -10,9 +10,9 @@ const {
 
 const router = express.Router();
 
+const processedTxs = new Set();
 router.post("/", async (req, res) => {
   const body = req.body;
-  const processedTxs = new Set();
 
   if (processedTxs.has(body.txId)) {
     console.log("⚠️ Duplicate webhook ignored:", body.txId);
@@ -110,7 +110,7 @@ router.post("/", async (req, res) => {
       },
     });
 
-    if (existing)
+    if (existing.id)
       return res
         .status(400)
         .json({ error: true, message: "Already processed" });
@@ -126,7 +126,7 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: true, message: "Wallet not found" });
     }
 
-    if (!existing) {
+    if (!existing.id) {
       // --- 🧮 Update balance ---
       await db.wallet.update({
         where: { id: wallet.id },
@@ -153,7 +153,7 @@ router.post("/", async (req, res) => {
       walletId: wallet.id,
     };
 
-    if (!existing) {
+    if (!existing.id) {
       // const newTx = await db.transaction.create({ data: txData });
       const newTx = await db.transaction.upsert({
         where: { txHash: normalized.txHash },
