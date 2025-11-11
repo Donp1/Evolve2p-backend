@@ -795,59 +795,84 @@ async function sendBEP20(
   }
 }
 
-async function sendTRC20({
+// async function sendTRC20({
+//   privateKey,
+//   to,
+//   contractAddress,
+//   amount,
+//   mainnet = true,
+// }) {
+//   try {
+//     const rpc = mainnet
+//       ? "https://api.trongrid.io" // ✅ Mainnet
+//       : "https://api.shasta.trongrid.io"; // 🧪 Testnet
+
+//     const tronWeb = new TronWeb({
+//       fullHost: rpc,
+//       privateKey,
+//     });
+
+//     // --- 1️⃣ Load contract
+//     const contract = await tronWeb.contract().at(contractAddress);
+
+//     // --- 2️⃣ Fetch token decimals
+//     const decimals = Number(await contract.decimals().call());
+
+//     // --- 3️⃣ Convert amount to smallest unit as string
+//     const amountInSun = BigInt(
+//       Math.round(Number(amount) * 10 ** decimals)
+//     ).toString();
+
+//     // --- 4️⃣ Get sender
+//     const sender = tronWeb.address.fromPrivateKey(privateKey);
+//     console.log(`🔑 From: ${sender}`);
+//     console.log(`📦 Sending ${amount} tokens to ${to}`);
+
+//     // --- 5️⃣ Send TRC20 transfer
+//     const tx = await contract
+//       .transfer(to, amountInSun)
+//       .send({ feeLimit: 100_000_000 }, privateKey);
+
+//     console.log(`✅ TX broadcast successfully! TXID: ${tx}`);
+
+//     return {
+//       success: true,
+//       txId: tx,
+//     };
+//   } catch (err) {
+//     console.error("❌ TRC20 Send Error:", err);
+//     return {
+//       success: false,
+//       error: err.message,
+//     };
+//   }
+// }
+
+async function sendTRC20(
   privateKey,
-  to,
-  contractAddress,
+  toAddress,
   amount,
-  mainnet = true,
-}) {
-  try {
-    const rpc = mainnet
-      ? "https://api.trongrid.io" // ✅ Mainnet
-      : "https://api.shasta.trongrid.io"; // 🧪 Testnet
-
-    const tronWeb = new TronWeb({
-      fullHost: rpc,
-      privateKey,
-    });
-
-    // --- 1️⃣ Load contract
-    const contract = await tronWeb.contract().at(contractAddress);
-
-    // --- 2️⃣ Fetch token decimals
-    const decimals = Number(await contract.decimals().call());
-
-    // --- 3️⃣ Convert amount to smallest unit as string
-    const amountInSun = BigInt(
-      Math.round(Number(amount) * 10 ** decimals)
-    ).toString();
-
-    // --- 4️⃣ Get sender
-    const sender = tronWeb.address.fromPrivateKey(privateKey);
-    console.log(`🔑 From: ${sender}`);
-    console.log(`📦 Sending ${amount} tokens to ${to}`);
-
-    // --- 5️⃣ Send TRC20 transfer
-    const tx = await contract
-      .transfer(to, amountInSun)
-      .send({ feeLimit: 100_000_000 }, privateKey);
-
-    console.log(`✅ TX broadcast successfully! TXID: ${tx}`);
-
-    return {
-      success: true,
-      txId: tx,
-    };
-  } catch (err) {
-    console.error("❌ TRC20 Send Error:", err);
-    return {
-      success: false,
-      error: err.message,
-    };
-  }
+  contractAddress,
+  isFee = false
+) {
+  const res = await fetch("https://api.tatum.io/v3/tron/trc20/transaction", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      to: toAddress,
+      amount: String(Number(amount).toFixed(6)), // TRC20 uses 6 decimals for USDT/USDC
+      fromPrivateKey: privateKey,
+      tokenAddress: contractAddress,
+      feeLimit: 600,
+    }),
+  });
+  const data = await res.json();
+  console.log(data);
+  return { ...data, success: true, isFee };
 }
-
 async function sweepTrc20(address, privateKey, amount) {
   try {
     const childBalance = await getTronBalance(address);
