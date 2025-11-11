@@ -1308,6 +1308,7 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
 
       if (processedTxs.has(txId) === false && !existing) {
         try {
+          processedTxs.add(txId);
           const webhookRes = await fetch(
             "https://evolve2p-backend.onrender.com/api/deposit",
             {
@@ -1319,7 +1320,7 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
 
           if (webhookRes.ok) {
             console.log("✅ Webhook sent:", txId);
-            processedTxs.add(txId);
+
             setTimeout(() => processedTxs.delete(txId), 5 * 60 * 1000); // forget after 5 mins
           } else {
             console.warn("⚠️ Webhook failed:", await webhookRes.text());
@@ -1376,11 +1377,20 @@ const convertCurrency = async (amount, fromSymbol, toSymbol) => {
   return Number((Number(amount) * rate).toFixed(8)); // rounding to 8 decimal places
 };
 
+let isPolling = false;
+
+async function safePoll(contractAddress) {
+  if (isPolling) return;
+  isPolling = true;
+  await pollTRC20Deposits(contractAddress);
+  isPolling = false;
+}
+
 function startPolling(contractAddress) {
   console.log(
     `📡 Starting TRC20 monitoring for ${contractAddress} Contract Address`
   );
-  cron.schedule("*/8 * * * * *", () => pollTRC20Deposits(contractAddress));
+  cron.schedule("*/8 * * * * *", () => safePoll(contractAddress));
 }
 
 async function convertCryptoToFiat(symbol, amount, fiat) {
