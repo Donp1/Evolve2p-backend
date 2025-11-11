@@ -1246,18 +1246,16 @@ const DECIMALS = 18n; // For USDT
 
 async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
   try {
+    const processedTxs = new Set();
     const walletMap = new Map();
     const wallets = await db.wallet.findMany();
-    wallets.forEach((wallet) => {
-      walletMap.set(wallet.address, wallet);
-    });
+    wallets.forEach((wallet) => walletMap.set(wallet.address, wallet));
 
     if (!contractAddress)
       throw new Error(`Unsupported TRC20 asset: ${contractAddress}`);
+
     const url = `https://api.shasta.trongrid.io/v1/contracts/${contractAddress}/events?event_name=Transfer&only_confirmed=true`;
     const res = await fetch(url);
-
-    // console.log("Polling TRC20 deposits from:", res);
     const { data: events } = await res.json();
 
     if (!Array.isArray(events) || events.length === 0) return;
@@ -1265,8 +1263,10 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
     for (const event of events) {
       const { from, to, value } = event.result;
       const txId = event.transaction_id;
-
       const toAddress = TronWeb.address.fromHex(to);
+
+      // prevent duplicates within last few minutes
+      if (processedTxs.has(txId)) continue;
 
       const wallet = walletMap.get(toAddress);
       if (!wallet) continue;
@@ -1276,7 +1276,6 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
       });
       if (existing) continue;
 
-      // Check if transaction is recent (1 min window)
       const now = Date.now();
       const timestamp = event.block_timestamp;
       const isRecent = now - timestamp < 3 * 60 * 1000;
@@ -1312,7 +1311,9 @@ async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
         );
 
         if (webhookRes.ok) {
-          console.log("✅ Webhook sent");
+          console.log("✅ Webhook sent:", txId);
+          processedTxs.add(txId);
+          setTimeout(() => processedTxs.delete(txId), 5 * 60 * 1000); // forget after 5 mins
         } else {
           console.warn("⚠️ Webhook failed:", await webhookRes.text());
         }

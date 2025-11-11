@@ -1592,6 +1592,87 @@ async function estimateTronFee(from, to, amountTrx) {
   }
 }
 
+// async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
+//   try {
+//     const walletMap = new Map();
+//     const wallets = await db.wallet.findMany();
+//     wallets.forEach((wallet) => {
+//       walletMap.set(wallet.address, wallet);
+//     });
+
+//     if (!contractAddress)
+//       throw new Error(`Unsupported TRC20 asset: ${contractAddress}`);
+//     const url = `https://api.shasta.trongrid.io/v1/contracts/${contractAddress}/events?event_name=Transfer&only_confirmed=true`;
+//     const res = await fetch(url);
+
+//     // console.log("Polling TRC20 deposits from:", res);
+//     const { data: events } = await res.json();
+
+//     if (!Array.isArray(events) || events.length === 0) return;
+
+//     for (const event of events) {
+//       const { from, to, value } = event.result;
+//       const txId = event.transaction_id;
+
+//       const toAddress = TronWeb.address.fromHex(to);
+
+//       const wallet = walletMap.get(toAddress);
+//       if (!wallet) continue;
+
+//       const existing = await db.transaction.findFirst({
+//         where: { txHash: txId },
+//       });
+//       if (existing) continue;
+
+//       // Check if transaction is recent (1 min window)
+//       const now = Date.now();
+//       const timestamp = event.block_timestamp;
+//       const isRecent = now - timestamp < 3 * 60 * 1000;
+//       if (!isRecent) continue;
+
+//       const amount = Number(BigInt(value)) / Number(10n ** DECIMALS);
+//       const fromBase58 = TronWeb.address.fromHex(from);
+
+//       const payload = {
+//         id: txId,
+//         address: toAddress,
+//         type: "incoming",
+//         asset: assetType.toUpperCase(),
+//         network: "TRON",
+//         amount: amount.toFixed(6),
+//         txId,
+//         timestamp,
+//         blockNumber: event.block_number,
+//         counterAddress: fromBase58,
+//         chain: "TRON",
+//         subscriptionType: "addressEvent",
+//         transactionType: "PAYMENT",
+//       };
+
+//       try {
+//         const webhookRes = await fetch(
+//           "https://evolve2p-backend.onrender.com/api/deposit",
+//           {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify(payload),
+//           }
+//         );
+
+//         if (webhookRes.ok) {
+//           console.log("✅ Webhook sent");
+//         } else {
+//           console.warn("⚠️ Webhook failed:", await webhookRes.text());
+//         }
+//       } catch (err) {
+//         console.error("❌ Webhook error:", err.message);
+//       }
+//     }
+//   } catch (err) {
+//     console.error("❌ Poll error:", err.message);
+//   }
+// }
+
 (async () => {
   const from = "TKGDMANAHfwADnjJyMQy1zwMSQDQrb7Yt3";
   const to = "TQTXcbLQze3Qd19xhMxjGeKwLjA6BmbkbM";
