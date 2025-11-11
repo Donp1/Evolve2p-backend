@@ -10,6 +10,8 @@ const {
 
 const router = express.Router();
 
+const processedTxs = new Set();
+
 router.post("/", async (req, res) => {
   const body = req.body;
 
