@@ -56,6 +56,24 @@ router.post("/", async (req, res) => {
         .json({ error: true, message: "Unsupported chain" });
     }
 
+    if (normalized.asset === "BTC") {
+      try {
+        const txDetails = await fetch(
+          `https://api.tatum.io/v3/bitcoin/transaction/${normalized.txHash}`,
+          {
+            headers: {
+              "x-api-key": process.env.TATUM_API_KEY,
+            },
+          }
+        );
+        const tx = await txDetails.json();
+        const fromAddress = tx.inputs?.[0]?.coin?.address;
+        if (fromAddress) normalized.fromAddress = fromAddress;
+      } catch (err) {
+        console.error("❌ Error fetching BTC tx details:", err.message);
+      }
+    }
+
     if (!normalized.fromAddress || normalized.fromAddress === null) {
       return;
     }
@@ -110,23 +128,6 @@ router.post("/", async (req, res) => {
     });
 
     // --- 🔗 Handle BTC specific “fromAddress” lookup ---
-    if (normalized.asset === "BTC") {
-      try {
-        const txDetails = await fetch(
-          `https://api.tatum.io/v3/bitcoin/transaction/${normalized.txHash}`,
-          {
-            headers: {
-              "x-api-key": process.env.TATUM_API_KEY,
-            },
-          }
-        );
-        const tx = await txDetails.json();
-        const fromAddress = tx.inputs?.[0]?.coin?.address;
-        if (fromAddress) normalized.fromAddress = fromAddress;
-      } catch (err) {
-        console.error("❌ Error fetching BTC tx details:", err.message);
-      }
-    }
 
     // --- 🧾 Create transaction record ---
 
