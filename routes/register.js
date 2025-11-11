@@ -63,11 +63,11 @@ route.post("/", async (req, res) => {
       if (symbol === "BTC") {
         address = btcAddress.address;
         privateKey = btcAddress.privateKey;
-        // subscribeToAddressWebhook(address, symbol);
+        subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "ETH") {
         address = ethAddress.address;
         privateKey = ethAddress.privateKey;
-        // subscribeToAddressWebhook(address, symbol);
+        subscribeToAddressWebhook(address, symbol);
       } else if (symbol === "USDT") {
         address = tronAddress.address;
         privateKey = tronAddress.privateKey;
@@ -75,7 +75,7 @@ route.post("/", async (req, res) => {
       } else if (symbol === "USDC") {
         address = bnbAddress.address;
         privateKey = bnbAddress.privateKey;
-        // subscribeToAddressWebhook(address, symbol);
+        subscribeToAddressWebhook(address, symbol);
       }
 
       const wallet = await db.wallet.create({
