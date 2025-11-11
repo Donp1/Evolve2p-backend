@@ -275,7 +275,7 @@ cron.schedule("* * * * *", async () => {
   });
 });
 
-startPolling(ERC20_CONTRACTS.USDT);
+// startPolling(ERC20_CONTRACTS.USDT);
 
 server.listen(PORT, (error) => {
   if (error) {

@@ -245,6 +245,15 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
       };
       break;
 
+    case "USDT":
+      subscriptionType = "INCOMING_FUNGIBLE_TX";
+      attr = {
+        chain: "tron-testnet", // change to "BSC" for mainnet
+        // contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
+        address: userAddress,
+      };
+      break;
+
     default:
       throw new Error(`Unsupported asset type: ${assetType}`);
   }
