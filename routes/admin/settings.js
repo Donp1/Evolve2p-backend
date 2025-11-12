@@ -41,6 +41,7 @@ router.put("/", isAdmin, async (req, res) => {
       maintenanceMode,
       supportEmail,
       supportPhoneNumber,
+      swapFee,
     } = req.body;
 
     const existing = await db.settings.findFirst();
@@ -62,6 +63,7 @@ router.put("/", isAdmin, async (req, res) => {
         maintenanceMode,
         supportEmail,
         supportPhoneNumber,
+        swapFee,
       },
     });
 
