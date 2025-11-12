@@ -260,18 +260,18 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
   switch (assetType.toUpperCase()) {
     case "BTC":
       subscriptionType = "ADDRESS_EVENT";
-      attr = { address: userAddress, chain: "bitcoin" };
+      attr = { address: userAddress, chain: "bitcoin-mainnet" };
       break;
 
     case "ETH":
       subscriptionType = "ADDRESS_EVENT";
-      attr = { address: userAddress, chain: "ethereum" };
+      attr = { address: userAddress, chain: "ethereum-mainnet" };
       break;
 
     case "USDC":
       subscriptionType = "INCOMING_FUNGIBLE_TX";
       attr = {
-        chain: "BSC", // change to "BSC" for mainnet
+        chain: "bsc-mainnet", // change to "BSC" for mainnet
         // contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
         address: userAddress,
       };
@@ -280,7 +280,7 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
     case "USDT":
       subscriptionType = "INCOMING_FUNGIBLE_TX";
       attr = {
-        chain: "TRON", // change to "BSC" for mainnet
+        chain: "tron-mainnet", // change to "BSC" for mainnet
         // contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
         address: userAddress,
       };
