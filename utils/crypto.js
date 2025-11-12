@@ -25,39 +25,71 @@ const ERC20_CONTRACTS = {
   USDT: process.env.CONTRACT_ADDRESS_USDT,
 };
 
-async function generateAddress(currency, index) {
+// async function generateAddress(currency, index) {
+//   if (currency === "BTC") {
+//     const wallet = await deriveBtcFromMnemonic(
+//       process.env.BTC_WALLET_MNEMONIC,
+//       index
+//     );
+//     return { ...wallet };
+//   }
+
+//   if (currency === "ETH") {
+//     const wallet = deriveEvmFromMnemonic(
+//       process.env.ETH_WALLET_MNEMONIC,
+//       index
+//     );
+//     return { ...wallet };
+//   }
+
+//   if (currency === "USDC") {
+//     const wallet = deriveEvmFromMnemonic(
+//       process.env.BNB_WALLET_MNEMONIC,
+//       index
+//     );
+//     return { ...wallet };
+//   }
+
+//   if (currency === "USDT") {
+//     const wallet = deriveTronFromMnemonic(
+//       process.env.TRON_WALLET_MNEMONIC,
+//       index
+//     );
+
+//     return { ...wallet };
+//   }
+// }
+
+async function generateAddress(currency, xpub, index) {
+  let url;
   if (currency === "BTC") {
-    const wallet = await deriveBtcFromMnemonic(
-      process.env.BTC_WALLET_MNEMONIC,
-      index
-    );
-    return { ...wallet };
+    url = `https://api.tatum.io/v3/bitcoin/address/${xpub}/${index}`;
+  } else if (currency === "ETH") {
+    url = `https://api.tatum.io/v3/ethereum/address/${xpub}/${index}`;
+  } else if (currency === "USDT") {
+    url = `https://api.tatum.io/v3/tron/address/${xpub}/${index}`;
+  } else if (currency === "USDC") {
+    url = `https://api.tatum.io/v3/bsc/address/${xpub}/${index}`;
   }
 
-  if (currency === "ETH") {
-    const wallet = deriveEvmFromMnemonic(
-      process.env.ETH_WALLET_MNEMONIC,
-      index
-    );
-    return { ...wallet };
-  }
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+  });
 
-  if (currency === "USDC") {
-    const wallet = deriveEvmFromMnemonic(
-      process.env.BNB_WALLET_MNEMONIC,
-      index
+  if (!response.ok) {
+    console.error(
+      "❌ Failed to get address:",
+      response.status,
+      await response.text()
     );
-    return { ...wallet };
+    return;
   }
-
-  if (currency === "USDT") {
-    const wallet = deriveTronFromMnemonic(
-      process.env.TRON_WALLET_MNEMONIC,
-      index
-    );
-
-    return { ...wallet };
-  }
+  const { address } = await response.json();
+  return address;
 }
 
 function generateIndexFromUserId(userId) {
@@ -1811,7 +1843,7 @@ async function deriveBtcFromMnemonic(mnemonic, index = 0, options = {}) {
       throw new Error("Invalid mnemonic");
     }
 
-    const { network = "testnet", scriptType = "p2wpkh", account = 0 } = options;
+    const { network = "mainnet", scriptType = "p2wpkh", account = 0 } = options;
 
     const NETWORK =
       network === "testnet"
