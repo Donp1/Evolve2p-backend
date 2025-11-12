@@ -25,42 +25,42 @@ const ERC20_CONTRACTS = {
   USDT: process.env.CONTRACT_ADDRESS_USDT,
 };
 
-// async function generateAddress(currency, index) {
-//   if (currency === "BTC") {
-//     const wallet = await deriveBtcFromMnemonic(
-//       process.env.BTC_WALLET_MNEMONIC,
-//       index
-//     );
-//     return { ...wallet };
-//   }
+async function generateAddress(currency, index) {
+  if (currency === "BTC") {
+    const wallet = await deriveBtcFromMnemonic(
+      process.env.BTC_WALLET_MNEMONIC,
+      index
+    );
+    return { ...wallet };
+  }
 
-//   if (currency === "ETH") {
-//     const wallet = deriveEvmFromMnemonic(
-//       process.env.ETH_WALLET_MNEMONIC,
-//       index
-//     );
-//     return { ...wallet };
-//   }
+  if (currency === "ETH") {
+    const wallet = deriveEvmFromMnemonic(
+      process.env.ETH_WALLET_MNEMONIC,
+      index
+    );
+    return { ...wallet };
+  }
 
-//   if (currency === "USDC") {
-//     const wallet = deriveEvmFromMnemonic(
-//       process.env.BNB_WALLET_MNEMONIC,
-//       index
-//     );
-//     return { ...wallet };
-//   }
+  if (currency === "USDC") {
+    const wallet = deriveEvmFromMnemonic(
+      process.env.BNB_WALLET_MNEMONIC,
+      index
+    );
+    return { ...wallet };
+  }
 
-//   if (currency === "USDT") {
-//     const wallet = deriveTronFromMnemonic(
-//       process.env.TRON_WALLET_MNEMONIC,
-//       index
-//     );
+  if (currency === "USDT") {
+    const wallet = deriveTronFromMnemonic(
+      process.env.TRON_WALLET_MNEMONIC,
+      index
+    );
 
-//     return { ...wallet };
-//   }
-// }
+    return { ...wallet };
+  }
+}
 
-async function generateAddress(currency, xpub, index) {
+async function generateMasterAddress(currency, xpub, index) {
   let url;
   if (currency === "BTC") {
     url = `https://api.tatum.io/v3/bitcoin/address/${xpub}/${index}`;
@@ -1591,7 +1591,7 @@ async function generateETHWallet() {
     const data = await response.json();
 
     const privateKey = await getETHMasterPrivateKey(data.mnemonic);
-    const address = await generateAddress("ETH", data.xpub, 0);
+    const address = await generateMasterAddress("ETH", data.xpub, 0);
 
     console.log("✅ ETHEREUM Wallet generated:");
     console.log("Mnemonic:", data.mnemonic);
@@ -1632,7 +1632,7 @@ async function generateBTCWallet() {
     const data = await response.json();
 
     const privateKey = await getBTCMasterPrivateKey(data.mnemonic);
-    const address = await generateAddress("BTC", data.xpub, 0);
+    const address = await generateMasterAddress("BTC", data.xpub, 0);
 
     console.log("✅ ETHEREUM Wallet generated:");
     console.log("Mnemonic:", data.mnemonic);
@@ -1673,7 +1673,7 @@ async function generateBSCWallet() {
     const data = await response.json();
 
     const privateKey = await getBSCMasterPrivateKey(data.mnemonic);
-    const address = await generateAddress("USDC", data.xpub, 0);
+    const address = await generateMasterAddress("USDC", data.xpub, 0);
 
     console.log("✅ ETHEREUM Wallet generated:");
     console.log("Mnemonic:", data.mnemonic);
@@ -1714,7 +1714,7 @@ async function generateTRONWallet() {
     const data = await response.json();
 
     const privateKey = await getTRONMasterPrivateKey(data.mnemonic);
-    const address = await generateAddress("USDT", data.xpub, 0);
+    const address = await generateMasterAddress("USDT", data.xpub, 0);
 
     console.log("✅ ETHEREUM Wallet generated:");
     console.log("Mnemonic:", data.mnemonic);
