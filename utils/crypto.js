@@ -228,18 +228,18 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
   switch (assetType.toUpperCase()) {
     case "BTC":
       subscriptionType = "ADDRESS_EVENT";
-      attr = { address: userAddress, chain: "bitcoin-testnet" };
+      attr = { address: userAddress, chain: "bitcoin" };
       break;
 
     case "ETH":
       subscriptionType = "ADDRESS_EVENT";
-      attr = { address: userAddress, chain: "ethereum-sepolia" };
+      attr = { address: userAddress, chain: "ethereum" };
       break;
 
     case "USDC":
       subscriptionType = "INCOMING_FUNGIBLE_TX";
       attr = {
-        chain: "bsc-testnet", // change to "BSC" for mainnet
+        chain: "BSC", // change to "BSC" for mainnet
         // contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
         address: userAddress,
       };
@@ -248,7 +248,7 @@ async function subscribeToAddressWebhook(userAddress, assetType) {
     case "USDT":
       subscriptionType = "INCOMING_FUNGIBLE_TX";
       attr = {
-        chain: "tron-testnet", // change to "BSC" for mainnet
+        chain: "TRON", // change to "BSC" for mainnet
         // contractAddress: "0x2D6c122a99109E9FC0eaaDa3DC8e3966AC86050B",
         address: userAddress,
       };
@@ -681,7 +681,7 @@ async function sendETH(fromPrivateKey, toAddress, amount, isFee = false) {
     headers: {
       "x-api-key": process.env.TATUM_API_KEY,
       "Content-Type": "application/json",
-      "x-testnet-type": "ethereum-sepolia",
+      // "x-testnet-type": "ethereum-sepolia",
     },
     body: JSON.stringify({
       to: toAddress,
@@ -736,7 +736,8 @@ async function sendBEP20(
   toAddress,
   amount,
   contractAddress = process.env.CONTRACT_ADDRESS_USDC,
-  rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/" // default: BSC testnet
+  // rpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/"
+  rpcUrl = "https://binance.llamarpc.com"
 ) {
   try {
     // 1️⃣ Setup provider and wallet
@@ -1438,6 +1439,102 @@ async function getMarketPrice(symbol, fiat) {
   const rate = forexData.rates[fiat.toUpperCase()];
   if (!rate) throw new Error(`Unsupported fiat: ${fiat}`);
   return priceUSD * rate;
+}
+
+async function getBTCMasterPrivateKey(mnemonic) {
+  const res = await fetch("https://api.tatum.io/v3/bitcoin/wallet/priv", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mnemonic,
+      index: 0, // master key (first child at index 0)
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("❌ Error generating private key:", data);
+    return;
+  }
+
+  return data.key;
+}
+
+async function getTRONMasterPrivateKey(mnemonic) {
+  const res = await fetch("https://api.tatum.io/v3/tron/wallet/priv", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mnemonic,
+      index: 0, // master key (first child at index 0)
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("❌ Error:", data);
+    return;
+  }
+
+  console.log(data);
+
+  return data.key;
+}
+
+async function getBSCMasterPrivateKey(mnemonic) {
+  const res = await fetch("https://api.tatum.io/v3/bsc/wallet/priv", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mnemonic,
+      index: 0, // master key (first child at index 0)
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("❌ Error:", data);
+    return;
+  }
+
+  console.log(data);
+
+  return data.key;
+}
+
+async function getETHMasterPrivateKey(mnemonic, index = 0) {
+  const res = await fetch("https://api.tatum.io/v3/ethereum/wallet/priv", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.TATUM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      mnemonic,
+      index, // master key (first child at index 0)
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("❌ Error generating private key:", data);
+    return;
+  }
+  console.log(data.key);
+  return data.key;
 }
 
 async function generateETHWallet() {
