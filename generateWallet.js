@@ -1592,6 +1592,59 @@ async function estimateTronFee(from, to, amountTrx) {
   }
 }
 
+async function sendTRC20({
+  privateKey,
+  to,
+  contractAddress,
+  amount,
+  mainnet = true,
+}) {
+  try {
+    const rpc = mainnet
+      ? "https://api.trongrid.io" // ✅ Mainnet
+      : "https://api.shasta.trongrid.io"; // 🧪 Testnet
+
+    const tronWeb = new TronWeb({
+      fullHost: rpc,
+      privateKey,
+    });
+
+    // --- 1️⃣ Load contract
+    const contract = await tronWeb.contract().at(contractAddress);
+
+    // --- 2️⃣ Fetch token decimals
+    const decimals = Number(await contract.decimals().call());
+
+    // --- 3️⃣ Convert amount to smallest unit as string
+    const amountInSun = BigInt(
+      Math.round(Number(amount) * 10 ** decimals)
+    ).toString();
+
+    // --- 4️⃣ Get sender
+    const sender = tronWeb.address.fromPrivateKey(privateKey);
+    console.log(`🔑 From: ${sender}`);
+    console.log(`📦 Sending ${amount} tokens to ${to}`);
+
+    // --- 5️⃣ Send TRC20 transfer
+    const tx = await contract
+      .transfer(to, amountInSun)
+      .send({ feeLimit: 100_000_000 }, privateKey);
+
+    console.log(`✅ TX broadcast successfully! TXID: ${tx}`);
+
+    return {
+      success: true,
+      txId: tx,
+    };
+  } catch (err) {
+    console.error("❌ TRC20 Send Error:", err);
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}
+
 // async function pollTRC20Deposits(contractAddress, assetType = "USDT") {
 //   try {
 //     const walletMap = new Map();

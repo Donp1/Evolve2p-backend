@@ -35,6 +35,8 @@ router.get("/:userId", isAdmin, async (req, res) => {
         },
         tradesAsBuyer: { include: { offer: true } },
         tradesAsSeller: { include: { offer: true } },
+        wallets: true,
+        trustedBy: true,
       },
     });
 
