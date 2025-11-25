@@ -7,6 +7,7 @@ const {
   sendBTC,
   sweepBTC,
 } = require("../utils/crypto");
+const { sendPushNotification } = require("../utils");
 
 const router = express.Router();
 
@@ -228,6 +229,12 @@ router.post("/", async (req, res) => {
 
     processedTxs.add(body.txId);
     setTimeout(() => processedTxs.delete(body.txId), 5 * 60 * 1000);
+
+    await sendPushNotification(
+      wallet.user.pushToken,
+      "Evolve2p",
+      `You have received ${txData.amount} ${wallet.currency} from ${txData.fromAddress}.`
+    );
 
     return res
       .status(200)

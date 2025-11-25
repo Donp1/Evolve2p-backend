@@ -1,7 +1,7 @@
 const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
-const { sendPushNotification } = require("../utils/users");
+const { sendPushNotification } = require("../utils");
 
 const router = express.Router();
 

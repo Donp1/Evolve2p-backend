@@ -19,11 +19,11 @@ model Admin {
 model User {
   id               String            @id @default(uuid())
   email            String            @unique
-  name             String?
   phone            String
   password         String
   username         String
   country          String
+  name             String?
   kycVerified      Boolean?          @default(false)
   emailVerified    Boolean?          @default(false)
   pin              String?
@@ -32,6 +32,7 @@ model User {
   secret           String?
   is2faEnabled     Boolean?          @default(false)
   authType         String?
+  pushToken        String?
   role             UserRole          @default(USER)
   wallets          Wallet[]
   transactions     Transaction[]
@@ -43,18 +44,9 @@ model User {
   chatParticipants ChatParticipant[]
   messages         Message[]
   notifications    Notification[]
-  pushTokens       PushToken[]
   trustedBy        Trust[]
   createdAt        DateTime          @default(now())
   status           UserStatus        @default(ACTIVE)
-}
-
-model PushToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  createdAt DateTime @default(now())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
 }
 
 model OTP {
