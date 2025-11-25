@@ -7,6 +7,7 @@ const cloudinary = require("cloudinary").v2;
 const { db } = require("../db");
 const { isAuthenticated } = require("../middlewares");
 const streamifier = require("streamifier");
+const { sendPushNotification } = require("../utils/index");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -24,14 +25,22 @@ router.post(
       const { userId: senderId } = req.payload;
       const { chatId, content } = req.body;
 
+      const sender = await db.user.findFirst({ where: { id: senderId } });
+
+      if (!sender) {
+        return res
+          .status(404)
+          .json({ error: true, message: "Unable to send message" });
+      }
+
       // Validate chat exists
       const chat = await db.chat.findUnique({
         where: { id: chatId },
-        include: { participants: true },
+        include: { participants: { include: { user: true } } },
       });
 
       if (!chat) {
-        return res.status(404).json({ error: "Chat not found" });
+        return res.status(404).json({ error: true, message: "Chat not found" });
       }
 
       let attachmentUrl = null;
@@ -77,6 +86,16 @@ router.post(
       if (io) {
         io.to(chatId).emit("new_message", message);
       }
+
+      chat.participants.forEach(async (participant) => {
+        if (participant.id != senderId && participant.user.pushToken) {
+          await sendPushNotification(
+            participant.user.pushToken,
+            "Evolve2p: New Message",
+            `@${sender.username} send you a message`
+          );
+        }
+      });
 
       return res.status(201).json(message);
     } catch (err) {

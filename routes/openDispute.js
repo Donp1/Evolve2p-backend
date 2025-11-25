@@ -6,7 +6,7 @@ const { isAuthenticated } = require("../middlewares");
 const { db } = require("../db");
 const multer = require("multer");
 const streamifier = require("streamifier");
-const { sendPushNotification } = require("../utils/users");
+const { sendPushNotification } = require("../utils/index");
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
   secure: true,
@@ -133,16 +133,18 @@ router.post(
         io.to(trade.sellerId).emit("new_notification", sellserNotification);
       }
 
-      // await sendPushNotification(
-      //   trade.buyerId,
-      //   "Dispute Opened ⚠️",
-      //   `Your trade with ${trade?.seller?.username} is now in dispute.`
-      // );
-      // await sendPushNotification(
-      //   trade.sellerId,
-      //   "Dispute Opened ⚠️",
-      //   `Your trade with ${trade?.buyer?.username} is now in dispute.`
-      // );
+      if (trade.buyer.pushToken)
+        await sendPushNotification(
+          trade.buyer.pushToken,
+          "Dispute Opened ⚠️",
+          `Your trade with ${trade?.seller?.username} is now in dispute.`
+        );
+      if (trade.seller.pushToken)
+        await sendPushNotification(
+          trade.seller.pushToken,
+          "Dispute Opened ⚠️",
+          `Your trade with ${trade?.buyer?.username} is now in dispute.`
+        );
 
       return res.status(201).json({
         success: true,

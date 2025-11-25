@@ -1,7 +1,7 @@
 const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
-const { sendPushNotification } = require("../utils");
+const { sendPushNotification } = require("../utils/index");
 
 const router = express.Router();
 
@@ -98,16 +98,19 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
 
-    // await sendPushNotification(
-    //   updated.buyerId,
-    //   "Trade Canceled",
-    //   `Your trade with ${updated?.seller.username} has been canceled.`
-    // );
-    // await sendPushNotification(
-    //   updated.sellerId,
-    //   "Trade Canceled",
-    //   `Your trade with ${updated?.buyer.username} has been canceled. Funds have been returned to your wallet.`
-    // );
+    if (updated.buyer.pushToken)
+      await sendPushNotification(
+        updated.buyer.pushToken,
+        "Trade Canceled",
+        `Your trade with ${updated?.seller.username} has been canceled.`
+      );
+
+    if (updated.seller.pushToken)
+      await sendPushNotification(
+        updated.seller.pushToken,
+        "Trade Canceled",
+        `Your trade with ${updated?.buyer.username} has been canceled. Funds have been returned to your wallet.`
+      );
 
     res.json({
       success: true,
