@@ -70,7 +70,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
         category: "TRADE",
         data: { tradeId: id },
         read: false,
-        userId: updatedTrade.sellerId,
+        userId: updated.sellerId,
       },
     });
 
@@ -81,7 +81,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
         category: "TRADE",
         data: { tradeId: id },
         read: false,
-        userId: updatedTrade.buyerId,
+        userId: updated.buyerId,
       },
     });
 
