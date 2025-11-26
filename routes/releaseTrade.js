@@ -2,7 +2,8 @@ const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
 const { convertCryptoToFiat } = require("../utils/crypto");
-const { releaseTrade, sendPushNotification } = require("../utils/users");
+const { releaseTrade } = require("../utils/users");
+const { sendPushNotification } = require("../utils/index");
 
 const router = express.Router();
 
@@ -80,7 +81,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
     const buyerNotification = await db.notification.create({
       data: {
         title: "Funds Released 🎉",
-        message: `${updated?.seller?.username} has released ${trade.amountCrypto} ${trade.escrow.crypto}. The trade is now completed successfully.`,
+        message: `Your trade with ${updated?.seller?.username} has been completed successfully .`,
         category: "TRADE",
         data: { tradeId: id },
         read: false,
@@ -91,7 +92,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
     const sellserNotification = await db.notification.create({
       data: {
         title: "Funds Released 🎉",
-        message: `${updated?.seller?.username} has released ${trade.amountCrypto} ${trade.escrow.crypto}. The trade is now completed successfully.`,
+        message: `Your trade with ${updated?.buyer?.username} has been completed successfully.`,
         category: "TRADE",
         data: { tradeId: id },
         read: false,
@@ -112,16 +113,19 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
 
-    // await sendPushNotification(
-    //   trade.buyerId,
-    //   "Funds Released 🎉",
-    //   `Your trade with ${updated?.seller?.username} has been completed successfully .`
-    // );
-    // await sendPushNotification(
-    //   trade.sellerId,
-    //   "Funds Released 🎉",
-    //   `Your trade with ${updated?.buyer?.username} has been completed successfully.`
-    // );
+    if (updated.buyer.pushToken)
+      await sendPushNotification(
+        updated.buyer.pushToken,
+        "Funds Released 🎉",
+        `Your trade with ${updated?.seller?.username} has been completed successfully .`
+      );
+
+    if (updated.seller.pushToken)
+      await sendPushNotification(
+        updated.seller.pushToken,
+        "Funds Released 🎉",
+        `Your trade with ${updated?.buyer?.username} has been completed successfully .`
+      );
 
     res.json({
       success: true,

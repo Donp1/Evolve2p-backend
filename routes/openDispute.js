@@ -137,13 +137,13 @@ router.post(
         await sendPushNotification(
           trade.buyer.pushToken,
           "Dispute Opened ⚠️",
-          `Your trade with ${trade?.seller?.username} is now in dispute.`
+          `Your trade with @${trade?.seller?.username} is now in dispute.`
         );
       if (trade.seller.pushToken)
         await sendPushNotification(
           trade.seller.pushToken,
           "Dispute Opened ⚠️",
-          `Your trade with ${trade?.buyer?.username} is now in dispute.`
+          `Your trade with @${trade?.buyer?.username} is now in dispute.`
         );
 
       return res.status(201).json({

@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const { isAuthenticated } = require("../middlewares/index");
 
 const { findUserByEmail } = require("../utils/users");
+const { sendPushNotification } = require("../utils/index");
 
 const { db } = require("../db");
 
@@ -49,7 +50,14 @@ router.put("/", isAuthenticated, async (req, res) => {
         password: hashPassword,
       },
     });
+
     if (updateUser) {
+      if (user.pushToken)
+        await sendPushNotification(
+          user.pushToken,
+          "User Update",
+          "Password updated successfully"
+        );
       return res
         .status(200)
         .json({ success: true, message: "Password updated successfully" });

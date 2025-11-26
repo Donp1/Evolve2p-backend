@@ -216,7 +216,7 @@ router.post("/", isAuthenticated, async (req, res) => {
       await sendPushNotification(
         result.buyer.pushToken,
         "Trade Created 🛒",
-        `Your trade request to buy ${result.amountCrypto} ${offer.crypto} from ${result?.seller?.username} has been created successfully.`
+        `Your trade request to buy ${result.amountCrypto} ${offer.crypto} from @${result?.seller?.username} has been created successfully.`
       );
 
     if (result.seller.pushToken)
