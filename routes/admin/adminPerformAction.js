@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const { db } = require("../../db");
 const { isAdmin } = require("../../middlewares");
+const { sendPushNotification } = require("../../utils/index");
 
 const router = express.Router();
 
@@ -47,6 +48,12 @@ router.post("/", isAdmin, async (req, res) => {
     }
 
     if (updateUser) {
+      if (updateUser.pushToken)
+        await sendPushNotification(
+          updateUser.pushToken,
+          "Evolve2p Support",
+          `Your account with Evolve2p has been ${updateUser.status}`
+        );
       return res
         .status(200)
         .json({ success: true, message: "Status updated successfully" });

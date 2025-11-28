@@ -4,6 +4,7 @@ dotenv.config();
 const express = require("express");
 const { db } = require("../../db");
 const { isAdmin } = require("../../middlewares");
+const { sendPushNotification } = require("../../utils/index");
 
 const router = express.Router();
 
@@ -20,7 +21,11 @@ router.post("/", isAdmin, async (req, res) => {
     // Validate chat exists
     const chat = await db.chat.findUnique({
       where: { id: chatId },
-      include: { participants: true },
+      include: {
+        participants: {
+          include: { user: true },
+        },
+      },
     });
 
     if (!chat) {
@@ -33,7 +38,7 @@ router.post("/", isAdmin, async (req, res) => {
         chatId,
         senderId: null,
         content: content || null,
-        type: "SYSTEM",
+        type: "SUPPORT",
         attachment: null,
       },
     });
@@ -43,6 +48,15 @@ router.post("/", isAdmin, async (req, res) => {
     if (io) {
       io.to(chatId).emit("new_message", message);
     }
+
+    chat.participants.forEach(async (p) => {
+      if (p.user.pushToken)
+        await sendPushNotification(
+          p.user.pushToken,
+          "Evolve2p Support",
+          "New message from support on a Disputed trade"
+        );
+    });
 
     return res.status(201).json({ success: true, message });
   } catch (err) {

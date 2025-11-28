@@ -2,6 +2,7 @@
 const express = require("express");
 const { isAdmin } = require("../../middlewares");
 const { db } = require("../../db");
+const { sendPushNotification } = require("../../utils/index");
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.post("/:id", isAdmin, async (req, res) => {
       where: { id },
       include: {
         trade: {
-          include: { escrow: true },
+          include: { escrow: true, buyer: true, seller: true },
         },
       },
     });
@@ -110,6 +111,22 @@ router.post("/:id", isAdmin, async (req, res) => {
         },
       });
     });
+
+    if (trade.buyer.pushToken) {
+      await sendPushNotification(
+        trade.buyer.pushToken,
+        "Evolve2p Support",
+        `Trade with @${trade.seller.username} has been resolved and funds sent to ${winner}`
+      );
+    }
+
+    if (trade.seller.pushToken) {
+      await sendPushNotification(
+        trade.seller.pushToken,
+        "Evolve2p Support",
+        `Trade with @${trade.buyer.username} has been resolved and funds sent to ${winner}`
+      );
+    }
 
     res.json({
       success: true,

@@ -103,6 +103,39 @@ router.post(
         },
       });
 
+      const disputeMessage = `
+Your trade has been placed under dispute.  
+Our support team will now review all available evidence from both parties.
+
+Please provide the following information (if you haven’t already):
+
+• Payment proof (receipt, transfer screenshot, or reference number)  
+• A clear explanation of what happened  
+• Any additional documents that support your claim  
+
+⚠ Important:
+• Do NOT cancel the trade while the investigation is ongoing.  
+• Do NOT release or request release of the crypto until support resolves the dispute.  
+• Only upload real and verifiable proof — falsified documents may lead to account penalties.
+
+A dispute agent will join shortly and issue a final decision based on platform rules and the evidence provided.
+
+Thank you for your patience.
+`;
+
+      const message = await db.message.create({
+        data: {
+          chatId: updatedTrade.chat.id,
+          senderId: null,
+          content: disputeMessage,
+          type: "SUPPORT",
+          attachment: null,
+        },
+        include: {
+          sender: true,
+        },
+      });
+
       const sellserNotification = await db.notification.create({
         data: {
           title: "Dispute Opened ⚠️",
@@ -131,6 +164,8 @@ router.post(
 
         // ✅ Notify the seller
         io.to(trade.sellerId).emit("new_notification", sellserNotification);
+
+        io.to(updatedTrade.chat.id).emit("new_message", message);
       }
 
       if (trade.buyer.pushToken)

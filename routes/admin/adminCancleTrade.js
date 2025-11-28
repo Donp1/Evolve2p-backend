@@ -1,6 +1,7 @@
 const express = require("express");
 const { isAdmin } = require("../../middlewares/index");
 const { db } = require("../../db");
+const { sendPushNotification } = require("../../utils/index");
 
 const router = express.Router();
 
@@ -63,22 +64,22 @@ router.post("/:tradeId", isAdmin, async (req, res) => {
     const sellserNotification = await db.notification.create({
       data: {
         title: "Trade Canceled",
-        message: `Your trade with ${updated?.buyer.username} has been canceled by Evolve2p. Funds have been returned to your wallet.`,
+        message: `Your trade with @${updated?.buyer.username} has been canceled by Evolve2p. Funds have been returned to your wallet.`,
         category: "TRADE",
         data: { tradeId: id },
         read: false,
-        userId: updatedTrade.sellerId,
+        userId: updated.sellerId,
       },
     });
 
     const buyerNotification = await db.notification.create({
       data: {
         title: "Trade Canceled",
-        message: `Your trade with ${updated?.seller.username} has been canceled by Evolve2p.`,
+        message: `Your trade with @${updated?.seller.username} has been canceled by Evolve2p.`,
         category: "TRADE",
         data: { tradeId: id },
         read: false,
-        userId: updatedTrade.buyerId,
+        userId: updated.buyerId,
       },
     });
 
@@ -95,6 +96,19 @@ router.post("/:tradeId", isAdmin, async (req, res) => {
       io.to(updated.sellerId).emit("new_notification", sellserNotification);
     }
 
+    if (updated.buyer.pushToken)
+      await sendPushNotification(
+        updated.buyer.pushToken,
+        "Trade Canceled",
+        `Your trade with @${updated?.seller.username} has been canceled by Evolve2p.`
+      );
+
+    if (updated.seller.pushToken)
+      await sendPushNotification(
+        updated.buyer.pushToken,
+        "Trade Canceled",
+        `Your trade with @${updated?.buyer.username} has been canceled by Evolve2p. Funds have been returned to your wallet.`
+      );
     res.json({
       success: true,
       message: "Trade canceled and funds returned.",

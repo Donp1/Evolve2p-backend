@@ -262,6 +262,7 @@ enum MessageType {
   TEXT
   IMAGE
   SYSTEM // for auto system messages like "Trade started", "Payment confirmed"
+  SUPPORT
 }
 
 enum UserStatus {
