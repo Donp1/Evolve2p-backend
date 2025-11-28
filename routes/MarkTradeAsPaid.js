@@ -1,7 +1,7 @@
 const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
-const { sendPushNotification } = require("../utils/users");
+const { sendPushNotification } = require("../utils/index");
 
 const router = express.Router();
 
@@ -25,6 +25,28 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       return res
         .status(400)
         .json({ error: true, message: "Trade not in PENDING state" });
+    }
+
+    const sellerWallet = await db.wallet.findFirst({
+      where: { userId: trade.sellerId, currency: trade.offer.crypto },
+    });
+
+    if (!sellerWallet)
+      return res.status(400).json({
+        error: true,
+        message: "Unable to get seller wallet",
+      });
+
+    const deducted = await tx.wallet.update({
+      where: { id: sellerWallet.id },
+      data: { balance: { decrement: trade.amountCrypto } },
+    });
+
+    if (!deducted) {
+      return res.status(400).json({
+        error: true,
+        message: "Unable to lock crypto amount in escrow",
+      });
     }
 
     const updated = await db.trade.update({
@@ -60,16 +82,19 @@ router.post("/:id", isAuthenticated, async (req, res) => {
       io.to(trade?.sellerId).emit("new_notification", sellerNotification);
     }
 
-    // await sendPushNotification(
-    //   result?.buyerId,
-    //   "Marked as Paid ✅",
-    //   `You have marked your trade with ${trade?.seller?.username} as paid. Please wait for the seller to release ${trade.amountCrypto} ${trade?.offer?.crypto}.`
-    // );
-    // await sendPushNotification(
-    //   result?.sellerId,
-    //   "Marked as Paid ✅",
-    //   `${trade?.buyer?.username} has marked the trade as paid. Please confirm and release ${trade.amountCrypto} ${trade?.offer?.crypto}.`
-    // );
+    if (trade.buyer.pushToken)
+      await sendPushNotification(
+        trade.buyer.pushToken,
+        "Marked as Paid ✅",
+        `You have marked your trade with @${trade?.seller?.username} as paid. Please wait for the seller to release ${trade.amountCrypto} ${trade?.offer?.crypto}.`
+      );
+
+    if (trade.seller.pushToken)
+      await sendPushNotification(
+        trade.seller.pushToken,
+        "Marked as Paid ✅",
+        `@${trade?.buyer?.username} has marked the trade as paid. ${trade.amountCrypto} ${trade?.offer?.crypto} locked in escrow, Please confirm and release.`
+      );
 
     res.json({ success: true, message: "Marked as paid", trade: updated });
   } catch (err) {

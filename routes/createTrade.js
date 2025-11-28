@@ -86,10 +86,10 @@ router.post("/", isAuthenticated, async (req, res) => {
     const result = await db.$transaction(
       async (tx) => {
         // Deduct from seller (lock)
-        await tx.wallet.update({
-          where: { id: sellerWallet.id },
-          data: { balance: { decrement: amountCrypto } },
-        });
+        // await tx.wallet.update({
+        //   where: { id: sellerWallet.id },
+        //   data: { balance: { decrement: amountCrypto } },
+        // });
 
         // Create trade (no expiresAt yet)
         let trade = await tx.trade.create({
