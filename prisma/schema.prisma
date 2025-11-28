@@ -136,6 +136,7 @@ model Trade {
   updatedAt      DateTime    @updatedAt // track last action time
   completedAt    DateTime? // when trade is marked completed
   canceledAt     DateTime? // when trade is canceled
+  paidAt         DateTime?
 
   // 🔹 New field: actual expiration timestamp
   expiresAt DateTime?

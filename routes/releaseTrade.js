@@ -61,6 +61,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
           data: {
             status: "COMPLETED",
             escrowReleased: true,
+            completedAt: new Date(),
           },
           include: {
             buyer: true,
