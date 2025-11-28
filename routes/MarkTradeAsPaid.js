@@ -37,7 +37,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
         message: "Unable to get seller wallet",
       });
 
-    const deducted = await tx.wallet.update({
+    const deducted = await db.wallet.update({
       where: { id: sellerWallet.id },
       data: { balance: { decrement: trade.amountCrypto } },
     });
