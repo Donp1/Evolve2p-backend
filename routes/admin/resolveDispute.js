@@ -91,7 +91,7 @@ router.post("/:id", isAdmin, async (req, res) => {
       });
 
       // Update trade status
-      await tx.trade.update({
+      const updateTrade = await tx.trade.update({
         where: { id: trade.id },
         data: {
           status: "COMPLETED",
@@ -100,7 +100,7 @@ router.post("/:id", isAdmin, async (req, res) => {
       });
 
       // Update dispute status
-      return tx.dispute.update({
+      await tx.dispute.update({
         where: { id: dispute.id },
         data: {
           status:
@@ -110,7 +110,22 @@ router.post("/:id", isAdmin, async (req, res) => {
           resolvedAt: new Date(),
         },
       });
+
+      return updateTrade;
     });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(updated.sellerId).emit("new_trade", updated);
+
+      // ✅ Notify the seller
+      io.to(updated.buyerId).emit("new_trade", updated);
+
+      // io.to(updated?.buyerId).emit("new_notification", buyerNotification);
+
+      // // ✅ Notify the seller
+      // io.to(updated.sellerId).emit("new_notification", sellserNotification);
+    }
 
     if (trade.buyer.pushToken) {
       await sendPushNotification(
