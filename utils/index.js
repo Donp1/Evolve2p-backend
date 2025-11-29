@@ -185,6 +185,53 @@ async function sendPushNotification(expoPushToken, title, body) {
   });
 }
 
+let cachedPrices = null;
+let lastFetch = 0;
+const COIN_MAP = {
+  btc: "bitcoin",
+  eth: "ethereum",
+  usdt: "tether",
+  usdc: "usd-coin",
+};
+
+async function fetchAllPrices(currencies) {
+  const now = Date.now();
+
+  // Convert currency list to lowercase and unique
+  const lowerCurrencies = [...new Set(currencies.map((c) => c.toLowerCase()))];
+
+  // Use all supported coins
+  const COINS = Object.values(COIN_MAP);
+
+  // Return cached result if within 30 seconds
+  if (cachedPrices && now - lastFetch < 30_000) {
+    return cachedPrices;
+  }
+
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${COINS.join(
+    ","
+  )}&vs_currencies=${lowerCurrencies.join(",")}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`CoinGecko rate limit: ${res.status}`);
+  }
+
+  const data = await res.json();
+  lastFetch = now;
+
+  // Map CoinGecko IDs back to your symbols
+  const result = {};
+  for (const [symbol, id] of Object.entries(COIN_MAP)) {
+    if (data[id]) {
+      result[symbol] = data[id];
+    }
+  }
+
+  cachedPrices = result;
+  return cachedPrices;
+}
+
 module.exports = {
   generateAccessToken,
   generateOTP,
@@ -193,4 +240,5 @@ module.exports = {
   sendOtp,
   sendAdminMail,
   sendPushNotification,
+  fetchAllPrices,
 };

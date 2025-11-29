@@ -1,6 +1,7 @@
 // routes/offers.js
 const express = require("express");
 const { db } = require("../db");
+const { fetchAllPrices } = require("../utils");
 const router = express.Router();
 
 // GET /offers - Fetch offers with pagination, filters, and payment method
@@ -70,11 +71,33 @@ router.get("/", async (req, res) => {
       },
     });
 
+    const uniqueCurrencies = [
+      ...new Set(offers.map((o) => o.currency.toLowerCase())),
+    ];
+
+    const prices = await fetchAllPrices(uniqueCurrencies);
+    const offersWithPrice = offers.map((offer) => {
+      const fiat = offer.currency.toLowerCase();
+      const crypto = offer.crypto.toLowerCase();
+
+      // Base price of crypto in this fiat currency
+      const basePrice = prices[crypto]?.[fiat] || 0;
+
+      // Apply margin
+      const finalPrice = basePrice * (1 + offer.margin / 100);
+
+      return {
+        ...offer,
+        basePrice,
+        finalPrice,
+      };
+    });
+
     // Total count
     const totalOffers = await db.offer.count({ where: filters });
 
     res.json({
-      data: offers,
+      data: offersWithPrice,
       meta: {
         page: pageNum,
         limit: limitNum,
