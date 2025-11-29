@@ -89,6 +89,8 @@ const adminSendChat = require("./routes/admin/adminSendChat.js");
 const adminCancleTrade = require("./routes/admin/adminCancleTrade.js");
 const adminSendMail = require("./routes/admin/sendMail.js");
 const settings = require("./routes/admin/settings.js");
+const { savePrices } = require("./utils/coin.js");
+const { connectRedis } = require("./utils/redis.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -227,6 +229,12 @@ app.use("/api/get-chats", getChats);
 app.use("/api/upload-chat-proofs", uploadChatProofs);
 // End Chats
 
+app.use("/api/get-prices", require("./routes/get-prices.js"));
+app.use(
+  "/api/get-supported-countries",
+  require("./routes/get-supported-countries.js")
+);
+
 // Admin
 app.use("/api/admin/auth/register", createAdmin);
 app.use("/api/admin/auth/login", loginAdmin);
@@ -265,6 +273,19 @@ app.use(
   require("./routes/createPrivateKeyFromIndex.js")
 );
 
+// connect to redis
+connectRedis()
+  .then(() => {
+    cron.schedule("*/30 * * * * *", async () => {
+      try {
+        await savePrices();
+      } catch (err) {
+        console.error("Error fetching or saving prices:", err.message);
+      }
+    });
+  })
+  .catch((err) => console.log("error connecting to redis: ", err));
+
 // worker to check expired trades
 cron.schedule("* * * * *", async () => {
   // every 1 min
@@ -279,8 +300,6 @@ cron.schedule("* * * * *", async () => {
     },
   });
 });
-
-// startPolling(ERC20_CONTRACTS.USDT);
 
 server.listen(PORT, (error) => {
   if (error) {
