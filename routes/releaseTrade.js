@@ -103,10 +103,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      io.to(updated.buyerId).emit("new_trade", updated);
-
-      // ✅ Notify the seller
-      io.to(updated.sellerId).emit("new_trade", updated);
+      io.to(updated.id).emit("new_trade", updated);
 
       io.to(updated.buyerId).emit("new_notification", buyerNotification);
 

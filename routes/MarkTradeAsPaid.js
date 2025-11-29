@@ -80,8 +80,7 @@ router.post("/:id", isAuthenticated, async (req, res) => {
     if (io) {
       io.to(trade?.buyerId).emit("new_notification", buyerNotification);
       io.to(trade?.sellerId).emit("new_notification", sellerNotification);
-      io.to(trade?.buyerId).emit("new_trade", updated);
-      io.to(trade?.sellerId).emit("new_trade", updated);
+      io.to(updated.id).emit("new_trade", updated);
     }
 
     if (trade.buyer.pushToken)

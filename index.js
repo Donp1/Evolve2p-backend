@@ -127,6 +127,11 @@ io.on("connection", (socket) => {
     console.log(`📥 ${socket.id} joined chat ${chatId}`);
   });
 
+  socket.on("join_trade", (tradeId) => {
+    socket.join(tradeId);
+    console.log(`📥 ${socket.id} joined trade ${tradeId}`);
+  });
+
   socket.on("leave_chat", (chatId) => {
     socket.leave(chatId);
     console.log(`📤 ${socket.id} left chat ${chatId}`);

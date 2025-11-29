@@ -165,10 +165,7 @@ Thank you for your patience.
         // ✅ Notify the seller
         io.to(trade.sellerId).emit("new_notification", sellserNotification);
 
-        io.to(trade?.buyerId).emit("new_trade", updatedTrade);
-
-        // ✅ Notify the seller
-        io.to(trade.sellerId).emit("new_trade", updatedTrade);
+        io.to(updatedTrade.id).emit("new_trade", updatedTrade);
 
         io.to(updatedTrade.chat.id).emit("new_message", message);
       }
