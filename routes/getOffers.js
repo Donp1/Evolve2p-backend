@@ -1,60 +1,51 @@
 // routes/offers.js
 const express = require("express");
 const { db } = require("../db");
-const { fetchAllPrices } = require("../utils");
 const { getPricesForOffer } = require("../utils/coin");
+
 const router = express.Router();
 
-// GET /offers - Fetch offers with pagination, filters, and payment method
+// GET /offers - Fetch offers with filters, sorting, pricing
 router.get("/", async (req, res) => {
   try {
     const {
-      type,
-      crypto,
-      currency,
-      status,
-      paymentMethod,
-      // page = 1,
-      // limit = 20,
+      type, // BUY / SELL (user’s perspective)
+      crypto, // BTC / USDT / ETH
+      currency, // NGN / USD / GHS
+      status, // ACTIVE / INACTIVE
+      paymentMethod, // Single or array
       sortBy = "createdAt",
       order = "desc",
     } = req.query;
 
-    // Convert pagination params
-    // const pageNum = Math.max(parseInt(page), 1);
-    // const limitNum = Math.min(Math.max(parseInt(limit), 1), 100);
-
-    // Build filters
     const filters = {};
 
-    // ✅ Invert type logic (if BUY → fetch SELL, if SELL → fetch BUY)
+    // ✅ Correct Buy/Sell logic:
+    // If user wants to BUY → show SELL offers
+    // If user wants to SELL → show BUY offers
     if (type) {
-      const normalized = type.toUpperCase();
-      filters.type = normalized === "BUY" ? "SELL" : "BUY";
+      const t = type.toUpperCase();
+      filters.type = t === "BUY" ? "SELL" : "BUY";
     }
 
     if (crypto) filters.crypto = crypto.toUpperCase();
     if (currency) filters.currency = currency.toUpperCase();
-    if (status) filters.status = status.toUpperCase();
+    if (status) filters.status = "ACTIVE";
 
-    // ✅ Payment method filter (supports array)
+    // Payment method filter
     if (paymentMethod) {
-      const methods = Array.isArray(paymentMethod)
+      const methodArray = Array.isArray(paymentMethod)
         ? paymentMethod
-        : [paymentMethod]; // normalize into array
+        : [paymentMethod];
 
       filters.paymentMethod = {
-        id: {
-          in: methods,
-        },
+        id: { in: methodArray },
       };
     }
 
-    // Query DB
+    // Fetch offers
     const offers = await db.offer.findMany({
       where: filters,
-      // skip: (pageNum - 1) * limitNum,
-      // take: limitNum,
       orderBy: { [sortBy]: order.toLowerCase() },
       select: {
         id: true,
@@ -72,37 +63,29 @@ router.get("/", async (req, res) => {
       },
     });
 
-    // Total count
     const totalOffers = await db.offer.count({ where: filters });
 
-    if (!offers || offers.length == 0) {
+    if (!offers.length) {
       return res.json({
         data: [],
-        meta: {
-          // page: pageNum,
-          // limit: limitNum,
-          total: totalOffers,
-          // totalPages: Math.ceil(totalOffers / limitNum),
-        },
+        meta: { total: totalOffers },
       });
     }
 
+    // Get unique fiat currencies
     const uniqueCurrencies = [
       ...new Set(offers.map((o) => o.currency.toUpperCase())),
     ];
 
+    // Fetch prices for these currencies
     const prices = await getPricesForOffer(uniqueCurrencies);
 
-    // console.log(prices);
-
+    // Attach pricing
     const offersWithPrice = offers.map((offer) => {
       const fiat = offer.currency.toUpperCase();
-      const crypto = offer.crypto.toUpperCase();
+      const coin = offer.crypto.toUpperCase();
 
-      // Base price of crypto in this fiat currency
-      const basePrice = prices[crypto]?.[fiat] || 0;
-
-      // console.log(prices[crypto]);
+      const basePrice = prices?.[coin]?.[fiat] || 0;
 
       // Apply margin
       const finalPrice = basePrice * (1 + offer.margin / 100);
@@ -116,15 +99,10 @@ router.get("/", async (req, res) => {
 
     return res.json({
       data: offersWithPrice,
-      meta: {
-        // page: pageNum,
-        // limit: limitNum,
-        total: totalOffers,
-        // totalPages: Math.ceil(totalOffers / limitNum),
-      },
+      meta: { total: totalOffers },
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Failed fetching offers:", err);
     res.status(500).json({ error: "Failed to fetch offers" });
   }
 });
