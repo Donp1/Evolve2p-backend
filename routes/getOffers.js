@@ -33,7 +33,7 @@ router.get("/", async (req, res) => {
     if (status) filters.status = "ACTIVE";
 
     // Payment method filter
-    if (paymentMethod) {
+    if (paymentMethod && paymentMethod?.length > 0) {
       const methodArray = Array.isArray(paymentMethod)
         ? paymentMethod
         : [paymentMethod];
