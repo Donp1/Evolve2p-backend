@@ -349,7 +349,7 @@ async function getPricesForOffer(basePairs) {
 
     // Transform into easy lookup
     const result = {};
-    data.forEach((item) => {
+    data?.forEach((item) => {
       if (!result[item.symbol]) result[item.symbol] = {};
       result[item.symbol][item.basePair] = parseFloat(item.value); // convert string to number
     });

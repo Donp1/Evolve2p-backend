@@ -110,16 +110,13 @@ router.post("/:id", isAdmin, async (req, res) => {
       data: {
         status: "COMPLETED",
         escrowReleased: true,
+        completedAt: new Date(),
       },
     });
 
     const io = req.app.get("io");
     if (io) {
-      // io.to(updateTrade.sellerId).emit("new_trade", updateTrade);
       io.to(updateTrade.id).emit("new_trade", updateTrade);
-
-      // // ✅ Notify the seller
-      // io.to(updateTrade.buyerId).emit("new_trade", updateTrade);
     }
 
     if (trade.buyer.pushToken) {
