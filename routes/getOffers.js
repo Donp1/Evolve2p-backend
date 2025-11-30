@@ -79,10 +79,10 @@ router.get("/", async (req, res) => {
       return res.json({
         data: [],
         meta: {
-          page: pageNum,
-          limit: limitNum,
+          // page: pageNum,
+          // limit: limitNum,
           total: totalOffers,
-          totalPages: Math.ceil(totalOffers / limitNum),
+          // totalPages: Math.ceil(totalOffers / limitNum),
         },
       });
     }
@@ -117,10 +117,10 @@ router.get("/", async (req, res) => {
     return res.json({
       data: offersWithPrice,
       meta: {
-        page: pageNum,
-        limit: limitNum,
+        // page: pageNum,
+        // limit: limitNum,
         total: totalOffers,
-        totalPages: Math.ceil(totalOffers / limitNum),
+        // totalPages: Math.ceil(totalOffers / limitNum),
       },
     });
   } catch (err) {
