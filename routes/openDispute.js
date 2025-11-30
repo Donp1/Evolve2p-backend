@@ -96,10 +96,20 @@ router.post(
         where: { id: tradeId },
         data: { status: "DISPUTED" },
         include: {
-          buyer: true,
-          seller: true,
-          offer: { include: { paymentMethod: true } },
-          chat: { include: { messages: true, participants: true } },
+          buyer: { select: { id: true, username: true } },
+          seller: { select: { id: true, username: true } },
+          offer: {
+            include: {
+              paymentMethod: true, // 👈 include payment method relation
+            },
+          },
+          escrow: true,
+          chat: {
+            include: {
+              messages: true,
+              participants: true,
+            },
+          },
         },
       });
 

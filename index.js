@@ -139,6 +139,11 @@ io.on("connection", (socket) => {
     console.log(`📤 ${socket.id} left chat ${chatId}`);
   });
 
+  socket.on("leave_trade", (tradeId) => {
+    socket.leave(tradeId);
+    console.log(`📤 ${socket.id} left trade ${tradeId}`);
+  });
+
   // Step 4: Send + broadcast messages
   socket.on("send_message", async ({ chatId, senderId, content, type }) => {
     try {

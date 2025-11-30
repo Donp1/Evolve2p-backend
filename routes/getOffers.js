@@ -72,6 +72,9 @@ router.get("/", async (req, res) => {
       },
     });
 
+    // Total count
+    const totalOffers = await db.offer.count({ where: filters });
+
     if (!offers || offers.length == 0) {
       return res.json({
         data: [],
@@ -110,9 +113,6 @@ router.get("/", async (req, res) => {
         finalPrice,
       };
     });
-
-    // Total count
-    const totalOffers = await db.offer.count({ where: filters });
 
     return res.json({
       data: offersWithPrice,

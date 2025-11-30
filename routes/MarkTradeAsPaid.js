@@ -52,6 +52,22 @@ router.post("/:id", isAuthenticated, async (req, res) => {
     const updated = await db.trade.update({
       where: { id },
       data: { status: "PAID", paidAt: new Date() },
+      include: {
+        buyer: { select: { id: true, username: true } },
+        seller: { select: { id: true, username: true } },
+        offer: {
+          include: {
+            paymentMethod: true, // 👈 include payment method relation
+          },
+        },
+        escrow: true,
+        chat: {
+          include: {
+            messages: true,
+            participants: true,
+          },
+        },
+      },
     });
 
     const buyerNotification = await db.notification.create({
