@@ -14,15 +14,15 @@ router.get("/", async (req, res) => {
       currency,
       status,
       paymentMethod,
-      page = 1,
-      limit = 20,
+      // page = 1,
+      // limit = 20,
       sortBy = "createdAt",
       order = "desc",
     } = req.query;
 
     // Convert pagination params
-    const pageNum = Math.max(parseInt(page), 1);
-    const limitNum = Math.min(Math.max(parseInt(limit), 1), 100);
+    // const pageNum = Math.max(parseInt(page), 1);
+    // const limitNum = Math.min(Math.max(parseInt(limit), 1), 100);
 
     // Build filters
     const filters = {};
@@ -53,8 +53,8 @@ router.get("/", async (req, res) => {
     // Query DB
     const offers = await db.offer.findMany({
       where: filters,
-      skip: (pageNum - 1) * limitNum,
-      take: limitNum,
+      // skip: (pageNum - 1) * limitNum,
+      // take: limitNum,
       orderBy: { [sortBy]: order.toLowerCase() },
       select: {
         id: true,
