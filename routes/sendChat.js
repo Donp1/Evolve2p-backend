@@ -88,7 +88,7 @@ router.post(
       }
 
       chat.participants.forEach(async (participant) => {
-        if (participant.id != senderId && participant.user.pushToken) {
+        if (participant.id != sender.id && participant.user.pushToken) {
           await sendPushNotification(
             participant.user.pushToken,
             "Evolve2p: New Message",

@@ -72,6 +72,18 @@ router.get("/", async (req, res) => {
       },
     });
 
+    if (!offers || offers.length == 0) {
+      return res.json({
+        data: [],
+        meta: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalOffers,
+          totalPages: Math.ceil(totalOffers / limitNum),
+        },
+      });
+    }
+
     const uniqueCurrencies = [
       ...new Set(offers.map((o) => o.currency.toUpperCase())),
     ];
@@ -102,7 +114,7 @@ router.get("/", async (req, res) => {
     // Total count
     const totalOffers = await db.offer.count({ where: filters });
 
-    res.json({
+    return res.json({
       data: offersWithPrice,
       meta: {
         page: pageNum,
