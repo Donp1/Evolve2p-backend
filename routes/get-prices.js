@@ -2,19 +2,26 @@ const express = require("express");
 const { isAuthenticated } = require("../middlewares/index");
 const { db } = require("../db");
 const { redis } = require("../utils/redis");
+const { getPricesForOffer } = require("../utils/coin");
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/:code", async (req, res) => {
   try {
-    const data = await redis.get("crypto_prices"); // get the key
+    const { code } = req.params;
 
-    if (!data)
+    if (!code) {
+      return res.status(400).json({ error: true, message: "Code is required" });
+    }
+
+    // get the price
+    const prices = await getPricesForOffer([String(code).toUpperCase()]);
+
+    if (!prices) {
       return res
         .status(400)
-        .json({ error: true, message: "Unable to get prices" }); // key does not exist or expired
-
-    const prices = JSON.parse(data); // parse JSON back to object
+        .json({ error: true, message: "Unable to get prices" });
+    }
 
     return res.status(200).json({ success: true, prices });
   } catch (err) {

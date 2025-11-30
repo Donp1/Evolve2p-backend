@@ -292,19 +292,19 @@ app.use(
 //   .catch((err) => console.log("error connecting to redis: ", err));
 
 // worker to check expired trades
-cron.schedule("* * * * *", async () => {
-  // every 1 min
-  await db.trade.updateMany({
-    where: {
-      status: "PENDING",
-      expiresAt: { lt: new Date() },
-    },
-    data: {
-      status: "CANCELLED",
-      canceledAt: new Date(),
-    },
-  });
-});
+// cron.schedule("* * * * *", async () => {
+//   // every 1 min
+//   await db.trade.updateMany({
+//     where: {
+//       status: "PENDING",
+//       expiresAt: { lt: new Date() },
+//     },
+//     data: {
+//       status: "CANCELLED",
+//       canceledAt: new Date(),
+//     },
+//   });
+// });
 
 server.listen(PORT, (error) => {
   if (error) {
