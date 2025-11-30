@@ -114,34 +114,34 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 io.on("connection", (socket) => {
-  console.log("🔌 Connected:", socket.id);
+  // console.log("🔌 Connected:", socket.id);
 
   const userId = socket.handshake.query.userId;
 
   if (userId) {
     socket.join(userId); // join a room with the userId
-    console.log(`User ${userId} connected and joined room: ${userId}`);
+    // console.log(`User ${userId} connected and joined room: ${userId}`);
   }
 
   // Step 3: Join chat room
   socket.on("join_chat", (chatId) => {
     socket.join(chatId);
-    console.log(`📥 ${socket.id} joined chat ${chatId}`);
+    // console.log(`📥 ${socket.id} joined chat ${chatId}`);
   });
 
   socket.on("join_trade", (tradeId) => {
     socket.join(tradeId);
-    console.log(`📥 ${socket.id} joined trade ${tradeId}`);
+    // console.log(`📥 ${socket.id} joined trade ${tradeId}`);
   });
 
   socket.on("leave_chat", (chatId) => {
     socket.leave(chatId);
-    console.log(`📤 ${socket.id} left chat ${chatId}`);
+    // console.log(`📤 ${socket.id} left chat ${chatId}`);
   });
 
   socket.on("leave_trade", (tradeId) => {
     socket.leave(tradeId);
-    console.log(`📤 ${socket.id} left trade ${tradeId}`);
+    // console.log(`📤 ${socket.id} left trade ${tradeId}`);
   });
 
   // Step 4: Send + broadcast messages
@@ -173,7 +173,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("❌ Disconnected:", socket.id);
+    // console.log("❌ Disconnected:", socket.id);
   });
 });
 
