@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Trade" ADD COLUMN     "tradePrice" DOUBLE PRECISION NOT NULL DEFAULT 0;

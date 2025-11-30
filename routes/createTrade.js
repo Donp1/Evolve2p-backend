@@ -21,7 +21,7 @@ function calculateExpiration(createdAt, paymentWindow) {
 }
 
 router.post("/", isAuthenticated, async (req, res) => {
-  const { offerId, amountFiat, amountCrypto } = req.body;
+  const { offerId, amountFiat, amountCrypto, tradePrice } = req.body;
   const { userId: buyerId } = req.payload;
 
   try {
@@ -30,7 +30,9 @@ router.post("/", isAuthenticated, async (req, res) => {
       !amountFiat ||
       amountFiat <= 0 ||
       !amountCrypto ||
-      amountCrypto <= 0
+      amountCrypto <= 0 ||
+      !tradePrice ||
+      tradePrice <= 0
     ) {
       return res.status(400).json({ error: true, message: "Invalid request" });
     }
@@ -101,6 +103,7 @@ router.post("/", isAuthenticated, async (req, res) => {
             amountFiat: Number(amountFiat),
             status: "PENDING",
             escrowReleased: false,
+            tradePrice,
           },
           include: {
             buyer: true,
@@ -205,10 +208,6 @@ router.post("/", isAuthenticated, async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      io.to(buyerId).emit("new_trade", result);
-      // ✅ Notify the seller
-      io.to(sellerId).emit("new_trade", result);
-
       io.to(buyerId).emit("new_notification", buyerNotification);
       io.to(result?.sellerId).emit("new_notification", sellerNotification);
     }

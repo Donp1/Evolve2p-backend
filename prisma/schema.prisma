@@ -130,6 +130,7 @@ model Trade {
   status         TradeStatus @default(PENDING) // PENDING, PAID, COMPLETED, CANCELED
   amountFiat     Float
   amountCrypto   Float
+  tradePrice     Float       @default(0)
   escrowReleased Boolean     @default(false)
   paymentProof   String? // URL to uploaded proof image
   createdAt      DateTime    @default(now())
