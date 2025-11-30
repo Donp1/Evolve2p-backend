@@ -1,6 +1,7 @@
 const express = require("express");
 const { db } = require("../db");
 const { fetchAllPrices } = require("../utils"); // make sure you import the function
+const { getPricesForOffer } = require("../utils/coin");
 const router = express.Router();
 
 // GET a specific offer with user details
@@ -27,9 +28,9 @@ router.get("/:id", async (req, res) => {
     }
 
     // Fetch price for this single offer
-    const fiat = offer.currency.toLowerCase();
-    const crypto = offer.crypto.toLowerCase();
-    const prices = await fetchAllPrices([fiat]); // pass only relevant fiat
+    const fiat = offer.currency.toUpperCase();
+    const crypto = offer.crypto.toUpperCase();
+    const prices = await getPricesForOffer([fiat]); // pass only relevant fiat
 
     const basePrice = prices[crypto]?.[fiat] || 0;
     const finalPrice = basePrice * (1 + offer.margin / 100);

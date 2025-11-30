@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
         message: "Error getting supported countries data",
       });
     }
-
+    console.log([...countriesData].length);
     return res.status(200).json({ success: true, countriesData });
   } catch (error) {
     console.log("Error getting supported countries data: ", error);

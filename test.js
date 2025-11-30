@@ -1,18 +1,27 @@
-const { savePrices } = require("./utils/coin");
-const { redis } = require("./utils/redis");
+const dotenv = require("dotenv");
+const { getPricesForOffer } = require("./utils/coin");
+dotenv.config();
+
+// (async () => {
+//   const res = await fetch(
+//     "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=USDT,USDC,BTC,ETH&convert=NGN",
+//     {
+//       headers: {
+//         "X-CMC_PRO_API_KEY": process.env.COINMARKETCAP_API_KEY,
+//       },
+//     }
+//   );
+
+//   const data = await res.json();
+
+//   console.log(data);
+// })();
 
 (async () => {
-  // try {
-  //   const data = await redis.get("crypto_prices"); // get the key
-  //   console.log(data);
-  //   if (!data) return null; // key does not exist or expired
-  //   const prices = JSON.parse(data); // parse JSON back to object
-  //   console.log(prices);
-  //   return prices;
-  // } catch (err) {
-  //   console.error("Error fetching crypto prices from Redis:", err);
-  //   return null;
-  // }
+  try {
+    const prices = await getPricesForOffer(["NGN", "USD", "GHS"]);
+    console.log(prices);
+  } catch (error) {
+    console.log(error);
+  }
 })();
-
-// module.exports = { getCurrencyByCountryCode };

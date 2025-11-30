@@ -274,17 +274,17 @@ app.use(
 );
 
 // connect to redis
-connectRedis()
-  .then(() => {
-    cron.schedule("*/30 * * * * *", async () => {
-      try {
-        await savePrices();
-      } catch (err) {
-        console.error("Error fetching or saving prices:", err.message);
-      }
-    });
-  })
-  .catch((err) => console.log("error connecting to redis: ", err));
+// connectRedis()
+//   .then(() => {
+//     cron.schedule("*/30 * * * * *", async () => {
+//       try {
+//         await savePrices();
+//       } catch (err) {
+//         console.error("Error fetching or saving prices:", err.message);
+//       }
+//     });
+//   })
+//   .catch((err) => console.log("error connecting to redis: ", err));
 
 // worker to check expired trades
 cron.schedule("* * * * *", async () => {
