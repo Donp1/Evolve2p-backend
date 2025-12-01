@@ -169,12 +169,12 @@ router.post("/", isAuthenticated, async (req, res) => {
                 "Third-party payments are not accepted for this trade. The selected bank accounts must belong to the buyer and seller respectively.",
               senderId: null,
             },
-            {
-              type: "SYSTEM",
-              content:
-                "Please wait for the seller to share their bank account details.",
-              senderId: null,
-            },
+            // {
+            //   type: "SYSTEM",
+            //   content:
+            //     "Please wait for the seller to share their bank account details.",
+            //   senderId: null,
+            // },
           ],
         },
       },

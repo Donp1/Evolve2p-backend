@@ -65,7 +65,7 @@ router.get("/", async (req, res) => {
 
     const totalOffers = await db.offer.count({ where: filters });
 
-    if (!offers.length) {
+    if (!offers || offers.length <= 0) {
       return res.json({
         data: [],
         meta: { total: totalOffers },
