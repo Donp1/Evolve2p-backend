@@ -323,8 +323,8 @@ async function getPricesForOffer(basePairs) {
     const payload = [];
     let batchIdCounter = 1;
 
-    coins.forEach((coin) => {
-      basePairs.forEach((pair) => {
+    coins?.forEach((coin) => {
+      basePairs?.forEach((pair) => {
         payload.push({
           batchId: batchIdCounter.toString(),
           symbol: coin,
@@ -346,6 +346,10 @@ async function getPricesForOffer(basePairs) {
 
     const data = await res.json();
     // console.log("Raw response:", data);
+
+    if (!data) {
+      throw new Error("Unable to fetch coin price from tatum");
+    }
 
     // Transform into easy lookup
     const result = {};

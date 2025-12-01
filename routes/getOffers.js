@@ -72,13 +72,19 @@ router.get("/", async (req, res) => {
       });
     }
 
+    const excluded = ["ETH", "BTC", "USDT", "USDC"];
+
     // Get unique fiat currencies
     const uniqueCurrencies = [
       ...new Set(offers.map((o) => o.currency.toUpperCase())),
     ];
 
+    const filteredUnique = uniqueCurrencies.filter(
+      (item) => !excluded.includes(item)
+    );
+
     // Fetch prices for these currencies
-    const prices = await getPricesForOffer(uniqueCurrencies);
+    const prices = await getPricesForOffer(filteredUnique);
 
     // Attach pricing
     const offersWithPrice = offers.map((offer) => {

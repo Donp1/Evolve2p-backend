@@ -62,6 +62,16 @@ router.post("/", isAuthenticated, async (req, res) => {
     });
   }
 
+  const excluded = ["ETH", "BTC", "USDT", "USDC"];
+  const isAllowed = !excluded.some((ex) => currency.includes(ex));
+
+  if (!isAllowed) {
+    return res.status(400).json({
+      error: true,
+      message: "Currency cannot include ETH, BTC, USDT, or USDC",
+    });
+  }
+
   try {
     // const amountFiat = await convertCryptoToFiat(
     //   String(crypto).toUpperCase(),
