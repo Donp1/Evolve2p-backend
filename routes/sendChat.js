@@ -87,15 +87,28 @@ router.post(
         io.to(chatId).emit("new_message", message);
       }
 
-      chat.participants.forEach(async (participant) => {
-        if (participant.id != sender.id && participant.user.pushToken) {
-          await sendPushNotification(
-            participant.user.pushToken,
-            "Evolve2p: New Message",
-            `@${sender.username} send you a message`
-          );
-        }
-      });
+      // Send push notification to receiver only
+      const receiver = chat.participants.find(
+        (participant) => participant.userId !== senderId
+      );
+
+      if (receiver?.user?.pushToken) {
+        await sendPushNotification(
+          receiver.user.pushToken,
+          "Evolve2p: New Message",
+          `@${sender.username} sent you a message`
+        );
+      }
+
+      // chat.participants.forEach(async (participant) => {
+      //   if (participant.id != sender.id && participant.user.pushToken) {
+      //     await sendPushNotification(
+      //       participant.user.pushToken,
+      //       "Evolve2p: New Message",
+      //       `@${sender.username} send you a message`
+      //     );
+      //   }
+      // });
 
       return res.status(201).json(message);
     } catch (err) {
