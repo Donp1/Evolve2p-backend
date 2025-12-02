@@ -119,6 +119,9 @@ router.post("/:id", isAuthenticated, async (req, res) => {
 
       // ✅ Notify the seller
       io.to(updated.sellerId).emit("new_notification", sellserNotification);
+
+      io.to(updated.buyerId).emit("receive_coin", buyerNotification);
+      io.to(updated.sellerId).emit("receive_coin", sellserNotification);
     }
 
     if (updated.buyer.pushToken)

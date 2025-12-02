@@ -133,6 +133,9 @@ router.post("/:id", isAdmin, async (req, res) => {
     const io = req.app.get("io");
     if (io) {
       io.to(updateTrade.id).emit("new_trade", updateTrade);
+
+      io.to(updateTrade.buyerId).emit("receive_coin", updateTrade);
+      io.to(updateTrade.sellerId).emit("receive_coin", updateTrade);
     }
 
     if (trade.buyer.pushToken) {
