@@ -73,12 +73,6 @@ router.post("/", isAuthenticated, async (req, res) => {
   }
 
   try {
-    // const amountFiat = await convertCryptoToFiat(
-    //   String(crypto).toUpperCase(),
-    //   amountCrypto,
-    //   String(currency).toUpperCase()
-    // );
-
     const offer = await db.offer.create({
       data: {
         type: String(type)?.toUpperCase(),
