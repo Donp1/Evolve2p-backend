@@ -123,21 +123,22 @@ model Offer {
 }
 
 model Trade {
-  id             String      @id @default(uuid())
-  buyerId        String
-  sellerId       String
-  offerId        String
-  status         TradeStatus @default(PENDING) // PENDING, PAID, COMPLETED, CANCELED
-  amountFiat     Float
-  amountCrypto   Float
-  tradePrice     Float       @default(0)
-  escrowReleased Boolean     @default(false)
-  paymentProof   String? // URL to uploaded proof image
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt // track last action time
-  completedAt    DateTime? // when trade is marked completed
-  canceledAt     DateTime? // when trade is canceled
-  paidAt         DateTime?
+  id              String      @id @default(uuid())
+  buyerId         String
+  sellerId        String
+  offerId         String
+  status          TradeStatus @default(PENDING) // PENDING, PAID, COMPLETED, CANCELED
+  amountFiat      Float
+  amountCrypto    Float
+  tradePrice      Float       @default(0)
+  escrowReleased  Boolean     @default(false)
+  paymentProof    String? // URL to uploaded proof image
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt // track last action time
+  completedAt     DateTime? // when trade is marked completed
+  canceledAt      DateTime? // when trade is canceled
+  disputeOpenedAt DateTime? // when a dispute is opened
+  paidAt          DateTime?
 
   // 🔹 New field: actual expiration timestamp
   expiresAt DateTime?

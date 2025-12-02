@@ -94,7 +94,7 @@ router.post(
       // Update trade status to DISPUTED
       const updatedTrade = await db.trade.update({
         where: { id: tradeId },
-        data: { status: "DISPUTED" },
+        data: { status: "DISPUTED", disputeOpenedAt: new Date() },
         include: {
           buyer: { select: { id: true, username: true } },
           seller: { select: { id: true, username: true } },

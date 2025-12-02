@@ -5,7 +5,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 
 const { findUserByEmail } = require("../utils/users");
-const { generateAccessToken } = require("../utils");
+const { generateAccessToken, sendPushNotification } = require("../utils");
 
 const route = express.Router();
 
@@ -33,6 +33,14 @@ route.post("/", async (req, res) => {
     }
 
     const accessToken = generateAccessToken(existingUser);
+
+    if (existingUser.pushToken) {
+      await sendPushNotification(
+        existingUser.pushToken,
+        "Login Alert",
+        "New login to your account detected."
+      );
+    }
 
     return res.status(200).json({
       accessToken,
